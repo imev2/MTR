@@ -624,8 +624,8 @@ def generate_expansion_and_balance(factor):
         diff = abs(num_pos-num_neg)
     
     ### Balancing the data set (positive and control cases)
-    num_pos = len(mapP.keys())
-    num_neg = len(mapN.keys())
+    num_pos = len(mapP)
+    num_neg = len(mapN)
     while num_pos < num_neg:
         print("Expanding positive cases." )   
         for i in range(int(diff)):  
@@ -701,8 +701,8 @@ def generate_expansion_and_balance(factor):
         diff = abs(num_pos-num_neg)
     
     ### Balancing the data set (positive and control cases)
-    num_pos = len(mapP.keys())
-    num_neg = len(mapN.keys())
+    num_pos = len(mapP)
+    num_neg = len(mapN)
     while num_pos < num_neg:
         print("Expanding positive cases." )   
         for i in range(int(diff)):  
