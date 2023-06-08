@@ -590,25 +590,151 @@ def change_lines():
 ## Balance dataset based on positive and control cases and expand both by a given factor. 
 
 def generate_expansion_and_balance(factor):
-    files = os.listdir(fold+"/../data/ProcessData/ST1_umap_train/") 
+    files = os.listdir(fold+"/data/ProcessData/ST1_umap_train/") 
     files = [l.split(".")[0] for l in files ]
-    table = pd.read_csv(fold +"/../data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
+    table = pd.read_csv(fold +"/data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
     u_batch = pd.unique(table["batch"])
-    #i = 1
+    i = 1
     print("ST1")
     mapP = {}
     mapN = {}
     for b in u_batch:
         lf_pos = list(table.loc[(table["batch"]==b) & (table["outcome"]==1),"id"])
         lf_pos = [l.upper() for l in lf_pos]
+        for f in lf_pos:
+            if not (f in files):
+                print(f)
+                lf_pos.remove(f)
+        num_pos = len(lf_pos)
+
         lf_neg = list(table.loc[(table["batch"]==b) & (table["outcome"]==0),"id"])
         lf_neg = [l.upper() for l in lf_neg]
+        for f in lf_neg:
+            if not (f in files):
+                print(f)
+                lf_pos.remove(f)
+        num_neg = len(lf_neg)
+
         for f in lf_pos:
             mapP[f] = lf_pos
         for f in lf_neg:
             mapN[f] = lf_neg
-    
+
+        ###
+        diff = abs(num_pos-num_neg)
+        
+        ### Balancing the data set (positive and control cases)
+        if num_pos < num_neg:
+            print("Expanding positive cases." )   
+            for i in range(int(diff)):  
+                print(i, "out of", diff)
+                file1 = random.choice((list(mapP.keys())))
+                file2 = random.choice(mapP[file1])
+                #file1, file2 = random.sample(list(lf_pos), 2)
+                ############### random.uniform(0,1) OR random.random()
+                dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+            
+        elif num_pos > num_neg:
+            print("Expanding control cases." ) 
+            for i in range(int(diff)):    
+                print(i, "out of", diff)     
+                file1 = random.choice((list(mapN.keys())))
+                file2 = random.choice(mapN[file1])
+                #file1, file2 = random.sample(list(lf_neg), 2)
+                dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+        
+        elif num_pos == num_neg:
+            print("Equal number of positive and control cases, no data augmentation will be performed.")
+
+        ### Expanding the data set (positive and control cases)
+        #while isinstance(num_pos*factor, int) is False:
+        while num_pos <= num_pos*factor:
+            ## Create 1 new negative file 
+            file1, file2 = random.sample(list(lf_neg), 2)
+            dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+
+            ## Create 1 new positive file 
+            file1, file2 = random.sample(list(lf_pos), 2)
+            dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+
+            num_pos += 1
+            print("Increased to", num_pos, "cases.")
+        print("There are", num_pos, "positive and negative cases.")
+
+    files = os.listdir(fold+"/data/ProcessData/ST2_umap_train/") 
+    files = [l.split(".")[0] for l in files ]
+    table = pd.read_csv(fold +"/data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
+    u_batch = pd.unique(table["batch"])
+    i = 1
+    print("ST2")
+    for b in u_batch:
+        lf_pos = list(table.loc[(table["batch"]==b) & (table["outcome"]==1),"id"])
+        lf_pos = [l.upper() for l in lf_pos]
+        for f in lf_pos:
+            if not (f in files):
+                print(f)
+                lf_pos.remove(f)
+        num_pos = len(lf_pos)
+
+        lf_neg = list(table.loc[(table["batch"]==b) & (table["outcome"]==0),"id"])
+        lf_neg = [l.upper() for l in lf_neg]
+        for f in lf_neg:
+            if not (f in files):
+                print(f)
+                lf_pos.remove(f)
+        num_neg = len(lf_neg)
+
+        for f in lf_pos:
+            mapP[f] = lf_pos
+        for f in lf_neg:
+            mapN[f] = lf_neg
+
+        ###
+        diff = abs(num_pos-num_neg)
+        
+        ### Balancing the data set (positive and control cases)
+        if num_pos < num_neg:
+            print("Expanding positive cases." )   
+            for i in range(int(diff)):  
+                print(i, "out of", diff)
+                file1 = random.choice((list(mapP.keys())))
+                file2 = random.choice(mapP[file1])
+                
+                #file1, file2 = random.sample(list(lf_pos), 2)
+                ############### random.uniform(0,1) OR random.random()
+                dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+            
+        elif num_pos > num_neg:
+            print("Expanding control cases." ) 
+            for i in range(int(diff)):    
+                print(i, "out of", diff)     
+                file1 = random.choice((list(mapN.keys())))
+                file2 = random.choice(mapN[file1])
+                #file1, file2 = random.sample(list(lf_neg), 2)
+                dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+        
+        elif num_pos == num_neg:
+            print("Equal number of positive and control cases, no data augmentation will be performed.")
+
+        ### Expanding the data set (positive and control cases)
+        #while isinstance(num_pos*factor, int) is False:
+        while num_pos <= num_pos*factor:
+            ## Create 1 new negative file 
+            file1 = random.choice((list(mapN.keys())))
+            file2 = random.choice(mapN[file1])
+            dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+
+            ## Create 1 new positive file 
+            file1 = random.choice((list(mapP.keys())))
+            file2 = random.choice(mapP[file1])
+            dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+
+            num_pos += 1
+            print("Increased to", num_pos, "cases.")
+        print("There are", num_pos, "positive and negative cases.")     
     print("")
+###########################################################################################################################
+
     #     for f in lf_pos:
     #         if not (f in files):
     #             print(f)
