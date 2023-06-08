@@ -22,6 +22,7 @@ seed = 123571113
 random.seed(seed)
 n_thread = 15
 fold = os.getcwd()
+#fold = "../" + fold
 perc_split = 0.7
 
 
@@ -71,7 +72,7 @@ def split_data():
     folds = 5
     
     #ST1
-    table = pd.read_csv(fold +"/data/"+"ST1.csv",sep="\t",header=None,names=("file_name","id","batch")) # Read in all ST1 file names. 
+    table = pd.read_csv(fold +"/../data/"+"ST1.csv",sep="\t",header=None,names=("file_name","id","batch")) # Read in all ST1 file names. 
     
     #split train_test
     y = []
@@ -90,11 +91,11 @@ def split_data():
     x_train, x_test, y_train, y_test = train_test_split(table, y, test_size=1/folds, random_state=seed,stratify=y) # balances number of positives and controls in the test and train groups to match the overall groups
     x_train["y"] = y_train
     x_test["y"] = y_test
-    x_train.to_csv(fold +"/data/"+"ST1_train.csv",sep="\t",header=None,index = False)
-    x_test.to_csv(fold +"/data/"+"ST1_test.csv",sep="\t",header=None,index = False)
+    x_train.to_csv(fold +"/../data/"+"ST1_train.csv",sep="\t",header=None,index = False)
+    x_test.to_csv(fold +"/../data/"+"ST1_test.csv",sep="\t",header=None,index = False)
     
     #ST2
-    table = pd.read_csv(fold +"/data/"+"ST1.csv",sep="\t",header=None,names=("file_name","id","batch"))
+    table = pd.read_csv(fold +"/../data/"+"ST1.csv",sep="\t",header=None,names=("file_name","id","batch"))
     y = []
     for i in table["id"]:
         i = i.upper()
@@ -109,11 +110,11 @@ def split_data():
     x_train, x_test, y_train, y_test = train_test_split(table, y, test_size=1/folds, random_state=seed,stratify=y)
     x_train["y"] = y_train
     x_test["y"] = y_test
-    x_train.to_csv(fold +"/data/"+"ST1_train.csv",sep="\t",header=None,index = False)
-    x_test.to_csv(fold +"/data/"+"ST1_test.csv",sep="\t",header=None,index = False)
+    x_train.to_csv(fold +"/../data/"+"ST1_train.csv",sep="\t",header=None,index = False)
+    x_test.to_csv(fold +"/../data/"+"ST1_test.csv",sep="\t",header=None,index = False)
     
     #ST2
-    table = pd.read_csv(fold +"/data/"+"ST2.csv",sep="\t",header=None,names=("file_name","id","batch"))
+    table = pd.read_csv(fold +"/../data/"+"ST2.csv",sep="\t",header=None,names=("file_name","id","batch"))
     #split train_test
     y = []
     for i in table["id"]:
@@ -130,11 +131,11 @@ def split_data():
     x_train, x_test, y_train, y_test = train_test_split(table, y, test_size=1/folds, random_state=seed,stratify=y)
     x_train["y"] = y_train
     x_test["y"] = y_test
-    x_train.to_csv(fold +"/data/"+"ST2_train.csv",sep="\t",header=None,index = False)
-    x_test.to_csv(fold +"/data/"+"ST2_test.csv",sep="\t",header=None,index = False)
+    x_train.to_csv(fold +"/../data/"+"ST2_train.csv",sep="\t",header=None,index = False)
+    x_test.to_csv(fold +"/../data/"+"ST2_test.csv",sep="\t",header=None,index = False)
     
     #ST2
-    table = pd.read_csv(fold +"/data/"+"ST2.csv",sep="\t",header=None,names=("file_name","id","batch"))
+    table = pd.read_csv(fold +"/../data/"+"ST2.csv",sep="\t",header=None,names=("file_name","id","batch"))
     y = []
     for i in table["id"]:
         i = i.upper()
@@ -149,8 +150,8 @@ def split_data():
     x_train, x_test, y_train, y_test = train_test_split(table, y, test_size=1/folds, random_state=seed,stratify=y)
     x_train["y"] = y_train
     x_test["y"] = y_test
-    x_train.to_csv(fold +"/data/"+"ST2_train.csv",sep="\t",header=None,index = False)
-    x_test.to_csv(fold +"/data/"+"ST2_test.csv",sep="\t",header=None,index = False)
+    x_train.to_csv(fold +"/../data/"+"ST2_train.csv",sep="\t",header=None,index = False)
+    x_test.to_csv(fold +"/../data/"+"ST2_test.csv",sep="\t",header=None,index = False)
     
 
 #batch normalization
@@ -158,8 +159,8 @@ def batch_normalization():
     sample_size = 1000
     #ST1
     print("\nST1\n")
-    train = pd.read_csv(fold +"/data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","y")) 
-    test = pd.read_csv(fold +"/data/"+"ST1_test.csv",sep="\t",header=None,names=("id","batch","y"))
+    train = pd.read_csv(fold +"/../data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","y")) 
+    test = pd.read_csv(fold +"/../data/"+"ST1_test.csv",sep="\t",header=None,names=("id","batch","y"))
     scale = StandardScaler(with_mean= True,with_std= True)
     mapa = {}
     l_batchs = pd.unique(train.batch)
@@ -169,7 +170,7 @@ def batch_normalization():
         f_idd = train.loc[train["batch"]==b,"id"]
         n_df = pd.DataFrame()
         for idd in f_idd:
-            df = pd.read_csv(fold + "/data/ProcessData/ST1/"+idd+".csv",sep="\t")    
+            df = pd.read_csv(fold + "/../data/ProcessData/ST1/"+idd+".csv",sep="\t")    
             n_df = pd.concat([n_df,df.sample(sample_size,replace=False)],ignore_index=True)
         colum = n_df.columns
         #n_df = n_df.to_numpy()
@@ -185,7 +186,7 @@ def batch_normalization():
         idd = train.id.iloc[i]
         print(idd)
         batch = train.batch.iloc[i]
-        df = pd.read_csv(fold + "/data/ProcessData/ST1/"+idd+".csv",sep="\t")
+        df = pd.read_csv(fold + "/../data/ProcessData/ST1/"+idd+".csv",sep="\t")
         df.columns = [string.upper().split("(CD")[0] for string in df.columns]
         col_name = df.columns
         scale.scale_,scale.mean_,scale.feature_names_in_ = mapa[batch]
@@ -196,13 +197,13 @@ def batch_normalization():
         #df = pd.DataFrame(df,columns=col_name)
         df = scale.transform(df)
         df = pd.DataFrame(df,columns=col_name)
-        df.to_csv(fold + "/data/ProcessData/ST1_train/"+idd+".csv",sep="\t",index=False)
+        df.to_csv(fold + "/../data/ProcessData/ST1_train/"+idd+".csv",sep="\t",index=False)
     
     for i in range(len(test.id)):
         idd = test.id.iloc[i]
         print(idd)
         batch = train.batch.iloc[i]
-        df = pd.read_csv(fold + "/data/ProcessData/ST1/"+idd+".csv",sep="\t")
+        df = pd.read_csv(fold + "/../data/ProcessData/ST1/"+idd+".csv",sep="\t")
         df.columns = [string.upper().split("(CD")[0] for string in df.columns]
         col_name = df.columns
         scale.scale_,scale.mean_,scale.feature_names_in_ = mapa[batch]
@@ -213,12 +214,12 @@ def batch_normalization():
         #df = pd.DataFrame(df,columns=col_name)
         df = scale.transform(df)
         df = pd.DataFrame(df,columns=col_name)
-        df.to_csv(fold + "/data/ProcessData/ST1_test/"+idd+".csv",sep="\t",index=False)
+        df.to_csv(fold + "/../data/ProcessData/ST1_test/"+idd+".csv",sep="\t",index=False)
     
     #ST2
     print("\nST2\n")
-    train = pd.read_csv(fold +"/data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","y")) 
-    test = pd.read_csv(fold +"/data/"+"ST2_test.csv",sep="\t",header=None,names=("id","batch","y")) 
+    train = pd.read_csv(fold +"/../data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","y")) 
+    test = pd.read_csv(fold +"/../data/"+"ST2_test.csv",sep="\t",header=None,names=("id","batch","y")) 
     scale = StandardScaler(with_mean= True,with_std= True)
     mapa = {}
     l_batchs = pd.unique(train.batch)
@@ -228,7 +229,7 @@ def batch_normalization():
         n_df = pd.DataFrame()
         scale = StandardScaler()
         for idd in f_idd:
-            df = pd.read_csv(fold + "/data/ProcessData/ST2/"+idd+".csv",sep="\t")    
+            df = pd.read_csv(fold + "/../data/ProcessData/ST2/"+idd+".csv",sep="\t")    
             n_df = pd.concat([n_df,df.sample(sample_size,replace=False)],ignore_index=True)
         colum = n_df.columns
         #n_df = n_df.to_numpy()
@@ -244,7 +245,7 @@ def batch_normalization():
         idd = train.id.iloc[i]
         print(idd)
         batch = train.batch.iloc[i]
-        df = pd.read_csv(fold + "/data/ProcessData/ST2/"+idd+".csv",sep="\t")
+        df = pd.read_csv(fold + "/../data/ProcessData/ST2/"+idd+".csv",sep="\t")
         df.columns = [string.upper().split("(CD")[0] for string in df.columns]
         col_name = df.columns
         scale.scale_,scale.mean_, scale.feature_names_in_ = mapa[batch]
@@ -255,13 +256,13 @@ def batch_normalization():
         #df = pd.DataFrame(df,columns=col_name)
         df = scale.transform(df)
         df = pd.DataFrame(df,columns=col_name)
-        df.to_csv(fold + "/data/ProcessData/ST2_train/"+idd+".csv",sep="\t",index=False)
+        df.to_csv(fold + "/../data/ProcessData/ST2_train/"+idd+".csv",sep="\t",index=False)
     
     for i in range(len(test.id)):
         idd = test.id.iloc[i]
         print(idd)
         batch = train.batch.iloc[i]
-        df = pd.read_csv(fold + "/data/ProcessData/ST2/"+idd+".csv",sep="\t")
+        df = pd.read_csv(fold + "/../data/ProcessData/ST2/"+idd+".csv",sep="\t")
         df.columns = [string.upper().split("(CD")[0] for string in df.columns]
         col_name = df.columns
         scale.scale_,scale.mean_,scale.feature_names_in_ = mapa[batch]
@@ -272,15 +273,15 @@ def batch_normalization():
         #df = pd.DataFrame(df,columns=col_name)
         df = scale.transform(df)
         df = pd.DataFrame(df,columns=col_name)
-        df.to_csv(fold + "/data/ProcessData/ST2_test/"+idd+".csv",sep="\t",index=False)
+        df.to_csv(fold + "/../data/ProcessData/ST2_test/"+idd+".csv",sep="\t",index=False)
     
 
 
 def umap_apply():    
     sample_size = 1000
     print("\nST1\n")
-    train = pd.read_csv(fold +"/data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","y")) 
-    test = pd.read_csv(fold +"/data/"+"ST1_test.csv",sep="\t",header=None,names=("id","batch","y"))
+    train = pd.read_csv(fold +"/../data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","y")) 
+    test = pd.read_csv(fold +"/../data/"+"ST1_test.csv",sep="\t",header=None,names=("id","batch","y"))
     #train ST1
     
     f_idd = train["id"]
@@ -290,27 +291,27 @@ def umap_apply():
     for idd in f_idd:
         print(str(i)+" de " + str(len(f_idd)))
         idd = f_idd[0]
-        df = pd.read_csv(fold + "/data/ProcessData/ST1_train/"+idd+".csv",sep="\t")
+        df = pd.read_csv(fold + "/../data/ProcessData/ST1_train/"+idd+".csv",sep="\t")
         mini.append(len(df))    
         n_df = pd.concat([n_df,df.sample(sample_size,replace=False)],ignore_index=True)
         i = i+1
     print("fit")
     dens_mapper = umap.UMAP(densmap=False, random_state=seed,low_memory=False,min_dist = 0.0)
     dens_mapper = dens_mapper.fit(n_df)
-    f = open(fold+'/data/st1.pk', 'wb')
+    f = open(fold+'/../data/st1.pk', 'wb')
     pk.dump(dens_mapper, f, pk.HIGHEST_PROTOCOL)
     f.close()
     
     df = pd.DataFrame(dens_mapper.embedding_)
-    df.to_csv(fold + "/data/ProcessData/ST1_umap_space.csv",sep="\t",index=False)
-    f1 = open(fold + "/data/ProcessData/ST1_umap_space.csv","a+")
+    df.to_csv(fold + "/../data/ProcessData/ST1_umap_space.csv",sep="\t",index=False)
+    f1 = open(fold + "/../data/ProcessData/ST1_umap_space.csv","a+")
     f1.seek(0)
     f1.write(str(len(df))+"\t2"+"\n")
     f1.close()
     def cal_st1(v):
         i,n_i,file,file_out = v
         print(str(i)+" de " + str(len(f_idd)))
-        f = open(fold+'/data/st1.pk', 'rb')
+        f = open(fold+'/../data/st1.pk', 'rb')
         model = pk.load(f)
         f.close()
         df = pd.read_csv(file,sep="\t")
@@ -325,7 +326,7 @@ def umap_apply():
     v = []
     n_i = len(f_idd)
     for i in range(n_i):
-        v.append((i,n_i,fold + "/data/ProcessData/ST1_train/"+f_idd[i]+".csv",fold + "/data/ProcessData/ST1_umap_train/"+f_idd[i]+".csv"))
+        v.append((i,n_i,fold + "/../data/ProcessData/ST1_train/"+f_idd[i]+".csv",fold + "/../data/ProcessData/ST1_umap_train/"+f_idd[i]+".csv"))
         
     Parallel(n_jobs=n_thread,verbose=0)(delayed(cal_st1)(p) for p in v)
     
@@ -335,13 +336,13 @@ def umap_apply():
     v = []
     n_i = len(f_idd)
     for i in range(n_i):
-        v.append((i,n_i,fold + "/data/ProcessData/ST1_test/"+f_idd[i]+".csv",fold + "/data/ProcessData/ST1_umap_test/"+f_idd[i]+".csv"))
+        v.append((i,n_i,fold + "/../data/ProcessData/ST1_test/"+f_idd[i]+".csv",fold + "/../data/ProcessData/ST1_umap_test/"+f_idd[i]+".csv"))
     
     Parallel(n_jobs=n_thread,verbose=0)(delayed(cal_st1)(p) for p in v)
     
     print("\nST2\n")
-    train = pd.read_csv(fold +"/data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","y")) 
-    test = pd.read_csv(fold +"/data/"+"ST2_test.csv",sep="\t",header=None,names=("id","batch","y"))
+    train = pd.read_csv(fold +"/../data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","y")) 
+    test = pd.read_csv(fold +"/../data/"+"ST2_test.csv",sep="\t",header=None,names=("id","batch","y"))
     #train ST2
     
     f_idd = train["id"]
@@ -351,27 +352,27 @@ def umap_apply():
     for idd in f_idd:
         print(str(i)+" de " + str(len(f_idd)))
         idd = f_idd[0]
-        df = pd.read_csv(fold + "/data/ProcessData/ST2_train/"+idd+".csv",sep="\t")
+        df = pd.read_csv(fold + "/../data/ProcessData/ST2_train/"+idd+".csv",sep="\t")
         mini.append(len(df))    
         n_df = pd.concat([n_df,df.sample(sample_size,replace=False)],ignore_index=True)
         i = i+1
     print("fit")
     dens_mapper = umap.UMAP(densmap=False, random_state=seed,low_memory=False,min_dist = 0.0)
     dens_mapper = dens_mapper.fit(n_df)
-    f = open(fold+'/data/st2.pk', 'wb')
+    f = open(fold+'/../data/st2.pk', 'wb')
     pk.dump(dens_mapper, f, pk.HIGHEST_PROTOCOL)
     f.close()
     
     df = pd.DataFrame(dens_mapper.embedding_)
-    df.to_csv(fold + "/data/ProcessData/ST2_umap_space.csv",sep="\t",index=False)
-    f1 = open(fold + "/data/ProcessData/ST2_umap_space.csv","a+")
+    df.to_csv(fold + "/../data/ProcessData/ST2_umap_space.csv",sep="\t",index=False)
+    f1 = open(fold + "/../data/ProcessData/ST2_umap_space.csv","a+")
     f1.seek(0)
     f1.write(str(len(df))+"\t2"+"\n")
     f1.close()
     def cal_st2(v):
        i,n_i,file,file_out = v
        print(str(i)+" de " + str(len(f_idd)))
-       f = open(fold+'/data/st2.pk', 'rb')
+       f = open(fold+'/../data/st2.pk', 'rb')
        model = pk.load(f)
        f.close()
        df = pd.read_csv(file,sep="\t")
@@ -386,7 +387,7 @@ def umap_apply():
     v = []
     n_i = len(f_idd)
     for i in range(n_i):
-        v.append((i,n_i,fold + "/data/ProcessData/ST2_train/"+f_idd[i]+".csv",fold + "/data/ProcessData/ST2_umap_train/"+f_idd[i]+".csv"))
+        v.append((i,n_i,fold + "/../data/ProcessData/ST2_train/"+f_idd[i]+".csv",fold + "/../data/ProcessData/ST2_umap_train/"+f_idd[i]+".csv"))
         
     Parallel(n_jobs=n_thread,verbose=0)(delayed(cal_st2)(p) for p in v)
     
@@ -396,7 +397,7 @@ def umap_apply():
     v = []
     n_i = len(f_idd)
     for i in range(n_i):
-        v.append((i,n_i,fold + "/data/ProcessData/ST2_test/"+f_idd[i]+".csv",fold + "/data/ProcessData/ST2_umap_test/"+f_idd[i]+".csv"))
+        v.append((i,n_i,fold + "/../data/ProcessData/ST2_test/"+f_idd[i]+".csv",fold + "/../data/ProcessData/ST2_umap_test/"+f_idd[i]+".csv"))
     
     Parallel(n_jobs=n_thread,verbose=0)(delayed(cal_st2)(p) for p in v)
 
@@ -405,8 +406,8 @@ def change_lines():
     #ST1
     print("ST1")
     i=0
-    fold_train = fold+"/data/ProcessData/ST1_umap_train/"   
-    fold_test = fold+"/data/ProcessData/ST1_umap_test/"
+    fold_train = fold+"/../data/ProcessData/ST1_umap_train/"   
+    fold_test = fold+"/../data/ProcessData/ST1_umap_test/"
     f_total = os.listdir(fold_train)
     for f in f_total:
         print(i)
@@ -432,8 +433,8 @@ def change_lines():
         file.close()
     #st2
     print("ST2")
-    fold_train = fold+"/data/ProcessData/ST2_umap_train/"   
-    fold_test = fold+"/data/ProcessData/ST2_umap_test/"
+    fold_train = fold+"/../data/ProcessData/ST2_umap_train/"   
+    fold_test = fold+"/../data/ProcessData/ST2_umap_test/"
     f_total = os.listdir(fold_train)
     i=0
     for f in f_total:
@@ -463,9 +464,9 @@ def change_lines():
 ## First only balance dataset based on positive and control cases. 
 
 # def generate_sample():
-#     files = os.listdir(fold+"/data/ProcessData/ST1_umap_train/") 
+#     files = os.listdir(fold+"/../data/ProcessData/ST1_umap_train/") 
 #     files = [l.split(".")[0] for l in files ]
-#     table = pd.read_csv(fold +"/data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
+#     table = pd.read_csv(fold +"/../data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
 #     u_batch = pd.unique(table["batch"])
 #     i = 1
 #     print("ST1")
@@ -503,14 +504,14 @@ def change_lines():
 #                 print(i, "out of", diff)
 #                 file1, file2 = random.sample(list(lf_pos), 2)
 #                 ############### random.uniform(0,1) OR random.random()
-#                 dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+#                 dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
 #         elif num_pos > num_neg:
 #             print("Expanding negative cases." ) 
 #             for i in range(int(diff)):    
 #                 print(i, "out of", diff)     
 #                 file1, file2 = random.sample(list(lf_neg), 2)
 #                 ############### random.uniform(0,1) OR random.random()
-#                 dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+#                 dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
         
 #         elif num_pos == num_neg:
 #             print("Equal number of positive and control cases, no data augmentation will be performed.")
@@ -519,7 +520,7 @@ def change_lines():
 #         #     print("file " + str(i) + " of " + str(len(lf_pos)*2))           
 #         #     file1, file2 = random.sample(list(lf_pos), 2)
 #         #     ############### random
-#         #     dataRecombination(file1, file2, 0.7, outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+#         #     dataRecombination(file1, file2, 0.7, outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
 #         # #print("negative")
 #         #print(str(i)+ " of " +str(len(u_batch)))
 #         #i = i+1
@@ -533,11 +534,11 @@ def change_lines():
 #         #     print("file " + str(i) + " of " + str(len(lf_pos)*2))           
 #         #     file1, file2 = random.sample(list(lf_pos), 2)
 #         #     ############### random
-#         #     dataRecombination(file1, file2, 0.7, outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+#         #     dataRecombination(file1, file2, 0.7, outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
     
-#     files = os.listdir(fold+"/data/ProcessData/ST2_umap_train/") 
+#     files = os.listdir(fold+"/../data/ProcessData/ST2_umap_train/") 
 #     files = [l.split(".")[0] for l in files ]
-#     table = pd.read_csv(fold +"/data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
+#     table = pd.read_csv(fold +"/../data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
 #     u_batch = pd.unique(table["batch"])
 #     i = 1
 #     print("ST2")
@@ -570,13 +571,13 @@ def change_lines():
 #                 print("Expanding positive cases" )      
 #                 file1, file2 = random.sample(list(lf_pos), 2)
 #                 ############### random.uniform(0,1) OR random.random()
-#                 dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+#                 dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
 #         elif num_pos > num_neg:
 #             for i in range(int(diff)):    
 #                 print("Expanding negative cases" )          
 #                 file1, file2 = random.sample(list(lf_neg), 2)
 #                 ############### random.uniform(0,1) OR random.random()
-#                 dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
+#                 dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
         
 #         elif num_pos == num_neg:
 #             print("Equal number of positive and control cases, no data augmentation will be performed.")
@@ -589,144 +590,153 @@ def change_lines():
 ## Balance dataset based on positive and control cases and expand both by a given factor. 
 
 def generate_expansion_and_balance(factor):
-    files = os.listdir(fold+"/data/ProcessData/ST1_umap_train/") 
+    files = os.listdir(fold+"/../data/ProcessData/ST1_umap_train/") 
     files = [l.split(".")[0] for l in files ]
-    table = pd.read_csv(fold +"/data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
+    table = pd.read_csv(fold +"/../data/"+"ST1_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
     u_batch = pd.unique(table["batch"])
-    i = 1
+    #i = 1
     print("ST1")
+    mapP = {}
+    mapN = {}
     for b in u_batch:
         lf_pos = list(table.loc[(table["batch"]==b) & (table["outcome"]==1),"id"])
         lf_pos = [l.upper() for l in lf_pos]
-        
-        for f in lf_pos:
-            if not (f in files):
-                print(f)
-                lf_pos.remove(f)
-        ###
-        num_pos = len(lf_pos)
-        ###
         lf_neg = list(table.loc[(table["batch"]==b) & (table["outcome"]==0),"id"])
         lf_neg = [l.upper() for l in lf_neg]
-        for f in lf_neg:
-            if not (f in files):
-                print(f)
-                lf_pos.remove(f)
-
-        ###
-        num_neg = len(lf_neg)
-        ###
-        diff = abs(num_pos-num_neg)
-        
-        ### Balancing the data set (positive and control cases)
-        if num_pos < num_neg:
-            print("Expanding positive cases." )   
-            for i in range(int(diff)):  
-                print(i, "out of", diff)
-                file1, file2 = random.sample(list(lf_pos), 2)
-                ############### random.uniform(0,1) OR random.random()
-                dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
-            
-        elif num_pos > num_neg:
-            print("Expanding control cases." ) 
-            for i in range(int(diff)):    
-                print(i, "out of", diff)     
-                file1, file2 = random.sample(list(lf_neg), 2)
-                ############### random.uniform(0,1) OR random.random()
-                dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
-        
-        elif num_pos == num_neg:
-            print("Equal number of positive and control cases, no data augmentation will be performed.")
-
-        ### Expanding the data set (positive and control cases)
-        #while isinstance(num_pos*factor, int) is False:
-        while num_pos <= num_pos*factor:
-            ## Create 1 new negative file 
-            file1, file2 = random.sample(list(lf_neg), 2)
-            ############### random.uniform(0,1) OR random.random()
-            dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
-
-            ## Create 1 new positive file 
-            file1, file2 = random.sample(list(lf_pos), 2)
-            ############### random.uniform(0,1) OR random.random()
-            dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
-
-            num_pos += 1
-            print("Increased to", num_pos, "cases.")
-        print("There are", num_pos, "positive and negative cases.")
-
-    files = os.listdir(fold+"/data/ProcessData/ST2_umap_train/") 
-    files = [l.split(".")[0] for l in files ]
-    table = pd.read_csv(fold +"/data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
-    u_batch = pd.unique(table["batch"])
-    i = 1
-    print("ST2")
-    for b in u_batch:
-        lf_pos = list(table.loc[(table["batch"]==b) & (table["outcome"]==1),"id"])
-        lf_pos = [l.upper() for l in lf_pos]
-        
         for f in lf_pos:
-            if not (f in files):
-                print(f)
-                lf_pos.remove(f)
-        ###
-        num_pos = len(lf_pos)
-        ###
-        lf_neg = list(table.loc[(table["batch"]==b) & (table["outcome"]==0),"id"])
-        lf_neg = [l.upper() for l in lf_neg]
+            mapP[f] = lf_pos
         for f in lf_neg:
-            if not (f in files):
-                print(f)
-                lf_pos.remove(f)
-
-        ###
-        num_neg = len(lf_neg)
-        ###
-        diff = abs(num_pos-num_neg)
-        
-        ### Balancing the data set (positive and control cases)
-        if num_pos < num_neg:
-            print("Expanding positive cases." )   
-            for i in range(int(diff)):  
-                print(i, "out of", diff)
-                file1, file2 = random.sample(list(lf_pos), 2)
-                ############### random.uniform(0,1) OR random.random()
-                dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
-            
-        elif num_pos > num_neg:
-            print("Expanding control cases." ) 
-            for i in range(int(diff)):    
-                print(i, "out of", diff)     
-                file1, file2 = random.sample(list(lf_neg), 2)
-                ############### random.uniform(0,1) OR random.random()
-                dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
-        
-        elif num_pos == num_neg:
-            print("Equal number of positive and control cases, no data augmentation will be performed.")
-
-        ### Expanding the data set (positive and control cases)
-        #while isinstance(num_pos*factor, int) is False:
-        while num_pos <= num_pos*factor:
-            ## Create 1 new negative file 
-            file1, file2 = random.sample(list(lf_neg), 2)
-            ############### random.uniform(0,1) OR random.random()
-            dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
-
-            ## Create 1 new positive file 
-            file1, file2 = random.sample(list(lf_pos), 2)
-            ############### random.uniform(0,1) OR random.random()
-            dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/data/ProcessData/ST1_umap_train/")
-
-            num_pos += 1
-            print("Increased to", num_pos, "cases.")
-        print("There are", num_pos, "positive and negative cases.")           
+            mapN[f] = lf_neg
+    
     print("")
+    #     for f in lf_pos:
+    #         if not (f in files):
+    #             print(f)
+    #             lf_pos.remove(f)
+    #     ###
+    #     num_pos = len(lf_pos)
+    #     ###
+    #     lf_neg = list(table.loc[(table["batch"]==b) & (table["outcome"]==0),"id"])
+    #     lf_neg = [l.upper() for l in lf_neg]
+    #     for f in lf_neg:
+    #         if not (f in files):
+    #             print(f)
+    #             lf_pos.remove(f)
+
+    #     ###
+    #     num_neg = len(lf_neg)
+    #     ###
+    #     diff = abs(num_pos-num_neg)
+        
+    #     ### Balancing the data set (positive and control cases)
+    #     if num_pos < num_neg:
+    #         print("Expanding positive cases." )   
+    #         for i in range(int(diff)):  
+    #             print(i, "out of", diff)
+    #             file1, file2 = random.sample(list(lf_pos), 2)
+    #             ############### random.uniform(0,1) OR random.random()
+    #             dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
+            
+    #     elif num_pos > num_neg:
+    #         print("Expanding control cases." ) 
+    #         for i in range(int(diff)):    
+    #             print(i, "out of", diff)     
+    #             file1, file2 = random.sample(list(lf_neg), 2)
+    #             ############### random.uniform(0,1) OR random.random()
+    #             dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
+        
+    #     elif num_pos == num_neg:
+    #         print("Equal number of positive and control cases, no data augmentation will be performed.")
+
+    #     ### Expanding the data set (positive and control cases)
+    #     #while isinstance(num_pos*factor, int) is False:
+    #     while num_pos <= num_pos*factor:
+    #         ## Create 1 new negative file 
+    #         file1, file2 = random.sample(list(lf_neg), 2)
+    #         ############### random.uniform(0,1) OR random.random()
+    #         dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
+
+    #         ## Create 1 new positive file 
+    #         file1, file2 = random.sample(list(lf_pos), 2)
+    #         ############### random.uniform(0,1) OR random.random()
+    #         dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
+
+    #         num_pos += 1
+    #         print("Increased to", num_pos, "cases.")
+    #     print("There are", num_pos, "positive and negative cases.")
+
+    # files = os.listdir(fold+"/../data/ProcessData/ST2_umap_train/") 
+    # files = [l.split(".")[0] for l in files ]
+    # table = pd.read_csv(fold +"/../data/"+"ST2_train.csv",sep="\t",header=None,names=("id","batch","outcome"))
+    # u_batch = pd.unique(table["batch"])
+    # i = 1
+    # print("ST2")
+    # for b in u_batch:
+    #     lf_pos = list(table.loc[(table["batch"]==b) & (table["outcome"]==1),"id"])
+    #     lf_pos = [l.upper() for l in lf_pos]
+        
+    #     for f in lf_pos:
+    #         if not (f in files):
+    #             print(f)
+    #             lf_pos.remove(f)
+    #     ###
+    #     num_pos = len(lf_pos)
+    #     ###
+    #     lf_neg = list(table.loc[(table["batch"]==b) & (table["outcome"]==0),"id"])
+    #     lf_neg = [l.upper() for l in lf_neg]
+    #     for f in lf_neg:
+    #         if not (f in files):
+    #             print(f)
+    #             lf_pos.remove(f)
+
+    #     ###
+    #     num_neg = len(lf_neg)
+    #     ###
+    #     diff = abs(num_pos-num_neg)
+        
+    #     ### Balancing the data set (positive and control cases)
+    #     if num_pos < num_neg:
+    #         print("Expanding positive cases." )   
+    #         for i in range(int(diff)):  
+    #             print(i, "out of", diff)
+    #             file1, file2 = random.sample(list(lf_pos), 2)
+    #             ############### random.uniform(0,1) OR random.random()
+    #             dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
+            
+    #     elif num_pos > num_neg:
+    #         print("Expanding control cases." ) 
+    #         for i in range(int(diff)):    
+    #             print(i, "out of", diff)     
+    #             file1, file2 = random.sample(list(lf_neg), 2)
+    #             ############### random.uniform(0,1) OR random.random()
+    #             dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
+        
+    #     elif num_pos == num_neg:
+    #         print("Equal number of positive and control cases, no data augmentation will be performed.")
+
+    #     ### Expanding the data set (positive and control cases)
+    #     #while isinstance(num_pos*factor, int) is False:
+    #     while num_pos <= num_pos*factor:
+    #         ## Create 1 new negative file 
+    #         file1, file2 = random.sample(list(lf_neg), 2)
+    #         ############### random.uniform(0,1) OR random.random()
+    #         dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
+
+    #         ## Create 1 new positive file 
+    #         file1, file2 = random.sample(list(lf_pos), 2)
+    #         ############### random.uniform(0,1) OR random.random()
+    #         dataRecombination(file1, file2, perc1=random.uniform(0,1), outputDir=fold+"/../data/ProcessData/ST1_umap_train/")
+
+    #         num_pos += 1
+    #         print("Increased to", num_pos, "cases.")
+    #     print("There are", num_pos, "positive and negative cases.")           
+    # print("")
 ###########################################################################################################################
    
 #split_data()
 #batch_normalization()
-umap_apply()
+#umap_apply()
 #change_lines()
-#generate_expansion_and_balance(2)
+generate_expansion_and_balance(5)
 #subprocess.Popen(["Grid_file.exe","C:\\repos\\flow_C\\data\\ProcessData\\ST2_umap_train\\","C:\\repos\\flow_C\\data\\ProcessData\\ST2_umap_space.csv","C:\\repos\\flow_C\\data\\ProcessData\\ST2_grid_train\\","200","15"]).wait()
 print("end")
