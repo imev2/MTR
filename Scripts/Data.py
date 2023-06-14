@@ -17,6 +17,7 @@ import os
 #import random
 import numpy as np
 import struct
+import re
 #import subprocess
 
 class Data:
@@ -108,6 +109,10 @@ class Data:
             s = f.read(tam2)
             s = struct.unpack(str(tam2)+"s", s)[0]
             self.batch = tuple(s.decode().split(","))
+            #map
+            self.map_batch = {}
+            for i in range(len(self.id)):
+                self.map_batch[self.id[i]] = self.batch[i]
             #dim
             d = f.read(struct.calcsize("i"))
             self.dim = struct.unpack("i", d)[0]
@@ -145,8 +150,21 @@ class Data:
         self.sizes = None
         for b in batch_f:
             files = os.listdir(folder + "/"+b)
+            #if b=="ST1_20200123":
+            print(b)
             for f in files:
-                idd = f
+                s = f.replace(" ", "").replace("-", "")
+                x = re.findall(r"AD(\d\d\d)([CP])",s )[0]
+                idd = "AD"+x[0]+x[1]
+                self.id.append(idd)
+                self.batch.append(b)
+                self.map_batch[idd] = b
+                if x[1]=="C":
+                    self.pheno.append(0)
+                else:
+                    self.pheno.append(1)
+                
+                
                 
         
         
