@@ -5,9 +5,10 @@ import seaborn as sns
 import os
 fold = os.getcwd()
 print(fold)
+
 # Define the input and output directories
-input_directory = fold+'/Data/ST1_grid_train_subset' # Specify the directory containing the CSV files
-output_directory = fold+'/Data/ST1_grid_train_subset_heatmap'  # Specify the directory to save the heatmaps
+input_directory = fold+'/../data' # Specify the directory containing the CSV files
+output_directory = fold+'/../heatmaps'  # Specify the directory to save the heatmaps
 
 # Create the output directory if it doesn't exist
 os.makedirs(output_directory, exist_ok=True)
