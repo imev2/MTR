@@ -9,10 +9,14 @@ from Data import Data
 
 data = Data()
 
-#3data.start_transform("C:/repos/MTR/data/ST1_transformed")
+#data.start_transform("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
 
-#data.load("C:/repos/MTR/data/st1.dat")
-data.load_c("C:/repos/MTR/data/st1_c.dat")
+data.load("C:/repos/MTR/data/ST1_test")
+#data.split_data_test("C:/repos/MTR/data/ST1_train", "C:/repos/MTR/data/ST1_test")
+#data.save("C:/repos/MTR/data/teste")
+#df = data._sample_data(0, 200)
+print("10")
+#data.load_c("C:/repos/MTR/data/st1_c.dat")
 #data.save_c("C:/repos/MTR/data/st1_c.dat")
 #train,val = data.get_train_validation_dataset()
 #d=train.__getitem__(0)
