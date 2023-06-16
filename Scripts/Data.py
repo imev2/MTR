@@ -17,12 +17,32 @@ import os
 import random
 import numpy as np
 import struct
+import ctypes
 import re
+import torch
+from torch.utils.data import Dataset
 #import subprocess
 
 
 
+
 class Data:
+    class AdDataset(Dataset):
+        def __init__(self,x,y,index):
+            self.x = x
+            self.y=y
+            self.index = index
+    
+        def __len__(self):
+            ## Size of whole data set
+            return len(self.index)
+    
+        def __getitem__(self, idx):
+            data = torch.from_numpy(self.x[self.index[idx]])
+            label = self.y[self.index[idx]]  # Get the class label for the corresponding file WATCH OUT FOR FLOAT --> MAY CAUSE ERRORS BECAUSE DATA NOT IN SAME DTYPE AS CLASS_LABEL
+            #dimensions = data.shape  # Get the dimensions of the data
+    
+            return data, label
 
     def __init__(self,seed = 123571113):
         self.id = None
@@ -33,67 +53,83 @@ class Data:
         self.map_batch = None
         self.dim = None
         self.sizes = None
+        self.pos = None
         np.random.seed(seed)
         random.seed(seed)
         
     def save_c(self,file):
         with open(file,"wb") as f:
-            #id
-            s =self.id[0]
+            #tam dim
             tam = len(self.id)
-            for i in range(1,tam):
-                s = s+"," + self.id[i]
-            tam = len(s)
-            d =struct.pack("i", tam)
+            d =struct.pack("i i", tam,self.dim)
             f.write(d)
-            mask = str(tam)+"s"
-            d = struct.pack(mask, bytes(s, 'utf-8'))
-            f.write(d)
-            #painel
-            s =self.painel[0]
-            ncol = len(self.painel)
-            for i in range(1,ncol):
-                s = s+"," + self.painel[i]
-            tam = len(s)
-            d =struct.pack("i", tam)
-            f.write(d)
-            mask = str(tam)+"s"
-            d = struct.pack(mask, bytes(s, 'utf-8'))
-            f.write(d)
-            #batch
-            s =self.batch[0]
-            ncol = len(self.batch)
-            for i in range(1,ncol):
-                s = s+"," + self.batch[i]
-            tam = len(s)
-            d =struct.pack("i", tam)
-            f.write(d)
-            mask = str(tam)+"s"
-            d = struct.pack(mask, bytes(s, 'utf-8'))
-            f.write(d)
-            #dim
-            d =struct.pack("i", self.dim)
-            f.write(d)
-            if self.dim == 0:
-                #data
-                tam = len(self.id)
+            #data pos
+            pos = 2488
+            vet = ctypes.c_size_t * (tam+1)
+            vet = np.ones(tam+1,np.uint64)
+            vet[0]=pos
+            if self.dim==0:
                 for i in range(tam):
-                    print("save " + str(i) + " of " + str(tam))
-                    #nlin, ncol
                     nlin = len(self.data[i])
                     ncol = len(self.data[i][0])
-                    d = struct.pack("i i", nlin,ncol)
+                    pos+= struct.calcsize("3i " + str(nlin*ncol)+"f")
+                    vet[i+1]=pos
+                    
+                
+                f.write(vet.tobytes())
+                #write data
+                for i in range(tam):
+                    print("save " + str(i) + " of " + str(tam))
+                    nlin = len(self.data[i])
+                    ncol = len(self.data[i][0])
+                    d = struct.pack("i i i", self.pheno[i],nlin,ncol)
                     f.write(d)
-                    #value
-                    for l in range(nlin):
-                        for c in range(ncol):
-                            f.write(struct.pack("f", self.data[i][l][c]))
-                 
-            
+                    df = self.data[i].flatten().astype(np.float32).tobytes()
+                    f.write(df)
+                #meta
+                #id
+                idd = self.id[0]
+                for i in range(1,tam):
+                    idd+=","+self.id[i]
+                sz = len(idd)
+                d = struct.pack("i",sz)
+                f.write(d)
+                
+                f.write(bytes(idd,'utf-8'))
+                #painel
+                idd = self.painel[0]
+                for i in range(1,len(self.painel)):
+                    idd+=","+self.painel[i]
+                sz = len(idd)
+                d = struct.pack("i",sz)
+                f.write(d)
+                f.write(bytes(idd,'utf-8'))
+                #batch
+                idd = self.batch[0]
+                for i in range(1,tam):
+                    idd+=","+self.batch[i]
+                sz = len(idd)
+                d = struct.pack("i",sz)
+                f.write(d)
+                f.write(bytes(idd,'utf-8'))           
             
     def load_c(self,file):
         with open(file,"rb") as f:
+            #tam dim
+            d = f.read(struct.calcsize("i i"))
+            tam, self.dim = struct.unpack("i i", d)
+            #vet
+            if self.dim==0:
+                sz=len(np.ones(tam+1,np.uint64).tobytes())
+                vet = f.read(sz)
+                vet = np.frombuffer(vet,np.uint64)
+                
+            
+            
+            
             #id
+            
+            
             d = f.read(struct.calcsize("i"))
             tam2 = struct.unpack("i", d)[0]
             s = f.read(tam2)
@@ -127,11 +163,12 @@ class Data:
                     print("load " + str(i) + " of " + str(tam))
                     d= f.read(struct.calcsize("i i"))
                     nlin,ncol =struct.unpack("i i", d)
-                    data = np.ones((nlin,ncol),np.float32)
-                    for l in range(nlin):
-                        for c in range(ncol):
-                            d = f.read(struct.calcsize("f"))
-                            data[l,c] = struct.unpack("f", d)[0]
+                    sz = nlin*ncol
+                    data = np.ones(sz,np.float32)
+                    d= f.read(sz*struct.calcsize("f"))
+                    data = struct.unpack(str(sz)+"f", d)
+                    
+                    data.reshape((nlin, ncol))
                     self.data.append(data.tolist())
             else:
                 self.sizes = None
@@ -437,5 +474,21 @@ class Data:
             num_pos+=1
              
             
-               
-                
+    def get_train_validation_dataset(self,frac_train=0.80):
+        pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
+        neg = [i for i in range(len(self.id)) if self.pheno[i]==0]
+        np.random.shuffle(pos)
+        np.random.shuffle(neg)
+        aux_pos = int(frac_train*len(pos))
+        aux_neg = int(frac_train*len(neg))
+        train = pos[:aux_pos] + neg[:aux_neg]
+        train = np.sort(train)
+        val = pos[aux_pos:] + neg[aux_neg:]
+        val = np.sort(val)
+        train =self.AdDataset(self.data,self.pheno,train)
+        val =self.AdDataset(self.data,self.pheno,val)
+        return(train,val)
+                 
+
+
+
