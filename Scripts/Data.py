@@ -5,8 +5,7 @@
 # 0. IMPORT STATEMENTS 
 
 import pandas as pd
-#from sklearn.model_selection import train_test_split
-#from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 #from joblib import Parallel, delayed
 #import plotly.express as px
 #import umap
@@ -21,6 +20,10 @@ import ctypes
 import re
 import torch
 from torch.utils.data import Dataset
+from sklearn.model_selection import train_test_split
+from Tools import RF
+from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
+
 import shutil
 #import subprocess
 
@@ -106,6 +109,7 @@ class Data:
         self.sizes = None
         data = []
         index=0
+        lowcell = []
         for b in batch_f:
             files = os.listdir(folder_in + "/"+b)
             print(b)
@@ -155,10 +159,14 @@ class Data:
                             print("painel "+ self.painel[i] + " \t col " + my_cols[i])
                 
                 df = df[self.painel]
+                if len(df) < 1000:
+                    lowcell.append("Less than 1000 cells\t"+b + "\t"+ f + "\tnum of cells sample: " + str(len(df)))
                 self._save_data(index, df.to_numpy())
                 index+=1
         print("save meta")
         self._save_meta()
+        for f in lowcell:
+            print(f)
     
     def _save_meta(self):
         if not os.path.exists(self.data):
@@ -316,13 +324,17 @@ class Data:
             shutil.copyfile(src,dest)
 
         
-    def augmentation(self,factor):
+    def augmentation(self,factor,seed = 0):
+        np.random.seed(seed)
+        random.seed(seed)
         #balanciate
         pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
         neg = [i for i in range(len(self.id)) if self.pheno[i]==0]
         num_neg = len(neg)
         num_pos = len(pos)
         while(num_neg!=num_pos):
+            samp1 = None
+            samp2 = None
             if num_neg < num_pos:
                samp1 = neg[random.randint(0, len(neg))]
                samp2 = neg[random.randint(0, len(neg))]
@@ -343,11 +355,9 @@ class Data:
             np.random.shuffle(df2)
             df = np.concatenate((df1[:aux1], df2[:aux2]), axis=0)
             self.pheno.append(self.pheno[samp1])
-            
-            self.data.append(df) 
-            batch = self.batch[samp1]+self.batch[samp2]
+            batch = self.batch[samp1]+ "_"+self.batch[samp2]
             self.batch.append(batch)
-            self.map_batch[idd] = batch
+            self._save_data(len(self.id)-1, df)
         #aumentation
         fac = int(num_pos*factor)
         while(num_pos< fac):
@@ -366,10 +376,9 @@ class Data:
             np.random.shuffle(df2)
             df = np.concatenate((df1[:aux1], df2[:aux2]), axis=0)
             self.pheno.append(self.pheno[samp1])
-            self.data.append(df) 
-            batch = self.batch[samp1]+self.batch[samp2]
+            batch = self.batch[samp1]+"_"+self.batch[samp2]
             self.batch.append(batch)
-            self.map_batch[idd] = batch
+            self._save_data(len(self.id)-1, df)
             #pos
             samp1 = pos[random.randint(0, len(neg))]
             samp2 = pos[random.randint(0, len(neg))]
@@ -385,13 +394,15 @@ class Data:
             np.random.shuffle(df2)
             df = np.concatenate((df1[:aux1], df2[:aux2]), axis=0)
             self.pheno.append(self.pheno[samp1])
-            self.data.append(df) 
-            batch = self.batch[samp1]+self.batch[samp2]
+            batch = self.batch[samp1]+"_"+self.batch[samp2]
             self.batch.append(batch)
-            self.map_batch[idd] = batch
+            self._save_data(len(self.id)-1, df)
             num_pos+=1
+        self._save_meta()
             
-    def augmentation_by_batch(self,factor):
+    def augmentation_by_batch(self,factor,seed = 0):
+        np.random.seed(seed)
+        random.seed(seed)
         #balanciate
         print("balanciate")
         pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
@@ -434,11 +445,9 @@ class Data:
             np.random.shuffle(df2)
             df = np.concatenate((df1[:aux1], df2[:aux2]), axis=0)
             self.pheno.append(self.pheno[samp1])
-            
-            self.data.append(df) 
             batch = self.batch[samp1]
             self.batch.append(batch)
-            self.map_batch[idd] = batch
+            self._save_data(len(self.id)-1, df)
         #aumentation
         print("aumentation")
         fac = int(num_pos*factor)
@@ -465,7 +474,8 @@ class Data:
             self.data.append(df) 
             batch = self.batch[samp1]+self.batch[samp2]
             self.batch.append(batch)
-            self.map_batch[idd] = batch
+            self._save_data(len(self.id)-1, df)
+            
             #pos
             samp1 = pos[random.randint(0, len(neg))]
             samp2 = mapP[samp1][random.randint(0, len(mapP[samp1])-1)]
@@ -484,24 +494,78 @@ class Data:
             self.data.append(df) 
             batch = self.batch[samp1]
             self.batch.append(batch)
-            self.map_batch[idd] = batch
+            self._save_data(len(self.id)-1, df)
             num_pos+=1
+        self._save_meta()
              
+
+    
+    def _feature_inportance(self,num_cells=1000,cv = 5,n_jobs = 15,seed = 0):
+        np.random.seed(seed)
+        random.seed(seed)
+        neg = pd.DataFrame()
+        pos = pd.DataFrame()
+        print("sample data")
+        tam = len(self.id)
+        for i in range(tam):
+            print(str(i) + " of " + str(tam))
+            if self.pheno[i]==0:
+                neg = pd.concat([neg, pd.DataFrame(self._sample_data(i, num_cells))], axis=0)
+            else:
+                pos = pd.concat([pos, pd.DataFrame(self._sample_data(i, num_cells))], axis=0)
+        neg["y"] = 0
+        pos["y"] = 1
+        x = pd.concat([neg, pos], axis=0)
+        y = x["y"].copy()
+        x.drop('y', axis=1, inplace=True)
+        
+        
+        x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.10,stratify=y,shuffle=True,random_state=seed)
+        print("train model")
+        rf = RF(random_state=seed ,n_jobs = n_jobs)
+        rf.fit(x_train, y_train)
+        y_pred = rf.predict(x_test)
+        y_ppred = rf.predict_proba(x_test)[:,1]
+        mod = {}
+        mod["acuracy"] = accuracy_score(y_test,y_pred)
+        mod["b_acuracy"] = balanced_accuracy_score(y_test,y_pred)
+        mod["ROC"] = roc_auc_score(y_test,y_ppred)
+        mod["importance"] = pd.DataFrame({"mark":self.painel,"importance":rf.rf.feature_importances_})
+        mod["y_t"] = y_test
+        mod["y_t_pred"] = y_pred
+        mod["y_t_ppred"] = y_ppred
+        
+        mod["par"] = rf.par
+        rf.fit(x,y)
+        mod["x"] = x
+        mod["y"] = y
+        mod["y_pred"] = rf.predict_proba(x)[:,1]
+        mod["painel"] = self.painel
+        return mod
             
-    def get_train_validation_dataset(self,frac_train=0.80):
-        pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
-        neg = [i for i in range(len(self.id)) if self.pheno[i]==0]
-        np.random.shuffle(pos)
-        np.random.shuffle(neg)
-        aux_pos = int(frac_train*len(pos))
-        aux_neg = int(frac_train*len(neg))
-        train = pos[:aux_pos] + neg[:aux_neg]
-        train = np.sort(train)
-        val = pos[aux_pos:] + neg[aux_neg:]
-        val = np.sort(val)
-        train =self.AdDataset(self.data,self.pheno,train)
-        val =self.AdDataset(self.data,self.pheno,val)
-        return(train,val)
+    def standard_by_batch(self,num_cells=1000):
+        u_batch = np.unique(self.batch)
+        for b in u_batch:
+            print(b)
+            idd = []
+            for i in range(len(self.id)):
+                if b==self.batch[i]:
+                    idd.append(i)
+            df = self._sample_data(idd[0], num_cells)
+            tam = len(idd)
+            print("generate sample")
+            for i in range(1,tam):
+                print(str(i)+ " of "+str(tam))
+                df = np.concatenate((df, self._sample_data(idd[i], num_cells)), axis=0)
+            scaler = StandardScaler()
+            scaler.fit(df)
+            print("standard sample")
+            for i in range(tam):
+                print(str(i)+ " of "+str(tam))
+                df = self._get_data(idd[i])[0]
+                df = np.array(scaler.transform(df))
+                self._save_data(idd[i], df)
+                
                  
 
 
