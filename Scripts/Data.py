@@ -565,8 +565,3 @@ class Data:
                 df = self._get_data(idd[i])[0]
                 df = np.array(scaler.transform(df))
                 self._save_data(idd[i], df)
-                
-                 
-
-
-
