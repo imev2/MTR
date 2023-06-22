@@ -32,21 +32,20 @@ import shutil
 
 class Data:
     class AdDataset(Dataset):
-        def __init__(self,x,y,index):
-            self.x = x
-            self.y=y
-            self.index = index
+        def __init__(self,data):
+            
+             self.data = data
     
         def __len__(self):
             ## Size of whole data set
-            return len(self.index)
+            return len(self.data.id)
     
         def __getitem__(self, idx):
-            data = torch.from_numpy(self.x[self.index[idx]])
-            label = self.y[self.index[idx]]  # Get the class label for the corresponding file WATCH OUT FOR FLOAT --> MAY CAUSE ERRORS BECAUSE DATA NOT IN SAME DTYPE AS CLASS_LABEL
-            #dimensions = data.shape  # Get the dimensions of the data
-    
-            return data, label
+            data,y = self.data._get_data(idx)
+            data = torch.from_numpy(data)
+            #y =  torch.from_numpy(np.array(y)) # Get the class label for the corresponding file WATCH OUT FOR FLOAT --> MAY CAUSE ERRORS BECAUSE DATA NOT IN SAME DTYPE AS CLASS_LABEL
+            #dimensions = data.shape  # Get the dimensions of the data  
+            return data, y
 
     def __init__(self,seed = 123571113):
         self.id = None
@@ -256,7 +255,9 @@ class Data:
     
 
             
-    def _sample_data(self,index ,num_lin):
+    def _sample_data(self,index ,num_lin,seed=0):
+        np.random.seed(seed)
+        random.seed(seed)
         df,y = self._get_data(index)
         if num_lin > len(df):
             print("sample " + str(index) + " num cells large " + str(len(df)))
@@ -328,26 +329,32 @@ class Data:
         np.random.seed(seed)
         random.seed(seed)
         #balanciate
+        print("balanciate")
         pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
         neg = [i for i in range(len(self.id)) if self.pheno[i]==0]
         num_neg = len(neg)
         num_pos = len(pos)
+        i=1
+        tot = np.abs(num_neg-num_pos)
         while(num_neg!=num_pos):
+            
+            print(str(i) + " of " + str(tot))
+            i = i+1
             samp1 = None
             samp2 = None
             if num_neg < num_pos:
-               samp1 = neg[random.randint(0, len(neg))]
-               samp2 = neg[random.randint(0, len(neg))]
+               samp1 = neg[random.randint(0, len(neg)-1)]
+               samp2 = neg[random.randint(0, len(neg)-1)]
                num_neg+=1
             else:
-               samp1 = pos[random.randint(0, len(neg))]
-               samp2 = pos[random.randint(0, len(neg))]
+               samp1 = pos[random.randint(0, len(pos)-1)]
+               samp2 = pos[random.randint(0, len(pos)-1)]
                num_pos+=1
             split = random.uniform(0, 1)
             idd = self.id[samp1]+self.id[samp2]
             self.id.append(idd)
-            df1 = self.data[samp1]
-            df2 = self.data[samp2]
+            df1 = self._get_data(samp1)[0]
+            df2 = self._get_data(samp2)[0]
             n_lin = np.min((len(df1),len(df2)))
             aux1 = int(n_lin*split)
             aux2 = n_lin -aux1
@@ -359,16 +366,18 @@ class Data:
             self.batch.append(batch)
             self._save_data(len(self.id)-1, df)
         #aumentation
+        print("aumentation")
         fac = int(num_pos*factor)
         while(num_pos< fac):
+            print(str(num_pos) + " of " + str(fac))
             #neg
-            samp1 = neg[random.randint(0, len(neg))]
-            samp2 = neg[random.randint(0, len(neg))]
+            samp1 = neg[random.randint(0, len(neg)-1)]
+            samp2 = neg[random.randint(0, len(neg)-1)]
             split = random.uniform(0, 1)
             idd = self.id[samp1]+self.id[samp2]
             self.id.append(idd)
-            df1 = self.data[samp1]
-            df2 = self.data[samp2]
+            df1 = self._get_data(samp1)[0]
+            df2 = self._get_data(samp2)[0]
             n_lin = np.min((len(df1),len(df2)))
             aux1 = int(n_lin*split)
             aux2 = n_lin -aux1
@@ -380,14 +389,14 @@ class Data:
             self.batch.append(batch)
             self._save_data(len(self.id)-1, df)
             #pos
-            samp1 = pos[random.randint(0, len(neg))]
-            samp2 = pos[random.randint(0, len(neg))]
+            samp1 = pos[random.randint(0, len(pos)-1)]
+            samp2 = pos[random.randint(0, len(pos)-1)]
             split = random.uniform(0, 1)
             idd = self.id[samp1]+self.id[samp2]
             self.id.append(idd)
-            df1 = self.data[samp1]
-            df2 = self.data[samp2]
-            n_lin = np.min(len(df1),len(df2))
+            df1 = self._get_data(samp1)[0]
+            df2 = self._get_data(samp2)[0]
+            n_lin = np.min((len(df1),len(df2)))
             aux1 = int(n_lin*split)
             aux2 = n_lin -aux1
             np.random.shuffle(df1)
@@ -451,11 +460,8 @@ class Data:
         #aumentation
         print("aumentation")
         fac = int(num_pos*factor)
-        diff = abs(fac-num_pos)
-        i=1
         while(num_pos< fac):
-            print(str(i), " out of ", str(diff))
-            i+=1
+            print(str(num_pos), " out of ", str(fac))
             #neg
             samp1 = neg[random.randint(0, len(neg))]
             samp2 = mapN[samp1][random.randint(0, len(mapN[samp1])-1)]
@@ -567,6 +573,33 @@ class Data:
                 self._save_data(idd[i], df)
                 
                  
-
+    def sample_all_cells(self,numcells,seed):
+        
+        tam = len(self.id)
+        print("sample cells")
+        for i in range(tam):
+            print(str(i)+" of "+str(tam))
+            seed +=1
+            df =self._sample_data(i,numcells,seed=seed)
+            self._save_data(i, df)
+    
+    def get_dataload(self,fold_train,fold_test,perc_train= 0.7,numcells=1000,factor=10,seed=0):
+        self.split_data_test(fold_train,fold_test,perc_train = 0.7,seed=123571113)
+        train = Data()
+        train.load(fold_train)
+        train.augmentation(factor,seed+1)
+        train.load(fold_train)
+        train.sample_all_cells(numcells,seed=seed+2)
+        
+        test = Data()
+        test.load(fold_test)
+        test.sample_all_cells(numcells,seed=seed+2)
+        
+        
+        return self.AdDataset(train),self.AdDataset(test)
+        
+            
+            
+        
 
 
