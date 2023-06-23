@@ -42,7 +42,7 @@ class Data:
     
         def __getitem__(self, idx):
             data,y = self.data._get_data(idx)
-            data = torch.from_numpy(data)
+            data = torch.from_numpy(data.flatten())
             #y =  torch.from_numpy(np.array(y)) # Get the class label for the corresponding file WATCH OUT FOR FLOAT --> MAY CAUSE ERRORS BECAUSE DATA NOT IN SAME DTYPE AS CLASS_LABEL
             #dimensions = data.shape  # Get the dimensions of the data  
             return data, y
@@ -244,8 +244,26 @@ class Data:
                 data = struct.unpack(str(sz)+"f", d)
                 data = np.array(data)
                 data = data.reshape((nlin, ncol))
-                return data,y 
+                return data,y
             
+    def readfile(self, file):
+        with open(file,"rb") as f:
+                d= f.read(12)
+                y,nlin,ncol =struct.unpack("i i i", d)
+                sz = nlin*ncol
+                d= f.read(sz*struct.calcsize("f"))
+                data = struct.unpack(str(sz)+"f", d)
+                data = np.array(data)
+                data = data.reshape((nlin, ncol))
+                return data,y
+    def writefile(self,file,data,y):
+        with open(file,"wb") as f:
+            nlin = len(data)
+            ncol = len(data[0])
+            d = struct.pack("i i i", y,nlin,ncol)
+            f.write(d)
+            df = data.flatten().astype(np.float32).tobytes()
+            f.write(df)    
     def _get_pheno(self,index):
         file = self.data + self.id[index] + ".dat"
         with open(file,"rb") as f:
@@ -584,22 +602,29 @@ class Data:
             self._save_data(i, df)
     
     def get_dataload(self,fold_train,fold_test,perc_train= 0.7,numcells=1000,factor=10,seed=0):
-        self.split_data_test(fold_train,fold_test,perc_train = 0.7,seed=123571113)
+        #self.split_data_test(fold_train,fold_test,perc_train = 0.7,seed=123571113)
         train = Data()
+        #train.load(fold_train)
+        #train.augmentation(factor,seed+1)
         train.load(fold_train)
-        train.augmentation(factor,seed+1)
-        train.load(fold_train)
-        train.sample_all_cells(numcells,seed=seed+2)
+        #train.sample_all_cells(numcells,seed=seed+2)
         
         test = Data()
         test.load(fold_test)
-        test.sample_all_cells(numcells,seed=seed+2)
+        #test.sample_all_cells(numcells,seed=seed+2)
         
         
         return self.AdDataset(train),self.AdDataset(test)
         
             
-            
+    def umap_space(self,num_cells=1000):
+         df = self._sample_data(0, num_cells)
+         tam = len(self.id)
+         print("generate sample")
+         for i in range(1,tam):
+             print(str(i)+ " of "+str(tam))
+             df = np.concatenate((df, self._sample_data(i, num_cells)), axis=0)
+         return df.copy()
         
 
 
