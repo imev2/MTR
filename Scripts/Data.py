@@ -16,7 +16,6 @@ import os
 import random
 import numpy as np
 import struct
-import ctypes
 import re
 import torch
 from torch.utils.data import Dataset
@@ -89,13 +88,13 @@ class Data:
         self.pheno = []
         tam = len(self.id)
         for i in range(tam):
-            print(str(i) + " of " + str(tam))
+            #print(str(i) + " of " + str(tam))
             self.pheno.append(self._get_pheno(i))
             
         
         
         
-    def start_transform(self,folder_in,folder_out):
+    def start(self,folder_in,folder_out):
         batch_f = os.listdir(folder_in)
         print(batch_f)
         self.id = []
@@ -106,7 +105,7 @@ class Data:
         self.map_batch = {}
         self.dim = 0
         self.sizes = None
-        data = []
+        #data = []
         index=0
         lowcell = []
         for b in batch_f:
@@ -453,7 +452,7 @@ class Data:
             print(str(i), " out of ", str(diff))
             i+=1
             if num_neg < num_pos:
-               samp1 = neg[random.randint(0, len(neg))]
+               samp1 = neg[random.randint(0, len(neg)-1)]
                samp2 = mapN[samp1][random.randint(0, len(mapN[samp1])-1)]
                num_neg+=1
             else:
@@ -501,7 +500,7 @@ class Data:
             self._save_data(len(self.id)-1, df)
             
             #pos
-            samp1 = pos[random.randint(0, len(neg))]
+            samp1 = pos[random.randint(0, len(neg)-1)]
             samp2 = mapP[samp1][random.randint(0, len(mapP[samp1])-1)]
             split = random.uniform(0, 1)
             idd = self.id[samp1]+self.id[samp2]
@@ -566,30 +565,25 @@ class Data:
         mod["y_pred"] = rf.predict_proba(x)[:,1]
         mod["painel"] = self.painel
         return mod
-            
-    def standard_by_batch(self,num_cells=1000):
-        u_batch = np.unique(self.batch)
-        for b in u_batch:
-            print(b)
-            idd = []
-            for i in range(len(self.id)):
-                if b==self.batch[i]:
-                    idd.append(i)
-            df = self._sample_data(idd[0], num_cells)
-            tam = len(idd)
-            print("generate sample")
-            for i in range(1,tam):
-                print(str(i)+ " of "+str(tam))
-                df = np.concatenate((df, self._sample_data(idd[i], num_cells)), axis=0)
-            scaler = StandardScaler()
-            scaler.fit(df)
-            print("standard sample")
-            for i in range(tam):
-                print(str(i)+ " of "+str(tam))
-                df = self._get_data(idd[i])[0]
-                df = np.array(scaler.transform(df))
-                self._save_data(idd[i], df)
-                
+    
+    def _oversample(self,df,y,seed=0):
+        np.random.seed(seed)
+        random.seed(seed)
+        neg = [i for i in range(len(y)) if y[i]==0]
+        pos = [i for i in range(len(y)) if y[i]==1]
+        s_neg = len(neg)
+        s_pos = len(pos)
+        idd = []
+        while s_neg !=s_pos:
+            if s_neg>s_pos:
+                idd.append(pos[random.randint(0, len(pos)-1)])
+                s_pos+=1
+            else:
+                idd.append(neg[random.randint(0, len(neg)-1)])
+                s_neg+=1
+        df1 = np.take(df, idd, axis=0)
+        df = np.concatenate((df, df1), axis=0)
+        return df
                  
     def sample_all_cells(self,numcells,seed):
         
@@ -602,21 +596,12 @@ class Data:
             self._save_data(i, df)
     
     def get_dataload(self,fold_train,fold_test,perc_train= 0.7,numcells=1000,factor=10,seed=0):
-        #self.split_data_test(fold_train,fold_test,perc_train = 0.7,seed=123571113)
         train = Data()
-        #train.load(fold_train)
-        #train.augmentation(factor,seed+1)
         train.load(fold_train)
-        #train.sample_all_cells(numcells,seed=seed+2)
-        
         test = Data()
-        test.load(fold_test)
-        #test.sample_all_cells(numcells,seed=seed+2)
-        
-        
+        test.load(fold_test)        
         return self.AdDataset(train),self.AdDataset(test)
-        
-            
+                  
     def umap_space(self,num_cells=1000):
          df = self._sample_data(0, num_cells)
          tam = len(self.id)
@@ -627,5 +612,107 @@ class Data:
          return df.copy()
         
 
-
+class Standard_tranformer:
+    def __init__(self,by_batch=True,seed=0,num_cells=1000):
+        self.by_batch=by_batch
+        self.batch = None
+        self.mean = None
+        self.sd = None
+        self.num_cells=num_cells
+        self.seed = seed
+        np.random.seed(seed)
+        random.seed(seed)
+    def fit(self,fold):
+        data = Data()
+        data.load(fold)
+        if self.by_batch:
+            self.batch = []
+            self.sd = []
+            self.mean = []
+            u_batch = np.unique(data.batch)
+            for b in u_batch:
+                self.batch.append(b)
+                print(b)
+                idd = []
+                yd = []
+                for i in range(len(data.id)):
+                    if b==data.batch[i]:
+                        idd.append(i)
+                        yd.append(i)
+                df = data._sample_data(idd[0], self.num_cells)
+                df_y = np.repeat(data.pheno[yd[0]], self.num_cells)
+                tam = len(idd)
+                print("generate sample")
+                for i in range(1,tam):
+                    print(str(i)+ " of "+str(tam))
+                    df = np.concatenate((df, data._sample_data(idd[i], self.num_cells)), axis=0)
+                    df_y = np.concatenate((df_y,np.repeat(data.pheno[yd[i]], self.num_cells)))
+                df = data._oversample(df, df_y,self.seed+1)
+                scaler = StandardScaler()
+                scaler.fit(df)
+                self.sd.append(scaler.scale_)
+                self.mean.append(scaler.mean_)
+        else:
+            tam = len(data.id)
+            df = data._sample_data(0, self.num_cells)
+            print("generate sample")
+            for i in range(1,tam):
+                print(str(i)+ " of "+str(tam))
+                df = np.concatenate((df, self._sample_data(i, self.num_cells)), axis=0)
+            scaler = StandardScaler()
+            scaler.fit(df)
+            self.sd = scaler.scale_
+            self.mean = scaler.mean_
+            
+    def transform(self,folder):
+        data = Data()
+        data.load(folder)
+        if self.by_batch:
+            scaler = StandardScaler()
+            for b in range(len(self.batch)):
+                print(self.batch[b])
+                tam = len(data.id)
+                for i in range(tam):
+                    
+                    if self.batch[b]==data.batch[i]:
+                        print(str(i))
+                        scaler.mean_=self.mean[b]
+                        scaler.scale_ = self.sd[b]
+                        df = data._get_data(i)[0]                
+                        df = np.array(scaler.transform(df))
+                        data._save_data(i, df)
+        else:
+            scaler = StandardScaler()
+            tam = len(data.id)
+            for i in range(tam):
+                print(str(i)+ " of "+str(tam))
+                df = data._get_data(i)[0]
+                df = np.array(scaler.transform(df))
+                data._save_data(i, df)
+    
+    def save(self,file):
+        f = open(file,"wb")
+        pk.dump(self,f)
+        f.close()
+    
+    def load(self,file):
+        f = open(file,"rb")
+        a = pk.load(f)
+        f.close()
+        self.mean = a.mean
+        self.sd = a.sd
+        self.num_cells = a.num_cells
+        self.batch = a.batch
+        
+    
+class Log_transformer():
+    def fit_transform(self,folder):
+        data = Data()
+        data.load(folder)
+        tam = len(data.id)
+        for i in range(tam):
+            print(str(i)+" of "+str(tam))
+            df = data._get_data(i)[0]
+            df = np.log1p(df)
+            data._save_data(i, df)
 

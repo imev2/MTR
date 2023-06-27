@@ -5,14 +5,67 @@ Created on Mon Jun 12 15:07:46 2023
 @author: rafae
 """
 
-from Data import Data
+from Data import Data,Log_transformer,Standard_tranformer
 import pickle as pk
 
+#generate data ST1
 seed = 1235711
 data = Data()
+#data.start("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
 
-#data.start_transform("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
-#data.load("C:/repos/MTR/data/ST1_train_val")
+
+# #split test group
+# data.load("C:/repos/MTR/data/ST1_base")
+# data.split_data_test("C:/repos/MTR/data/ST1_train_val", "C:/repos/MTR/data/ST1_test",perc_train = 0.9,seed=seed+1)
+
+# #split train val group
+# data.load("C:/repos/MTR/data/ST1_train_val")
+# data.split_data_test("C:/repos/MTR/data/ST1_train", "C:/repos/MTR/data/ST1_val",perc_train = 0.8,seed=seed+1)
+
+# #log transformation
+# data.load("C:/repos/MTR/data/ST1_train")
+# data.save("C:/repos/MTR/data/ST1_train_log")
+# logt = Log_transformer()
+# logt.fit_transform("C:/repos/MTR/data/ST1_train_log")
+# data.load("C:/repos/MTR/data/ST1_val")
+# data.save("C:/repos/MTR/data/ST1_val_log")
+# data.load("C:/repos/MTR/data/ST1_test")
+# data.save("C:/repos/MTR/data/ST1_test_log")
+# logt.fit_transform("C:/repos/MTR/data/ST1_test_log")
+
+
+# #standard fit
+# scaler = Standard_tranformer(by_batch=True,seed=seed+2,num_cells=1000)
+# scaler.fit("C:/repos/MTR/data/ST1_train")
+# scaler.save("C:/repos/MTR/data/scaler_no_log")
+# scaler = Standard_tranformer(by_batch=True,seed=seed+2,num_cells=1000)
+# scaler.fit("C:/repos/MTR/data/ST1_train_log")
+# scaler.save("C:/repos/MTR/data/scaler_log")
+
+# #standard transform
+# scaler = Standard_tranformer()
+# scaler.load("C:/repos/MTR/data/scaler_no_log")
+# scaler.transform("C:/repos/MTR/data/ST1_train")
+# scaler.transform("C:/repos/MTR/data/ST1_val")
+# scaler.transform("C:/repos/MTR/data/ST1_test")
+# scaler = Standard_tranformer()
+# scaler.load("C:/repos/MTR/data/scaler_log")
+# scaler.transform("C:/repos/MTR/data/ST1_train_log")
+# scaler.transform("C:/repos/MTR/data/ST1_val_log")
+# scaler.transform("C:/repos/MTR/data/ST1_test_log")
+
+
+#augment
+data.load("C:/repos/MTR/data/ST1_train")
+data.save("C:/repos/MTR/data/ST1_train_augment")
+data.load("C:/repos/MTR/data/ST1_train_augment")
+data.augmentation(10,seed=seed+3)
+
+data.load("C:/repos/MTR/data/ST1_train_log")
+data.save("C:/repos/MTR/data/ST1_train_augment_log")
+data.load("C:/repos/MTR/data/ST1_train_augment_log")
+data.augmentation(10,seed=seed+3)
+
 #data.save("C:/repos/MTR/data/ST1__train_standard")
 #data.load("C:/repos/MTR/data/ST1_train_val")
 #data.save("C:/repos/MTR/data/umap_no_stdar")
@@ -26,9 +79,9 @@ data = Data()
 # data.load("C:/repos/MTR/data/umap_no_stdar")
 # df = data.umap_space()
 # data.writefile("C:/repos/MTR/umap_no_stdar.dat", df, 1)
-data.load("C:/repos/MTR/data/umap_stdar")
-df = data.umap_space()
-data.writefile("C:/repos/MTR/umap_stdar.dat", df, 1)
+#data.load("C:/repos/MTR/data/umap_stdar")
+#df = data.umap_space()
+#data.writefile("C:/repos/MTR/umap_stdar.dat", df, 1)
 #data.load("C:/repos/MTR/data/ST1__train_standard")
 #data.save("C:/repos/MTR/data/ST1__train_argument")
 #data.load("C:/repos/MTR/data/ST1__train_argument")
