@@ -11,6 +11,8 @@ import pickle as pk
 #generate data ST1
 seed = 1235711
 data = Data()
+data.load("C:/repos/MTR/data/ST1_base")
+df,y = data.get_poll_cells(seed=seed)
 #data.start("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
 
 
@@ -56,15 +58,17 @@ data = Data()
 
 
 #augment
-data.load("C:/repos/MTR/data/ST1_train")
-data.save("C:/repos/MTR/data/ST1_train_augment")
-data.load("C:/repos/MTR/data/ST1_train_augment")
-data.augmentation(10,seed=seed+3)
+#data.load("C:/repos/MTR/data/ST1_train")
+#data.save("C:/repos/MTR/data/ST1_train_augment")
+#data.load("C:/repos/MTR/data/ST1_train_augment")
+#data.augmentation(10,seed=seed+3)
 
-data.load("C:/repos/MTR/data/ST1_train_log")
-data.save("C:/repos/MTR/data/ST1_train_augment_log")
-data.load("C:/repos/MTR/data/ST1_train_augment_log")
-data.augmentation(10,seed=seed+3)
+#data.load("C:/repos/MTR/data/ST1_train_log")
+#data.save("C:/repos/MTR/data/ST1_train_augment_log")
+#data.load("C:/repos/MTR/data/ST1_train_augment_log")
+#data.augmentation(10,seed=seed+3)
+
+
 
 #data.save("C:/repos/MTR/data/ST1__train_standard")
 #data.load("C:/repos/MTR/data/ST1_train_val")
