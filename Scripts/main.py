@@ -12,16 +12,14 @@ import os
 seed = 1235711
 fold = os.getcwd()
 data = Data()
+
 # data.load(fold + "/data/ST1_base")
 # print(data._get_data(0))
 # data.save("Scripts/data/ST1_base_log")
 # df,y = data.get_poll_cells(seed=seed)
 # data.start("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
-
-
 # #split test group
 # data.split_data_test(fold+"/data/ST1_base_train_val", fold+"/data/ST1_base_test",perc_train = 0.9,seed=seed+1)
-
 # #split train val group
 #data.load("C:/repos/MTR/data/ST1/ST1_train_val")
 #data.split_data_test("C:/repos/MTR/data/ST1/ST1_train", "C:/repos/MTR/data/ST1/ST1_val",perc_train = 0.8,seed=seed+1)
@@ -49,7 +47,6 @@ data = Data()
 # logt.fit_transform(fold + "/data/ST1_base_test_log")
 
 # STANDARD FITS
-
 #standard fit - batch
 # scaler = Standard_tranformer(by_batch=True,seed=seed+2,num_cells=1000)
 # scaler.fit(fold + "/data/ST1_base_train_val")
@@ -146,7 +143,6 @@ data.load(fold + "/data/ST1_base_train_val_log_scaled")
 df, df_y = data.get_poll_cells()
 # df["df_y"] = df_y
 # df.to.csv(fold + "/data/ST1_base_train_val_log_scaled_pool")
-    
 
 #data.save("C:/repos/MTR/data/ST1__train_standard")
 #data.load("C:/repos/MTR/data/ST1_train_val")
