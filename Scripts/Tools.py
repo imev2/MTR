@@ -526,10 +526,10 @@ class RF(ClassifierMixin,BaseEstimator):
         self.n_jobs = n_jobs
         self.par = None
 
-    def fit(self, x, y):
+    def fit(self, x, y, verbose=1):
         comp = get_hyper_RF(x,y,seed=self.random_state,n_jobs = self.n_jobs)
         self.par = comp
-        rf = RandomForestClassifier(n_estimators=4001,max_features=comp["max_features"],max_depth=comp["max_depth"],random_state=self.random_state,class_weight="balanced_subsample",n_jobs=self.n_jobs,oob_score=True,verbose=1)
+        rf = RandomForestClassifier(n_estimators=4001,max_features=comp["max_features"],max_depth=comp["max_depth"],random_state=self.random_state,class_weight="balanced_subsample",n_jobs=self.n_jobs,oob_score=True,verbose=verbose)
         rf.fit(x, y)
         self.rf = rf
         return self
