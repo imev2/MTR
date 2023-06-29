@@ -8,6 +8,10 @@ Created on Mon Jun 12 15:07:46 2023
 from Data import Data,Log_transformer,Standard_tranformer
 import pickle as pk
 import os
+import numpy as np
+import pandas as pd
+from Tools import RF
+from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
 #generate data ST1
 seed = 1235711
 fold = os.getcwd()
@@ -116,33 +120,70 @@ data = Data()
 
 # CELL POOL - TODO, SAVE CSV
 # batch - no log
-# QUESTION --> do we need to do this for test - think no
+# train
+# data.load(fold + "/data/ST1_base_train_val_batch")
+# df_batch_train, df_y_batch_train = data.get_poll_cells()
+# df_y_batch_train = np.reshape(df_y_batch_train, (276000, 1))
+# df_batch_train_try = np.hstack((df_batch_train, df_y_batch_train))
+# df = pd.DataFrame(df_batch_train_try)
+# df.to_csv(fold + "/data/pooled/ST1_base_train_val_batch_pool")
+# test 
+# data.load(fold + "/data/ST1_base_test_batch")
+# df_batch_test, df_y_batch_test = data.get_poll_cells()
+# df_y_batch_test = np.reshape(df_y_batch_test, (32000, 1))
+# df_batch_test_try = np.hstack((df_batch_test, df_y_batch_test))
+# df = pd.DataFrame(df_batch_test_try)
+# df.to_csv(fold + "/data/pooled/ST1_base_test_batch_pool")
 
-data.load(fold + "/data/ST1_base_train_val_batch")
-df, df_y = data.get_poll_cells()
-# df["df_y"] = df_y
-# df.to.csv(fold + "/data/ST1_base_train_val_batch_pool")
+
+# data = Data()
+# data.load(fold + "/data/ST1_base_train_val_batch")
+# df_batch_train, df_y_batch_train = data.get_poll_cells()
+# df_batch_train["df_y"] = df_y_batch_train
 
 # batch - log
-data = Data()
-data.load(fold + "/data/ST1_base_train_val_log_batch")
-df, df_y = data.get_poll_cells()
+# data = Data()
+# data.load(fold + "/data/ST1_base_train_val_log_batch")
+# df, df_y = data.get_poll_cells()
 # df["df_y"] = df_y
 # df.to.csv(fold + "/data/ST1_base_train_val_log_batch_pool")
 
 # no batch - no log
-data = Data()
-data.load(fold + "/data/ST1_base_train_val_scaled")
-df, df_y = data.get_poll_cells()
+# data = Data()
+# data.load(fold + "/data/ST1_base_train_val_scaled")
+# df, df_y = data.get_poll_cells()
 # df["df_y"] = df_y
 # df.to.csv(fold + "/data/ST1_base_train_val_scaled_pool")
 
 # # no batch - log
-data = Data()
-data.load(fold + "/data/ST1_base_train_val_log_scaled")
-df, df_y = data.get_poll_cells()
+# data = Data()
+# data.load(fold + "/data/ST1_base_train_val_log_scaled")
+# df, df_y = data.get_poll_cells()
 # df["df_y"] = df_y
 # df.to.csv(fold + "/data/ST1_base_train_val_log_scaled_pool")
+
+# FEATURE SELECTION 
+# batch - no log
+rf = RF(random_state=0 ,n_jobs = 15)
+x_train = df_batch_train
+y_train = df_y_batch_train.reshape(276000,) # TODO Fix dimensions above
+rf.fit(x_train, y_train, verbose=2)
+
+x_test = df_batch_test
+y_test = df_y_batch_test.reshape(32000,) # TODO Fix dimensions above
+y_pred = rf.predict(x_test)
+y_ppred = rf.predict_proba(x_test)[:,1]
+
+
+mod = {}
+mod["acuracy"] = accuracy_score(y_test,y_pred)
+mod["b_acuracy"] = balanced_accuracy_score(y_test,y_pred)
+mod["ROC"] = roc_auc_score(y_test,y_ppred)
+
+# mod = df._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1) 
+# file = open(fold+"data/rf_batch.dat","wb")
+# pk.dump(mod, file)
+# file.close()
 
 #data.save("C:/repos/MTR/data/ST1__train_standard")
 #data.load("C:/repos/MTR/data/ST1_train_val")
@@ -181,6 +222,7 @@ df, df_y = data.get_poll_cells()
 # file.close()
 #split
 #data.split_data_test("C:/repos/MTR/data/ST1_train_val", "C:/repos/MTR/data/ST1_test",perc_train=0.8,seed = seed)
+
 #feature selection
 #data.load("C:/repos/MTR/data/ST1_train_val")
 #mod = data._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1)
