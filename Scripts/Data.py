@@ -26,9 +26,6 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_scor
 import shutil
 #import subprocess
 
-
-
-
 class Data:
     class AdDataset(Dataset):
         def __init__(self,data):
@@ -221,6 +218,8 @@ class Data:
             meta["size"] = size
             return meta
             
+
+            
     def _save_data(self,index,data):
         file = self.data + self.id[index] + ".dat"
         with open(file,"wb") as f:
@@ -287,6 +286,18 @@ class Data:
     
     
                 
+    def get_poll_cells(self,balanciate=True,num_cells=1000,seed = 0):
+        df = self._sample_data(0,num_cells,seed=seed)
+        df_y = np.repeat(self.pheno[0], num_cells)
+        tam = len(self.id)
+        print("generate sample")
+        for i in range(1,tam):
+            print(str(i)+ " of "+str(tam))
+            df = np.concatenate((df, self._sample_data(i,num_cells,seed=seed+i)), axis=0)
+            df_y = np.concatenate((df_y,np.repeat(self.pheno[i], num_cells)))
+        if balanciate:
+            df,df_y = self._oversample(df, df_y,seed+11)
+        return(df,df_y)
         
             
     def split_data_test(self,fold_train,fold_test,perc_train = 0.7,seed=123571113):
@@ -574,16 +585,21 @@ class Data:
         s_neg = len(neg)
         s_pos = len(pos)
         idd = []
+        y_n = []
         while s_neg !=s_pos:
             if s_neg>s_pos:
                 idd.append(pos[random.randint(0, len(pos)-1)])
+                y_n.append(1)
                 s_pos+=1
             else:
                 idd.append(neg[random.randint(0, len(neg)-1)])
+                y_n.append(0)
                 s_neg+=1
         df1 = np.take(df, idd, axis=0)
         df = np.concatenate((df, df1), axis=0)
-        return df
+        y_n = list(y)+y_n
+        y_n = np.array(y_n)
+        return df,y_n
                  
     def sample_all_cells(self,numcells,seed):
         
@@ -639,26 +655,30 @@ class Standard_tranformer:
                     if b==data.batch[i]:
                         idd.append(i)
                         yd.append(i)
-                df = data._sample_data(idd[0], self.num_cells)
+                df = data._sample_data(idd[0], self.num_cells,self.seed)
+                self.seed+=1
                 df_y = np.repeat(data.pheno[yd[0]], self.num_cells)
                 tam = len(idd)
                 print("generate sample")
                 for i in range(1,tam):
                     print(str(i)+ " of "+str(tam))
-                    df = np.concatenate((df, data._sample_data(idd[i], self.num_cells)), axis=0)
+                    df = np.concatenate(df, data._sample_data(idd[i], self.num_cells,self.seed), axis=0)
+                    self.seed+=1
                     df_y = np.concatenate((df_y,np.repeat(data.pheno[yd[i]], self.num_cells)))
-                df = data._oversample(df, df_y,self.seed+1)
+                df = data._oversample(df, df_y,self.seed+1)[0]
                 scaler = StandardScaler()
                 scaler.fit(df)
                 self.sd.append(scaler.scale_)
                 self.mean.append(scaler.mean_)
         else:
             tam = len(data.id)
-            df = data._sample_data(0, self.num_cells)
+            self.seed+=1
+            df = data._sample_data(0, self.num_cells,seed=self.seed)
             print("generate sample")
             for i in range(1,tam):
                 print(str(i)+ " of "+str(tam))
-                df = np.concatenate((df, self._sample_data(i, self.num_cells)), axis=0)
+                self.seed+=1
+                df = np.concatenate((df, data._sample_data(i, self.num_cells,self.seed)), axis=0)
             scaler = StandardScaler()
             scaler.fit(df)
             self.sd = scaler.scale_
@@ -685,6 +705,8 @@ class Standard_tranformer:
             scaler = StandardScaler()
             tam = len(data.id)
             for i in range(tam):
+                scaler.mean_=self.mean
+                scaler.scale_ = self.sd
                 print(str(i)+ " of "+str(tam))
                 df = data._get_data(i)[0]
                 df = np.array(scaler.transform(df))
@@ -703,6 +725,7 @@ class Standard_tranformer:
         self.sd = a.sd
         self.num_cells = a.num_cells
         self.batch = a.batch
+        self.by_batch=a.by_batch
         
     
 class Log_transformer():
