@@ -7,55 +7,101 @@ Created on Mon Jun 12 15:07:46 2023
 
 from Data import Data,Log_transformer,Standard_tranformer
 import pickle as pk
-
+import os
 #generate data ST1
 seed = 1235711
+fold = os.getcwd()
 data = Data()
-#data.load("C:/repos/MTR/data/ST1/ST1_base")
-#df,y = data.get_poll_cells(seed=seed)
-#data.start("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
 
-
+# data.load(fold + "/data/ST1_base")
+# print(data._get_data(0))
+# data.save("Scripts/data/ST1_base_log")
+# df,y = data.get_poll_cells(seed=seed)
+# data.start("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
 # #split test group
-#data.split_data_test("C:/repos/MTR/data/ST1/ST1_train_val", "C:/repos/MTR/data/ST1/ST1_test",perc_train = 0.9,seed=seed+1)
-
+# data.split_data_test(fold+"/data/ST1_base_train_val", fold+"/data/ST1_base_test",perc_train = 0.9,seed=seed+1)
 # #split train val group
 #data.load("C:/repos/MTR/data/ST1/ST1_train_val")
 #data.split_data_test("C:/repos/MTR/data/ST1/ST1_train", "C:/repos/MTR/data/ST1/ST1_val",perc_train = 0.8,seed=seed+1)
 
-# #log transformation
-#data.load("C:/repos/MTR/data/ST1/ST1_train")
-#data.save("C:/repos/MTR/data/ST1/ST1_train_log")
-#logt = Log_transformer()
-#logt.fit_transform("C:/repos/MTR/data/ST1/ST1_train_log")
-#data.load("C:/repos/MTR/data/ST1/ST1_val")
-#data.save("C:/repos/MTR/data/ST1/ST1_val_log")
-#logt.fit_transform("C:/repos/MTR/data/ST1/ST1_val_log")
-#data.load("C:/repos/MTR/data/ST1/ST1_test")
-#data.save("C:/repos/MTR/data/ST1/ST1_test_log")
-#logt.fit_transform("C:/repos/MTR/data/ST1/ST1_test_log")
+# log transformation
+# data.load(fold + "/data/ST1_base_train")
+# logt = Log_transformer()
+# logt.fit_transform("Scripts/data/ST1_base_log")
+# data.load("Scripts/data/ST1_base_log")
+# print(data._get_data(0))
+# data.load("C:/repos/MTR/data/ST1/ST1_test")
+# data.save("C:/repos/MTR/data/ST1/ST1_test_log")
+# logt.fit_transform("C:/repos/MTR/data/ST1/ST1_test_log")
 
+#log transformation - train_val
+# data.load(fold + "/data/ST1_base_train_val")
+# data.save(fold + "/data/ST1_base_train_val_log")
+# logt = Log_transformer()
+# logt.fit_transform(fold + "/data/ST1_base_train_val_log")
 
-# #standard fit
-scaler = Standard_tranformer(by_batch=True,seed=seed+2,num_cells=1000)
-scaler.fit("C:/repos/MTR/data/ST1/ST1_train")
-scaler.save("C:/repos/MTR/data/ST1/scaler_no_log")
+# log transformation - test
+# data.load(fold + "/data/ST1_base_test")
+# data.save(fold + "/data/ST1_base_test_log")
+# logt = Log_transformer()
+# logt.fit_transform(fold + "/data/ST1_base_test_log")
 
-scaler.fit("C:/repos/MTR/data/ST1/ST1_train_log")
-scaler.save("C:/repos/MTR/data/ST1/scaler_log")
+# STANDARD FITS
+#standard fit - batch
+# scaler = Standard_tranformer(by_batch=True,seed=seed+2,num_cells=1000)
+# scaler.fit(fold + "/data/ST1_base_train_val")
+# scaler.save(fold + "/data/ST1_base_train_val_scaler_batch")
+# scaler.fit(fold + "/data/ST1_base_train_val_log")
+# scaler.save(fold + "/data/ST1_base_train_val_scaler_batch_log")
 
-# #standard transform
+#standard fit - no batch
+# scaler = Standard_tranformer(by_batch=False,seed=seed+2,num_cells=1000)
+# scaler.fit(fold + "/data/ST1_base_train_val")
+# scaler.save(fold + "/data/ST1_base_train_val_scaler")
+# scaler.fit(fold + "/data/ST1_base_train_val_log")
+# scaler.save(fold + "/data/ST1_base_train_val_scaler_log")
+
+# STANDARD TRANFORMS
+
+# standard transform - batch - no log
+# data.load(fold + "/data/ST1_base_train_val")
+# data.save(fold + "/data/ST1_base_train_val_batch")
+# data.load(fold + "/data/ST1_base_test")
+# data.save(fold + "/data/ST1_base_test_batch")
 # scaler = Standard_tranformer()
-# scaler.load("C:/repos/MTR/data/scaler_no_log")
-# scaler.transform("C:/repos/MTR/data/ST1_train")
-# scaler.transform("C:/repos/MTR/data/ST1_val")
-# scaler.transform("C:/repos/MTR/data/ST1_test")
-# scaler = Standard_tranformer()
-# scaler.load("C:/repos/MTR/data/scaler_log")
-# scaler.transform("C:/repos/MTR/data/ST1_train_log")
-# scaler.transform("C:/repos/MTR/data/ST1_val_log")
-# scaler.transform("C:/repos/MTR/data/ST1_test_log")
+# scaler.load(fold + "/data/ST1_base_train_val_scaler_batch")
+# scaler.transform(fold + "/data/ST1_base_train_val_batch")
+# scaler.transform(fold + "/data/ST1_base_test_batch")
 
+# standard transform - batch - log
+# data.load(fold + "/data/ST1_base_train_val_log")
+# data.save(fold + "/data/ST1_base_train_val_log_batch")
+# data.load(fold + "/data/ST1_base_test_log")
+# data.save(fold + "/data/ST1_base_test_log_batch")
+# scaler = Standard_tranformer()
+# scaler.load(fold + "/data/ST1_base_train_val_scaler_batch_log")
+# scaler.transform(fold + "/data/ST1_base_train_val_log_batch")
+# scaler.transform(fold + "/data/ST1_base_test_log_batch")
+
+# standard transform - no batch - no log
+# data.load(fold + "/data/ST1_base_train_val")
+# data.save(fold + "/data/ST1_base_train_val_scaled")
+# data.load(fold + "/data/ST1_base_test")
+# data.save(fold + "/data/ST1_base_test_scaled")
+# scaler = Standard_tranformer()
+# scaler.load(fold + "/data/ST1_base_train_val_scaler")
+# scaler.transform(fold + "/data/ST1_base_train_val_scaled")
+# scaler.transform(fold + "/data/ST1_base_test_scaled")
+
+# standard transform - no batch - log
+# data.load(fold + "/data/ST1_base_train_val_log")
+# data.save(fold + "/data/ST1_base_train_val_log_scaled")
+# data.load(fold + "/data/ST1_base_test_log")
+# data.save(fold + "/data/ST1_base_test_log_scaled")
+# scaler = Standard_tranformer()
+# scaler.load(fold + "/data/ST1_base_train_val_scaler_log")
+# scaler.transform(fold + "/data/ST1_base_train_val_log_scaled")
+# scaler.transform(fold + "/data/ST1_base_test_log_scaled")
 
 #augment
 #data.load("C:/repos/MTR/data/ST1_train")
@@ -68,7 +114,35 @@ scaler.save("C:/repos/MTR/data/ST1/scaler_log")
 #data.load("C:/repos/MTR/data/ST1_train_augment_log")
 #data.augmentation(10,seed=seed+3)
 
+# CELL POOL - TODO, SAVE CSV
+# batch - no log
+# QUESTION --> do we need to do this for test - think no
 
+data.load(fold + "/data/ST1_base_train_val_batch")
+df, df_y = data.get_poll_cells()
+# df["df_y"] = df_y
+# df.to.csv(fold + "/data/ST1_base_train_val_batch_pool")
+
+# batch - log
+data = Data()
+data.load(fold + "/data/ST1_base_train_val_log_batch")
+df, df_y = data.get_poll_cells()
+# df["df_y"] = df_y
+# df.to.csv(fold + "/data/ST1_base_train_val_log_batch_pool")
+
+# no batch - no log
+data = Data()
+data.load(fold + "/data/ST1_base_train_val_scaled")
+df, df_y = data.get_poll_cells()
+# df["df_y"] = df_y
+# df.to.csv(fold + "/data/ST1_base_train_val_scaled_pool")
+
+# # no batch - log
+data = Data()
+data.load(fold + "/data/ST1_base_train_val_log_scaled")
+df, df_y = data.get_poll_cells()
+# df["df_y"] = df_y
+# df.to.csv(fold + "/data/ST1_base_train_val_log_scaled_pool")
 
 #data.save("C:/repos/MTR/data/ST1__train_standard")
 #data.load("C:/repos/MTR/data/ST1_train_val")
