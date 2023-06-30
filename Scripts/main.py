@@ -2,7 +2,7 @@
 """
 Created on Mon Jun 12 15:07:46 2023
 
-@author: rafae
+@author: rafae, Nina
 """
 
 from Data import Data,Log_transformer,Standard_tranformer
@@ -10,7 +10,7 @@ import pickle as pk
 import os
 import numpy as np
 import pandas as pd
-from Tools import RF
+from ToolsNina import RF, LR, SVM
 from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
 #generate data ST1
 seed = 1235711
@@ -157,7 +157,7 @@ data = Data()
  
 # batch - no log
 
-def FeatureSelectionRF(fold, train_path, test_path, out_path, verbose=2):
+def FeatureSelectionRF(fold, train_path, test_path, verbose=2):
     # Read in sampled cell file, extract df and df_y. 
     # Perform RF feature selection and save output. 
     print('Reading training file')
@@ -196,16 +196,215 @@ def FeatureSelectionRF(fold, train_path, test_path, out_path, verbose=2):
     # mod["y_pred"] = rf.predict_proba(x)[:,1]
     # TODO: Edit with painel!
     # mod["painel"] = self.painel
-    file = open(fold+out_path,"wb")
-    pk.dump(mod, file)
-    file.close()
     
     return mod
 
-MOD = FeatureSelectionRF(fold=fold, 
+MOD_batch = FeatureSelectionRF(fold=fold, 
                          train_path="/data/pooled/ST1_base_train_val_batch_pool",
-                         test_path="/data/pooled/ST1_base_train_val_batch_pool", 
-                         out_path="/data/MOD/batch.dat")
+                         test_path="/data/pooled/ST1_base_test_batch_pool")
+
+file = open(fold+"/data/MOD_RF/batch.dat","wb")
+pk.dump(MOD_batch, file)
+file.close()
+
+MOD_logbatch = FeatureSelectionRF(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_log_batch_pool",
+                         test_path="/data/pooled/ST1_base_test_log_batch_pool")
+
+file = open(fold+"/data/MOD_RF/log_batch.dat","wb")
+pk.dump(MOD_logbatch, file)
+file.close()
+
+MOD_scaled = FeatureSelectionRF(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_scaled_pool",
+                         test_path="/data/pooled/ST1_base_test_scaled_pool")
+
+file = open(fold+"/data/MOD_RF/scaled.dat","wb")
+pk.dump(MOD_scaled, file)
+file.close()
+
+MOD_logscaled = FeatureSelectionRF(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_log_scaled_pool",
+                         test_path="/data/pooled/ST1_base_test_log_scaled_pool")
+
+file = open(fold+"/data/MOD_RF/log_scaled.dat","wb")
+pk.dump(MOD_logscaled, file)
+file.close()
+
+# LOGISTIC REGRESSION
+
+def FeatureSelectionLR(fold, train_path, test_path, verbose=2):
+    # Read in sampled cell file, extract df and df_y. 
+    # Perform LR feature selection and save output. 
+    print('Reading training file')
+    file = pd.read_csv(fold+train_path) 
+    df_train = file.iloc[:, :-2].to_numpy()
+    df_y_train = file.iloc[:, -1].to_numpy().reshape(-1,)
+
+    print('Fitting using training data')
+    lr = LR(random_state=0 ,n_jobs = 15)
+    lr.fit(pd.DataFrame(df_train), pd.DataFrame(df_y_train))
+
+    print('Reading test file')
+    file = pd.read_csv(fold+test_path) 
+    df_test = file.iloc[:, :-2].to_numpy()
+    df_y_test = file.iloc[:, -1].to_numpy().reshape(-1,)
+
+    print('Predicting')
+    y_pred = lr.predict(df_test)
+    y_ppred = lr.predict_proba(df_test)[:,1]
+
+    
+    print('Saving results')
+    mod = {}
+    mod["accuracy"] = accuracy_score(df_y_test,y_pred)
+    mod["b_accuracy"] = balanced_accuracy_score(df_y_test,y_pred)
+    mod["ROC"] = roc_auc_score(df_y_test,y_ppred)
+    # TODO: Edit with painel!
+    mod["importance"] = pd.DataFrame({"importance":rf.rf.feature_importances_}) 
+    mod["y_t"] = df_y_test
+    mod["y_t_pred"] = y_pred
+    mod["y_t_ppred"] = y_ppred
+    mod["par"] = rf.par
+    # TODO: Fix so that compatible! Just testing here
+    # rf.fit(x,y)
+    # mod["x"] = x
+    # mod["y"] = y
+    # mod["y_pred"] = rf.predict_proba(x)[:,1]
+    # TODO: Edit with painel!
+    # mod["painel"] = self.painel
+    
+    return mod
+
+MOD_batch = FeatureSelectionLR(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_batch_pool",
+                         test_path="/data/pooled/ST1_base_test_batch_pool")
+
+file = open(fold+"/data/MOD_LR/batch.dat","wb")
+pk.dump(MOD_batch, file)
+file.close()
+
+MOD_logbatch = FeatureSelectionLR(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_log_batch_pool",
+                         test_path="/data/pooled/ST1_base_test_log_batch_pool")
+
+file = open(fold+"/data/MOD_LR/log_batch.dat","wb")
+pk.dump(MOD_logbatch, file)
+file.close()
+
+MOD_scaled = FeatureSelectionLR(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_scaled_pool",
+                         test_path="/data/pooled/ST1_base_test_scaled_pool")
+
+file = open(fold+"/data/MOD_LR/scaled.dat","wb")
+pk.dump(MOD_scaled, file)
+file.close()
+
+MOD_logscaled = FeatureSelectionLR(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_log_scaled_pool",
+                         test_path="/data/pooled/ST1_base_test_log_scaled_pool")
+
+file = open(fold+"/data/MOD_LR/log_scaled.dat","wb")
+pk.dump(MOD_logscaled, file)
+file.close()
+
+# SVM
+
+def FeatureSelectionSVM(fold, train_path, test_path, verbose=2):
+    # Read in sampled cell file, extract df and df_y. 
+    # Perform SVM feature selection and save output. 
+    print('Reading training file')
+    file = pd.read_csv(fold+"/data/pooled/ST1_base_train_val_batch_pool") 
+    df_train = file.iloc[:, :-2].to_numpy()
+    df_y_train = file.iloc[:, -1].to_numpy().reshape(-1,)
+
+    print('Fitting using training data')
+    svm = SVM(random_state=0 ,n_jobs = 15)
+    svm.fit(pd.DataFrame(df_train), pd.DataFrame(df_y_train))
+
+    print('Reading test file')
+    file = pd.read_csv(fold+test_path) 
+    df_test = file.iloc[:, :-2].to_numpy()
+    df_y_test = file.iloc[:, -1].to_numpy().reshape(-1,)
+
+    print('Predicting')
+    y_pred = svm.predict(df_test)
+    y_ppred = svm.predict_proba(df_test)[:,1]
+
+
+    
+    print('Saving results')
+    mod = {}
+    mod["accuracy"] = accuracy_score(df_y_test,y_pred)
+    mod["b_accuracy"] = balanced_accuracy_score(df_y_test,y_pred)
+    mod["ROC"] = roc_auc_score(df_y_test,y_ppred)
+    # TODO: Edit with painel!
+    mod["importance"] = pd.DataFrame({"importance":rf.rf.feature_importances_}) 
+    mod["y_t"] = df_y_test
+    mod["y_t_pred"] = y_pred
+    mod["y_t_ppred"] = y_ppred
+    mod["par"] = rf.par
+    # TODO: Fix so that compatible! Just testing here
+    # rf.fit(x,y)
+    # mod["x"] = x
+    # mod["y"] = y
+    # mod["y_pred"] = rf.predict_proba(x)[:,1]
+    # TODO: Edit with painel!
+    # mod["painel"] = self.painel
+    
+    return mod
+
+MOD_batch = FeatureSelectionSVM(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_batch_pool",
+                         test_path="/data/pooled/ST1_base_test_batch_pool")
+
+file = open(fold+"/data/MOD_SVM/batch.dat","wb")
+pk.dump(MOD_batch, file)
+file.close()
+
+MOD_logbatch = FeatureSelectionSVM(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_log_batch_pool",
+                         test_path="/data/pooled/ST1_base_test_log_batch_pool")
+
+file = open(fold+"/data/MOD_SVM/log_batch.dat","wb")
+pk.dump(MOD_logbatch, file)
+file.close()
+
+MOD_scaled = FeatureSelectionSVM(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_scaled_pool",
+                         test_path="/data/pooled/ST1_base_test_scaled_pool")
+
+file = open(fold+"/data/MOD_SVM/scaled.dat","wb")
+pk.dump(MOD_scaled, file)
+file.close()
+
+MOD_logscaled = FeatureSelectionSVM(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_log_scaled_pool",
+                         test_path="/data/pooled/ST1_base_test_log_scaled_pool")
+
+file = open(fold+"/data/MOD_SVM/log_scaled.dat","wb")
+pk.dump(MOD_logscaled, file)
+file.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # RAFAEL'S CODE BELOW!
 
