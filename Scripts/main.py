@@ -265,7 +265,7 @@ def FeatureSelectionLR(fold, train_path, test_path, verbose=2):
     mod["y_t"] = df_y_test
     mod["y_t_pred"] = y_pred
     mod["y_t_ppred"] = y_ppred
-    mod["par"] = rf.par
+    mod["par"] = lr.par
     # TODO: Fix so that compatible! Just testing here
     # rf.fit(x,y)
     # mod["x"] = x
@@ -331,8 +331,6 @@ def FeatureSelectionSVM(fold, train_path, test_path, verbose=2):
     y_pred = svm.predict(df_test)
     y_ppred = svm.predict_proba(df_test)[:,1]
 
-
-    
     print('Saving results')
     mod = {}
     mod["accuracy"] = accuracy_score(df_y_test,y_pred)
@@ -343,7 +341,7 @@ def FeatureSelectionSVM(fold, train_path, test_path, verbose=2):
     mod["y_t"] = df_y_test
     mod["y_t_pred"] = y_pred
     mod["y_t_ppred"] = y_ppred
-    mod["par"] = rf.par
+    mod["par"] = svm.par
     # TODO: Fix so that compatible! Just testing here
     # rf.fit(x,y)
     # mod["x"] = x
