@@ -119,71 +119,95 @@ data = Data()
 #data.augmentation(10,seed=seed+3)
 
 # CELL POOL - TODO, SAVE CSV
+
 # batch - no log
 # train
 # data.load(fold + "/data/ST1_base_train_val_batch")
-# df_batch_train, df_y_batch_train = data.get_poll_cells()
-# df_y_batch_train = np.reshape(df_y_batch_train, (276000, 1))
-# df_batch_train_try = np.hstack((df_batch_train, df_y_batch_train))
-# df = pd.DataFrame(df_batch_train_try)
-# df.to_csv(fold + "/data/pooled/ST1_base_train_val_batch_pool")
+# df_batch_train, df_y_batch_train = data.get_poll_cells(fold=fold, filename="/data/ST1_base_train_val_batch_pool", save=True)
 # test 
 # data.load(fold + "/data/ST1_base_test_batch")
-# df_batch_test, df_y_batch_test = data.get_poll_cells()
-# df_y_batch_test = np.reshape(df_y_batch_test, (32000, 1))
-# df_batch_test_try = np.hstack((df_batch_test, df_y_batch_test))
-# df = pd.DataFrame(df_batch_test_try)
-# df.to_csv(fold + "/data/pooled/ST1_base_test_batch_pool")
-
-
-# data = Data()
-# data.load(fold + "/data/ST1_base_train_val_batch")
-# df_batch_train, df_y_batch_train = data.get_poll_cells()
-# df_batch_train["df_y"] = df_y_batch_train
+# df_batch_test, df_y_batch_test = data.get_poll_cells(fold=fold, filename="/data/ST1_base_test_batch_pool", save=True)
 
 # batch - log
-# data = Data()
+# train
 # data.load(fold + "/data/ST1_base_train_val_log_batch")
-# df, df_y = data.get_poll_cells()
-# df["df_y"] = df_y
-# df.to.csv(fold + "/data/ST1_base_train_val_log_batch_pool")
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST1_base_train_val_log_batch_pool", save=True)
+# test
+# data.load(fold + "/data/ST1_base_test_log_batch")
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST1_base_test_log_batch_pool", save=True)
 
 # no batch - no log
-# data = Data()
+# train
 # data.load(fold + "/data/ST1_base_train_val_scaled")
-# df, df_y = data.get_poll_cells()
-# df["df_y"] = df_y
-# df.to.csv(fold + "/data/ST1_base_train_val_scaled_pool")
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_train_val_scaled_pool", save=True)
+# # test
+# data.load(fold + "/data/ST1_base_test_scaled")
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_test_scaled_pool", save=True)
 
 # # no batch - log
-# data = Data()
+# # train
 # data.load(fold + "/data/ST1_base_train_val_log_scaled")
-# df, df_y = data.get_poll_cells()
-# df["df_y"] = df_y
-# df.to.csv(fold + "/data/ST1_base_train_val_log_scaled_pool")
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_train_val_log_scaled_pool", save=True)
+# # test
+# data.load(fold + "/data/ST1_base_test_log_scaled")
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_test_log_scaled_pool", save=True)
 
-# FEATURE SELECTION 
+
+# FEATURE SELECTION
+ 
 # batch - no log
-rf = RF(random_state=0 ,n_jobs = 15)
-x_train = df_batch_train
-y_train = df_y_batch_train.reshape(276000,) # TODO Fix dimensions above
-rf.fit(x_train, y_train, verbose=2)
 
-x_test = df_batch_test
-y_test = df_y_batch_test.reshape(32000,) # TODO Fix dimensions above
-y_pred = rf.predict(x_test)
-y_ppred = rf.predict_proba(x_test)[:,1]
+def FeatureSelectionRF(fold, train_path, test_path, out_path, verbose=2):
+    # Read in sampled cell file, extract df and df_y. 
+    # Perform RF feature selection and save output. 
+    print('Reading training file')
+    file = pd.read_csv(fold+train_path) 
+    df_train = file.iloc[:, :-2].to_numpy()
+    df_y_train = file.iloc[:, -1].to_numpy().reshape(-1,)
+    
+    print('Fitting using training data')
+    rf = RF(random_state=0 ,n_jobs = 15)
+    rf.fit(df_train, df_y_train, verbose=verbose)
+    
+    print('Reading test file')
+    file = pd.read_csv(fold+test_path) 
+    df_test = file.iloc[:, :-2].to_numpy()
+    df_y_test = file.iloc[:, -1].to_numpy().reshape(-1,)
+    
+    print('Predicting')
+    y_pred = rf.predict(df_test)
+    y_ppred = rf.predict_proba(df_test)[:,1]
+    
+    print('Saving results')
+    mod = {}
+    mod["accuracy"] = accuracy_score(df_y_test,y_pred)
+    mod["b_accuracy"] = balanced_accuracy_score(df_y_test,y_pred)
+    mod["ROC"] = roc_auc_score(df_y_test,y_ppred)
+    # TODO: Edit with painel!
+    mod["importance"] = pd.DataFrame({"importance":rf.rf.feature_importances_}) 
+    mod["y_t"] = df_y_test
+    mod["y_t_pred"] = y_pred
+    mod["y_t_ppred"] = y_ppred
+    mod["par"] = rf.par
+    # TODO: Fix so that compatible! Just testing here
+    # rf.fit(x,y)
+    # mod["x"] = x
+    # mod["y"] = y
+    # mod["y_pred"] = rf.predict_proba(x)[:,1]
+    # TODO: Edit with painel!
+    # mod["painel"] = self.painel
+    file = open(fold+out_path,"wb")
+    pk.dump(mod, file)
+    file.close()
+    
+    return mod
 
+MOD = FeatureSelectionRF(fold=fold, 
+                         train_path="/data/pooled/ST1_base_train_val_batch_pool",
+                         test_path="/data/pooled/ST1_base_train_val_batch_pool", 
+                         out_path="/data/MOD/batch.dat")
 
-mod = {}
-mod["acuracy"] = accuracy_score(y_test,y_pred)
-mod["b_acuracy"] = balanced_accuracy_score(y_test,y_pred)
-mod["ROC"] = roc_auc_score(y_test,y_ppred)
-
-# mod = df._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1) 
-# file = open(fold+"data/rf_batch.dat","wb")
-# pk.dump(mod, file)
-# file.close()
+# RAFAEL'S CODE BELOW!
 
 #data.save("C:/repos/MTR/data/ST1__train_standard")
 #data.load("C:/repos/MTR/data/ST1_train_val")
