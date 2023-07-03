@@ -551,7 +551,8 @@ class LR(ClassifierMixin, BaseEstimator):
 
     def fit(self, x, y):
         comp = get_hyper_LR(x,y,seed=self.random_state,n_jobs = self.n_jobs, cv=self.intercv)
-        model = LogisticRegression(random_state=self.random_state,C=comp["c"],penalty="l1",solver="liblinear",class_weight="balanced")
+        self.par = comp
+        model = LogisticRegression(random_state=self.random_state,C=comp["c"],penalty="l1",solver="liblinear",class_weight="balanced", verbose=1)
         model.fit(x, y)
         self.model = model
         return self
@@ -598,7 +599,8 @@ class SVM(ClassifierMixin, BaseEstimator):
 
     def fit(self, x, y):
         comp = get_hyper_SVM(x,y,seed=self.random_state,n_jobs = self.n_jobs, cv=self.intercv,line=self.line)
-        model = SVC(C=comp["c"],gamma=comp["gamma"],kernel=comp["kernel"],class_weight="balanced",probability=True)
+        self.par = comp
+        model = SVC(C=comp["c"],gamma=comp["gamma"],kernel=comp["kernel"],class_weight="balanced",probability=True, verbose=True)
         model.fit(x, y)
         self.model = model
         return self
@@ -947,14 +949,18 @@ def get_hyper_LR(x,y,seed=0,n_jobs = 15, cv=3):
             x_test = x.iloc[test_index,:].copy()
             y_test = y.iloc[test_index].copy()
             for r in reg:
-                v.append((i,x_train,y_train,x_test,y_test,r))
+                v.append((i,x_train,y_train.values.ravel(),x_test,y_test.values.ravel(),r))
+            
             i+=1
                 
         def calcu(v):
             i,x_train,y_train,x_test,y_test,c = v
-            rf = LogisticRegression(random_state=seed,C=c,penalty="l1",solver="liblinear",class_weight="balanced")
-            rf.fit(x_train, y_train)
-            y_pred = rf.predict(x_test)
+            # CHANGED NINA BELOW - ADDED VERBOSITY
+            # rf = LogisticRegression(random_state=seed,C=c,penalty="l1",solver="liblinear",class_weight="balanced", verbose=1)
+            # rf.fit(x_train, y_train)
+            lr = LogisticRegression(random_state=seed,C=c,penalty="l1",solver="liblinear",class_weight="balanced", verbose=1)
+            lr.fit(x_train, y_train)
+            y_pred = lr.predict(x_test)
             return balanced_accuracy_score(y_true=y_test,y_pred=y_pred)
         print("start")
         res = Parallel(n_jobs=n_jobs,verbose=0)(delayed(calcu)(p) for p in v)
@@ -1110,12 +1116,15 @@ def get_hyper_SVM(x,y,seed=0,n_jobs = 15, cv=3,line=False):
             for c in res_c:
                 for gamma in res_gamma:
                     for kernel in res_kernel:
-                        v.append((i,x_train,y_train,x_test,y_test,c,gamma,kernel))
+                        # for r in reg:
+                        #     v.append((i,x_train,y_train.values.ravel(),x_test,y_test.values.ravel(),r))
+                        v.append((i,x_train,y_train.values.ravel(),x_test,y_test.values.ravel(),c,gamma,kernel))
+                       
             i+=1
                 
         def calcu(v):
             i,x_train,y_train,x_test,y_test,c,gamma,kernel = v
-            model = SVC(C=c,gamma=gamma,kernel=kernel,class_weight="balanced",probability=True)
+            model = SVC(C=c,gamma=gamma,kernel=kernel,class_weight="balanced",probability=True, verbose=True)
             model.fit(x_train, y_train)
             y_pred = model.predict(x_test)
             return balanced_accuracy_score(y_true=y_test,y_pred=y_pred)

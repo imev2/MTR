@@ -5,6 +5,8 @@ library(tidyverse)
 # Directory 
 #dirPath <- "D:\toNina" #Ex. ST1, ST2, etc.  
 
+
+
 # List all CSV files in the directory
 filesList <- list.files(path = "~/Cambridge/Thesis/Data/Pre-processing", pattern = "*.csv")
 
