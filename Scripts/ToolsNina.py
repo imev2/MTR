@@ -958,9 +958,9 @@ def get_hyper_LR(x,y,seed=0,n_jobs = 15, cv=3):
             # CHANGED NINA BELOW - ADDED VERBOSITY
             # rf = LogisticRegression(random_state=seed,C=c,penalty="l1",solver="liblinear",class_weight="balanced", verbose=1)
             # rf.fit(x_train, y_train)
-            rf = LogisticRegression(random_state=seed,C=c,penalty="l1",solver="liblinear",class_weight="balanced", verbose=1)
-            rf.fit(x_train, y_train)
-            y_pred = rf.predict(x_test)
+            lr = LogisticRegression(random_state=seed,C=c,penalty="l1",solver="liblinear",class_weight="balanced", verbose=1)
+            lr.fit(x_train, y_train)
+            y_pred = lr.predict(x_test)
             return balanced_accuracy_score(y_true=y_test,y_pred=y_pred)
         print("start")
         res = Parallel(n_jobs=n_jobs,verbose=0)(delayed(calcu)(p) for p in v)

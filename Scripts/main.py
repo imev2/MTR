@@ -261,7 +261,7 @@ def FeatureSelectionLR(fold, train_path, test_path, verbose=2):
     mod["b_accuracy"] = balanced_accuracy_score(df_y_test,y_pred)
     mod["ROC"] = roc_auc_score(df_y_test,y_ppred)
     # TODO: Edit with painel!
-    mod["importance"] = pd.DataFrame({"importance":rf.rf.feature_importances_}) 
+    mod["importance"] = pd.DataFrame({"importance":lr.lr.feature_importances_}) 
     mod["y_t"] = df_y_test
     mod["y_t_pred"] = y_pred
     mod["y_t_ppred"] = y_ppred
@@ -337,7 +337,7 @@ def FeatureSelectionSVM(fold, train_path, test_path, verbose=2):
     mod["b_accuracy"] = balanced_accuracy_score(df_y_test,y_pred)
     mod["ROC"] = roc_auc_score(df_y_test,y_ppred)
     # TODO: Edit with painel!
-    mod["importance"] = pd.DataFrame({"importance":rf.rf.feature_importances_}) 
+    mod["importance"] = pd.DataFrame({"importance":svm.svm.feature_importances_}) 
     mod["y_t"] = df_y_test
     mod["y_t_pred"] = y_pred
     mod["y_t_ppred"] = y_ppred
@@ -383,26 +383,6 @@ MOD_logscaled = FeatureSelectionSVM(fold=fold,
 file = open(fold+"/data/MOD_SVM/log_scaled.dat","wb")
 pk.dump(MOD_logscaled, file)
 file.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # RAFAEL'S CODE BELOW!
 
