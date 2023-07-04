@@ -42,3 +42,9 @@ data.load(fold + "/data/ST1/ST1_base_test_batch")
 data.save(fold + "/data/ST1/ST1_cell_test_batch")
 data.load(fold + "/data/ST1/ST1_cell_test_batch")
 data.sample_all_cells(numcells=1000,seed=seed)
+
+#save train and valalidation dataset
+dataset = data.get_dataload(fold_train=fold + "/data/ST1/ST1_cell_train_batch", fold_test=fold + "/data/ST1/ST1_cell_val_batch")
+file = open(fold +"/data/ST1/dataset_cell_cnn.dat","wb")
+pk.dump(dataset,file)
+file.close()

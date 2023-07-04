@@ -6,7 +6,7 @@
 
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-#from joblib import Parallel, delayed
+from joblib import Parallel, delayed
 #import plotly.express as px
 #import umap
 import pickle as pk
@@ -220,13 +220,18 @@ class Data:
             
 
             
-    def _save_data(self,index,data):
-        file = self.data + self.id[index] + ".dat"
+    def _save_data(self,index,data,idd=False,pheno=1):
+        
+        if idd!=False:
+            file = self.data + idd + ".dat"
+        else:
+            pheno = self.pheno[index]
+            file = self.data + self.id[index] + ".dat"
         with open(file,"wb") as f:
             if self.dim ==0:
                 nlin = len(data)
                 ncol = len(data[0])
-                d = struct.pack("i i i", self.pheno[index],nlin,ncol)
+                d = struct.pack("i i i",pheno ,nlin,ncol)
                 f.write(d)
                 df = data.flatten().astype(np.float32).tobytes()
                 f.write(df)
@@ -357,7 +362,7 @@ class Data:
             shutil.copyfile(src,dest)
 
         
-    def augmentation(self,factor,seed = 0):
+    def augmentation(self,factor,seed = 0,n_jobs=15):
         np.random.seed(seed)
         random.seed(seed)
         #balanciate
@@ -399,15 +404,17 @@ class Data:
             self._save_data(len(self.id)-1, df)
         #aumentation
         print("aumentation")
-        fac = int(num_pos*factor)
-        while(num_pos< fac):
-            print(str(num_pos) + " of " + str(fac))
-            #neg
+        fac = int(len(self.id)*factor)
+        def aument(pos,neg,i,self):
+            idd_n = []
+            batch_n = []
+            pheno_n = []
             samp1 = neg[random.randint(0, len(neg)-1)]
             samp2 = neg[random.randint(0, len(neg)-1)]
+            pheno_n.append(self.pheno[samp1])
             split = random.uniform(0, 1)
             idd = self.id[samp1]+self.id[samp2]
-            self.id.append(idd)
+            idd_n.append(idd)
             df1 = self._get_data(samp1)[0]
             df2 = self._get_data(samp2)[0]
             n_lin = np.min((len(df1),len(df2)))
@@ -416,16 +423,16 @@ class Data:
             np.random.shuffle(df1)
             np.random.shuffle(df2)
             df = np.concatenate((df1[:aux1], df2[:aux2]), axis=0)
-            self.pheno.append(self.pheno[samp1])
             batch = self.batch[samp1]+"_"+self.batch[samp2]
-            self.batch.append(batch)
-            self._save_data(len(self.id)-1, df)
+            batch_n.append(batch)
+            self._save_data(i, df,idd_n[0],0)
             #pos
             samp1 = pos[random.randint(0, len(pos)-1)]
             samp2 = pos[random.randint(0, len(pos)-1)]
+            pheno_n.append(self.pheno[samp1])
             split = random.uniform(0, 1)
             idd = self.id[samp1]+self.id[samp2]
-            self.id.append(idd)
+            idd_n.append(idd)
             df1 = self._get_data(samp1)[0]
             df2 = self._get_data(samp2)[0]
             n_lin = np.min((len(df1),len(df2)))
@@ -436,9 +443,21 @@ class Data:
             df = np.concatenate((df1[:aux1], df2[:aux2]), axis=0)
             self.pheno.append(self.pheno[samp1])
             batch = self.batch[samp1]+"_"+self.batch[samp2]
-            self.batch.append(batch)
-            self._save_data(len(self.id)-1, df)
-            num_pos+=1
+            batch_n.append(batch)
+            self._save_data(i+1, df,idd_n[1],1)
+            return{"id":idd_n,"batch":batch_n,"pheno":pheno_n}
+        
+        print("start")
+        res = Parallel(n_jobs=n_jobs,verbose=10)(delayed(aument)(pos,neg,i,self) for i in range(len(self.id),fac,2))
+        #res = aument(pos,neg,len(self.id)+10,self)
+        print("stop")    
+        for d in res:
+            self.id.append(d["id"][0])
+            self.id.append(d["id"][1])
+            self.batch.append((d["batch"][0]))
+            self.batch.append((d["batch"][1]))
+            self.pheno.append(d["pheno"][0])
+            self.pheno.append(d["pheno"][1])
         self._save_meta()
             
     def augmentation_by_batch(self,factor,seed = 0):
