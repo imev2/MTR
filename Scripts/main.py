@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 from ToolsNina import RF, LR, SVM
 from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
+from joblib import Parallel, delayed
+
 #generate data ST1
 seed = 1235711
 fold = os.getcwd()
