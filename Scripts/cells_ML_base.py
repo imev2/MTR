@@ -179,6 +179,10 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
+file = open(fold+"\data\ST1\RF_test.dat","wb")
+pk.dump(comb, file)
+file.close()
+
 
 lr = LogisticRegression(random_state=seed,C=0.64,penalty="l1",solver="liblinear", verbose=2)
 lr.fit(x_train, y_train)
@@ -186,6 +190,12 @@ y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"LR_y_pred":y_pred, "LR_y_prob":y_prob}
+file = open(fold+"\data\ST1\LR_test.dat","wb")
+pk.dump(comb, file)
+file.close()
+
+
+
 
 # data.load(fold + "/data/ST1/ST1_base_train_val_scaled")
 # mod = data._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1)

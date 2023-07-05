@@ -38,7 +38,7 @@ class Data:
     
         def __getitem__(self, idx):
             data,y = self.data._get_data(idx)
-            data = torch.from_numpy(data.flatten())
+            data = torch.as_tensor(data)
             #y =  torch.from_numpy(np.array(y)) # Get the class label for the corresponding file WATCH OUT FOR FLOAT --> MAY CAUSE ERRORS BECAUSE DATA NOT IN SAME DTYPE AS CLASS_LABEL
             #dimensions = data.shape  # Get the dimensions of the data  
             return data, y
