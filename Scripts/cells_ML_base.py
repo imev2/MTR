@@ -193,34 +193,3 @@ comb = {"LR_y_pred":y_pred, "LR_y_prob":y_prob}
 file = open(fold+"\data\ST1\LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()
-
-
-
-
-# data.load(fold + "/data/ST1/ST1_base_train_val_scaled")
-# mod = data._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1)
-# file = open(fold+"\data\ST1\RF/randomforest_scaled.dat","wb")
-# pk.dump(mod, file)
-# file.close()
-
-# # log - no batch
-# data.load(fold + "/data/ST1/ST1_base_train_val_log_scaled")
-# mod = data._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1)
-# file = open(fold+"/data/ST1/RF/randomforest_log_scaled.dat","wb")
-# pk.dump(mod, file)
-# file.close()
-
-# # no log - batch
-# data.load(fold + "/data/ST1/ST1_base_train_val_batch")
-# mod = data._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1)
-# file = open(fold+"/data/ST1/RF/randomforest_batch.dat","wb")
-# pk.dump(mod, file)
-# file.close()
-
-# # no log - no batch
-# data.load(fold + "/data/ST1/ST1_base_train_val_log_batch")
-# mod = data._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1)
-# file = open(fold+"/data/ST1/RF/randomforest_log_batch.dat","wb")
-# pk.dump(mod, file)
-# file.close()
-
