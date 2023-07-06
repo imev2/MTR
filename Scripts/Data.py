@@ -28,9 +28,10 @@ import shutil
 
 class Data:
     class AdDataset(Dataset):
-        def __init__(self,data):
+        def __init__(self,data,shape):
             
              self.data = data
+             self.shape = shape
     
         def __len__(self):
             ## Size of whole data set
@@ -38,7 +39,8 @@ class Data:
     
         def __getitem__(self, idx):
             data,y = self.data._get_data(idx)
-            data = torch.as_tensor(data)
+            data = torch.as_tensor(data,dtype=torch.float64).view(self.shape)
+            y=torch.as_tensor(y,dtype=torch.float64)
             #y =  torch.from_numpy(np.array(y)) # Get the class label for the corresponding file WATCH OUT FOR FLOAT --> MAY CAUSE ERRORS BECAUSE DATA NOT IN SAME DTYPE AS CLASS_LABEL
             #dimensions = data.shape  # Get the dimensions of the data  
             return data, y
@@ -668,8 +670,10 @@ class Data:
         train = Data()
         train.load(fold_train)
         test = Data()
-        test.load(fold_test)        
-        return self.AdDataset(train),self.AdDataset(test)
+        test.load(fold_test)
+        aux =train._get_data(0)
+        shape = [1]+ list(aux[0].shape)
+        return self.AdDataset(train,shape),self.AdDataset(test,shape)
                   
     def umap_space(self,num_cells=1000):
          df = self._sample_data(0, num_cells)
