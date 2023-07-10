@@ -93,7 +93,7 @@ class Data:
         
         
         
-    def start(self,folder_in,folder_out):
+    def start(self,folder_in,folder_out, panel):
         batch_f = os.listdir(folder_in)
         print(batch_f)
         self.id = []
@@ -129,11 +129,42 @@ class Data:
                     self.pheno.append(1)
                 file = folder_in + "/" + b + "/" + f
                 df = pd.read_csv(file)
-                mapa = {'KI67':'Ki67',"CTLA4":"CTLA-4","FOXP3":"FoxP3","CD11c":"FoxP3","ICOS(CD278)":"ICOS","CD80":"ICOS","CD123":"CD28","CD141":"Ki67","CD86":"CD95","IgM":"CD127","IL7Ra(CD127)":"CD127",
-                        "CD19":"CD31","HLADR":"HLA-DR","CD94":"CCR2","CCR2(CD192)":"CCR2","BAFF-R":"CXCR5","CD24":"CD25","CD27":"PD-1","CD21":"CXCR3","Comp-BYG584-A":"RORgT","CD10":"CTLA-4","CTLA-4(CD152)":"CTLA-4",
-                        "IgD":"CCR7", "CCR7(CD197)":"CCR7","CD57":"CD45RA","CD38":"CCR4","CCR4(CD194)":"CCR4","CD40":"-","CD16":"-","RORgt":"RORgT","CD56":"-","CCR7(CD197":"CCR7","IL1Ra(CD127)":"CD127","IL7RA":"CD127",
-                        "PD1":"PD-1"}
-                df.rename(columns = mapa, inplace = True)
+                
+                # LABELS
+                # incorrect:correct
+                # if panel=="ST1":
+                #     mapa = {'KI67':'Ki67',"CTLA4":"CTLA-4","FOXP3":"FoxP3","CD11c":"FoxP3","ICOS(CD278)":"ICOS","CD80":"ICOS","CD123":"CD28","CD141":"Ki67","CD86":"CD95","IgM":"CD127","IL7Ra(CD127)":"CD127",
+                #             "CD19":"CD31","HLADR":"HLA-DR","CD94":"CCR2","CCR2(CD192)":"CCR2","BAFF-R":"CXCR5","CD24":"CD25","CD27":"PD-1","CD21":"CXCR3","Comp-BYG584-A":"RORgT","CD10":"CTLA-4","CTLA-4(CD152)":"CTLA-4",
+                #             "IgD":"CCR7", "CCR7(CD197)":"CCR7","CD57":"CD45RA","CD38":"CCR4","CCR4(CD194)":"CCR4","CD40":"-","CD16":"-","RORgt":"RORgT","CD56":"-","CCR7(CD197":"CCR7","IL1Ra(CD127)":"CD127","IL7RA":"CD127",
+                #             "PD1":"PD-1"}
+                if (panel=="ST3"):
+                    mapa = {'KI67':'Ki67',"FOXP3":"FoxP3","CD11c":"FoxP3","ICOS(CD278)":"ICOS","CD80":"ICOS","CD141":"Ki67","IgM":"CD127","IL7Ra(CD127)":"CD127",
+                            "CD19":"CD31","HLADR":"HLA-DR","CD94":"CCR2","CCR2(CD192)":"CCR2","BAFF-R":"CXCR5","CD24":"CD25","CD27":"PD-1","Comp-BYG584-A":"RORgT",
+                            "IgD":"CCR7", "CCR7(CD197)":"CCR7","CD57":"CD45RA","CCR4(CD194)":"CCR4","CD40":"-","CCR7(CD197":"CCR7","IL1Ra(CD127)":"CD127","IL7RA":"CD127",
+                            "PD1":"PD-1", "CD27":"PD-1",
+                            "CD57":"TNFa", "CD21":"CD40L", 
+                            "BAFFR":"IL-10", "IL10":"IL-10", 
+                            "CD94":"4-1BB", "4-IBB":"4-1BB", 
+                            "IL7RA":"IL-4", "IgM":"IL-4", 
+                            "CD86":"IFNg", 
+                            "Ki67":"Tbet", "CD141":"Tbet", 
+                            "CD56":"CD45RA", 
+                            "CD80":"IL-2", "IL2":"IL-2", 
+                            "FOX-P3":"FoxP3", 
+                            # CHECK BELOW col IL-17 "['IL-17a'] not in index"
+                            "CD40":"IL-17a", "IL-17":"IL-17a", 
+                            # 
+                            "HLADR":"HLA-DR", 
+                            "CD21":"CD40L",
+                            "Gata3":"GATA-3","CD16":"GATA-3", "GATA3":"GATA-3",
+                            "CD56":"CD45RA",
+                            "CD27":"PD-1",
+                            "CD38":"IL-6",
+                            "CTLA-4":"CTLA4", "CD10":"CTLA4",
+                            "CTLA-4":"CTLA4", "RORgt":"RORgT", 
+                            "CD123":"-"}
+
+                    df.rename(columns = mapa, inplace = True)
                 my_cols = list(df.columns)    
                 for c in df.columns:
                     if c.startswith("-"):
