@@ -5,10 +5,11 @@
 # 0. IMPORT STATEMENTS 
 
 import pandas as pd
+import copy
 from sklearn.preprocessing import StandardScaler
 from joblib import Parallel, delayed
 #import plotly.express as px
-#import umap
+import umap
 import pickle as pk
 import os
 #from os import listdir
@@ -319,7 +320,7 @@ class Data:
             df = df[ilin[:num_lin],:]
             return df
                 
-    def get_poll_cells(self,fold, filename, balanciate=True,num_cells=1000,seed = 0, save=False):
+    def get_poll_cells(self,fold=None, filename=None, balanciate=True,num_cells=1000,seed = 0, save=False):
         df = self._sample_data(0,num_cells,seed=seed)
         df_y = np.repeat(self.pheno[0], num_cells)
         tam = len(self.id)
@@ -796,3 +797,37 @@ class Log_transformer():
             df = np.log1p(df)
             data._save_data(i, df)
 
+class Umap_tranformer:
+    def __init__(self,dimentions=2):
+        self.dimention=dimentions
+        
+    def fit(self,data,seed):
+        x,y = data.get_poll_cells()
+        self.space = umap.UMAP(n_components=self.dimention,densmap=False, random_state=seed,low_memory=False,min_dist = 0.0)
+        self.space.fit(x)
+    
+    def transform(self,data,n_jobs=15):
+        def cal_st2(space,i,data):
+            x,y = data._get_data(i)
+            x_ = space.transform(x)
+            x_ = np.concatenate((x, x_),axis=1)
+            data._save_data(i,x_)
+        tam = len(data.id)
+        v = list(range(tam))
+        #Parallel(n_jobs=n_jobs,verbose=10)(delayed(cal_st2)(copy.deepcopy(self.space),p,copy.deepcopy(data._get_data(p))) for p in v)
+        cal_st2(self.space,0,data)
+        data.painel=data.painel+["dim"+str(i+1) for i in range(self.dimention)]
+        data._save_meta()    
+        
+    
+    def save(self,file):
+        f = open(file,"wb")
+        pk.dump(self,f,pk.HIGHEST_PROTOCOL)
+        f.close()
+    
+    def load(self,file):
+        f = open(file,"rb")
+        a = pk.load(f)
+        f.close()
+        self.dimention=a.dimention
+        self.space = a.space
