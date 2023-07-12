@@ -148,7 +148,6 @@ fold
 # data = pd.DataFrame({"data":lab,"model":model,"par":par,"acuracy":res})
 
 # data.to_csv(fold+"/ST3/RF_LR_parameters.csv",index_label=False)
-# file = open(fold+"/ST3/RF_LR_paramiter.dat","wb")
 
 ### BATCH ###
 train_path = "/ST3/pooled/ST3_base_train_val_batch_pool"
@@ -164,23 +163,23 @@ file=file.iloc[:,1:]
 x_test= file.iloc[:, :-1]
 y_test = file.iloc[:, -1]
 
-rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
+rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=20,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
 rf.fit(x_train, y_train)
 y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST3/batch_ST2_RF_test","wb")
+file = open(fold+"/ST3/batch_ST3_RF_test","wb")
 pk.dump(comb, file)
 file.close()
 
-lr = LogisticRegression(random_state=seed,C=0.10737418240000003,penalty="l1",solver="liblinear", verbose=2)
+lr = LogisticRegression(random_state=seed,C=0.014411518807585589,penalty="l1",solver="liblinear", verbose=2)
 lr.fit(x_train, y_train)
 y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST3/batch_ST2_LR_test.dat","wb")
+file = open(fold+"/ST3/batch_ST3_LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -204,17 +203,17 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST3/scaled_ST2_RF_test","wb")
+file = open(fold+"/ST3/scaled_ST3_RF_test","wb")
 pk.dump(comb, file)
 file.close()
 
-lr = LogisticRegression(random_state=seed,C=0.014411518807585589,penalty="l1",solver="liblinear", verbose=2)
+lr = LogisticRegression(random_state=seed,C= 0.014411518807585589,penalty="l1",solver="liblinear", verbose=2)
 lr.fit(x_train, y_train)
 y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST3/scaled_ST2_LR_test.dat","wb")
+file = open(fold+"/ST3/scaled_ST3_LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -238,7 +237,7 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST3/logscaled_ST2_RF_test","wb")
+file = open(fold+"/ST3/logscaled_ST3_RF_test","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -248,7 +247,7 @@ y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST3/logscaled_ST2_LR_test.dat","wb")
+file = open(fold+"/ST3/logscaled_ST3_LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -272,7 +271,7 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST3/logbatch_ST2_RF_test","wb")
+file = open(fold+"/ST3/logbatch_ST3_RF_test","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -282,6 +281,6 @@ y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST3/logbatch_ST2_LR_test.dat","wb")
+file = open(fold+"/ST3/logbatch_ST3_LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()
