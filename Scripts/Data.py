@@ -206,10 +206,13 @@ class Data:
             f.write(str(self.dim)+"\n")
             #size
             if self.dim != 0:
-                s = str(self.size[0])
-                for i in range(len(self.size)):
-                    s+=" "+str(self.size[i])
-                f.write(s+"\n")
+                if self.size!=None:
+                    s = str(self.size[0])
+                    for i in range(len(self.size)):
+                        s+=" "+str(self.size[i])
+                    f.write(s+"\n")
+                else:
+                    f.write("-1\n")
             #id
             s = self.id[0]
             for i in range(1,tam):
@@ -234,10 +237,14 @@ class Data:
             size = None
             if dim != 0:
                 s_size = f.readline()[:-1]
-                s_size = s_size.split(" ")
-                size = []
-                for s in s_size:
-                    size.append(int(s))
+                if s_size=="-1":
+                    size = None
+                else:
+                    s_size = s_size.split(" ")
+                    size = []
+                    for s in s_size:
+                        size.append(int(s))
+            
                 
             idd = f.readline()[:-1]
             painel = f.readline()[:-1]
@@ -800,23 +807,46 @@ class Log_transformer():
 class Umap_tranformer:
     def __init__(self,dimentions=2):
         self.dimention=dimentions
+        self.x = None
         
     def fit(self,data,seed):
         x,y = data.get_poll_cells()
+        
         self.space = umap.UMAP(n_components=self.dimention,densmap=False, random_state=seed,low_memory=False,min_dist = 0.0)
         self.space.fit(x)
+        x_ = self.space.transform(x)
+        x_ = np.concatenate((x, x_),axis=1)
+        self.x = x_.copy()
     
-    def transform(self,data,n_jobs=15):
-        def cal_st2(space,i,data):
+    def save_umap_points(self,file):
+        n_col = len(self.x[0])
+        n_lin = len(self.x)
+        f = open(file,"w")
+        f.write(str(n_lin)+" "+str(n_col)+" "+str(self.dimention)+"\n")
+        for l in range(n_lin):
+            f.write(str(self.x[l][0]))
+            for c in range(1,n_col):
+                f.write(" "+str(self.x[l][c]))
+            f.write("\n")
+        f.close()
+        
+    
+    def transform(self,data,umap_space,n_jobs=15):
+        def cal_st2(i,data,umap_space):
             x,y = data._get_data(i)
+            space = Umap_tranformer()
+            space.load(umap_space)
+            space = space.space
             x_ = space.transform(x)
             x_ = np.concatenate((x, x_),axis=1)
             data._save_data(i,x_)
         tam = len(data.id)
         v = list(range(tam))
-        #Parallel(n_jobs=n_jobs,verbose=10)(delayed(cal_st2)(copy.deepcopy(self.space),p,copy.deepcopy(data._get_data(p))) for p in v)
-        cal_st2(self.space,0,data)
+        Parallel(n_jobs=n_jobs,verbose=10)(delayed(cal_st2)(p,data,umap_space) for p in v)
+        #cal_st2(self.space,0,data)
         data.painel=data.painel+["dim"+str(i+1) for i in range(self.dimention)]
+        data.dim = self.dimention
+        data.sizes = None
         data._save_meta()    
         
     
@@ -831,3 +861,4 @@ class Umap_tranformer:
         f.close()
         self.dimention=a.dimention
         self.space = a.space
+        self.x = a.x
