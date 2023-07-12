@@ -2,7 +2,7 @@
 """
 Created on Mon Jun 30 10:00 2023
 
-@author: nina working on RF
+@author: listonlab
 """
 
 from Data import Data,Log_transformer,Standard_tranformer
@@ -29,32 +29,6 @@ fold
 ### generate data
 
 data = Data()
-# data.load(fold + "/ST2/ST2_base_train_val_batch")
-# data.split_data_test(fold_train=fold + "/ST2/ST2_base_train_batch", fold_test=fold + "/ST2/ST2_base_val_batch",perc_train=0.8, seed=seed)
-# data.load(fold + "/ST2/ST2_base_train_batch")
-# data.augmentation(factor=50, seed=seed)
-
-### Sample 1,000 cells from all individuals in the training, validation, and testing batch. ###
-# data.load(fold + "/ST2/ST2_base_train_batch")
-# data.save(fold + "/ST2/ST2_cell_train_batch")
-# data.load(fold + "/ST2/ST2_cell_train_batch")
-# data.sample_all_cells(numcells=1000,seed=seed)
-
-# data.load(fold + "/ST2/ST2_base_val_batch")
-# data.save(fold + "/ST2/ST2_cell_val_batch")
-# data.load(fold + "/ST2/ST2_cell_val_batch")
-# data.sample_all_cells(numcells=1000,seed=seed)
-
-# data.load(fold + "/ST2/ST2_base_test_batch")
-# data.save(fold + "/ST2/ST2_cell_test_batch")
-# data.load(fold + "/ST2/ST2_cell_test_batch")
-# data.sample_all_cells(numcells=1000,seed=seed)
-
-### save train and valalidation dataset ###
-# dataset = data.get_dataload(fold_train=fold + "/ST2/ST2_cell_train_batch", fold_test=fold + "/ST2/ST2_cell_val_batch")
-# file = open(fold +"/ST2/dataset_cell_cnn.dat","wb")
-# pk.dump(dataset,file)
-# file.close()
 
 ### load and contruct dataset ###
 file = open(fold +"/ST2/dataset_cell_cnn.dat","rb")
@@ -79,88 +53,108 @@ class Model_CVRobust(torch.nn.Module):
         self.flatten = torch.flatten
         self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
         self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=1, kernel_size=(1,1))
-        # self.fc1 = torch.nn.Linear(in_features=1, out_features=1)
+        # self.fc1 = torch.nn.Linear(in_features=3, out_features=1)
         self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000,1),stride =1)
         self.sigmoid = torch.nn.Sigmoid()
         self.relu = torch.nn.ReLU()
-        self.do = torch.nn.Dropout1d(p=0.1)
+        self.do = torch.nn.Dropout1d(p=0.2)
+        self.bn = torch.nn.BatchNorm1d(1000)
         self.optimizer=None
     def forward(self, x):
+        # print(x.shape)
         x = self.do(self.relu(self.cov1(x)))
+        # print(x.shape)
+        x = self.bn(x)
+        # print(x.shape)
         x = self.do(self.relu(self.cov2(x)))
+        # print(x.shape)
+        # x = self.bn(x)
+        # print(x.shape)
         x = self.avPoll(x)
         x = self.flatten(x)
+        # x = self.fc1(x)
         x = self.sigmoid(x)
         return x
     
-class Model_CV1(torch.nn.Module):
+class Model_CVRobust_Dense(torch.nn.Module):
     def __init__(self,imput_size, num_markers):
         super().__init__()
         torch.set_default_dtype(torch.float64)
         self.flatten = torch.flatten
-        # self.fc1 = torch.nn.Linear(in_features=imput_size, out_features=1)
+        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
+        self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(1,1))
+        # self.fc1 = torch.nn.Linear(in_features=1, out_features=1)
+        self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000,1),stride =1)
         self.sigmoid = torch.nn.Sigmoid()
         self.relu = torch.nn.ReLU()
-        self.do = torch.nn.Dropout1d(p=0.1)
+        self.fc1 = torch.nn.Linear(in_features=3, out_features=10)
+        self.fc2 = torch.nn.Linear(in_features=10, out_features=1)
+        self.do = torch.nn.Dropout1d(p=0.2)
+        self.bn = torch.nn.BatchNorm1d(1000)
         self.optimizer=None
-        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
-        self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000,1),stride =1)
-        self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000,1),stride =1)
     def forward(self, x):
         x = self.do(self.relu(self.cov1(x)))
-        x = self.flatten(x)
-        print(x.shape)
+        x = self.bn(x)
+        # print(x.shape)
+        x = self.do(self.relu(self.cov2(x)))
+        # print(x.shape)
+        x = self.bn(x)
+        # print(x.shape)
         x = self.avPoll(x)
-        print(x.shape)
+        # print(x.shape)
+        x = self.flatten(x)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
         # print(x.shape)
         x = self.sigmoid(x)
         return x
     
-# class Model_CV2(torch.nn.Module):
-#     def __init__(self,imput_size, num_markers):
-#         super().__init__()
-#         self.flatten = torch.flatten
-#         self.fc1 = torch.nn.Linear(in_features=3, out_features=1)
-#         self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
-#         self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(1,1))
-#         self.maxPoll=torch.nn.MaxPool2d(kernel_size=(1000,1),stride =1)
-#         self.sigmoid = torch.nn.Sigmoid()
-#         self.relu = torch.nn.ReLU()
-#         self.optimizer=None
-#     def forward(self, x):
-#         x = self.relu(self.cov1(x))
-#         x = self.relu(self.cov2(x))
-#         x = self.maxPoll(x)
-#         x = self.flatten(x)
-#         x = self.sigmoid(self.fc1(x))
-#         return x
+
+class Model_Linear(torch.nn.Module):
+    def __init__(self,imput_size, num_markers):
+        super().__init__()
+        torch.set_default_dtype(torch.float64)
+        self.flatten = torch.flatten
+        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
+        self.fc1 = torch.nn.Linear(in_features=3, out_features=1)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.relu = torch.nn.ReLU()
+        self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000, 1),stride =1)
+        self.do = torch.nn.Dropout1d(p=0.2)
+        self.optimizer=None
+    def forward(self, x):
+        x = self.do(self.relu(self.cov1(x)))
+        x = self.avPoll(x)
+        x = self.flatten(x)
+        x = self.sigmoid(self.fc1(x))
+        return x
     
-
-
 ### construct Neural_network ### 
 
 class Neural:
-    def __init__(self,train_dataset,val_dataset,model,loss_f,device,sumary_lab=False,bach_size=16):
-        ### ADD OPTIMIZER? ###
+    def __init__(self,train_dataset,val_dataset,model,optimizer,loss_f, device,sumary_lab=False,bach_size=16):
         self.train_loader = train_loader
         self.bach_size = bach_size
         self.val_loader = val_loader
         self.model = model
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+        self.optimizer = optimizer
         self.loss_f = loss_f
         self.device = device
         self.sumary_lab = sumary_lab
         self.model.to(device)
-        self.writer= SummaryWriter("runs/"+self.sumary_lab)
+        self.writer= SummaryWriter(fold+"/runs/"+self.sumary_lab)
+        
     def trainning(self,num_epochs,file_out,test_dataset=None):
-        #sumarywrite def
         self.model.train()
         for epoch in range(num_epochs):
             if(epoch%20==0):
-                self._save(fold+"/ST2/runs/"+self.sumary_lab +".dat", epoch, num_epochs)
+                self._save(fold+"/ST2/ST2_models/"+self.sumary_lab +".dat", epoch, num_epochs)
             print(epoch)
-            tloss = 0
-            si=0
+            
+            ###TRAINING###
+            tloss, tscore, n_correct, n_incorrect, si = 0, 0, 0, 0, 0
             for batch_x,batch_y in self.train_loader:
                 for i in range(len(batch_x)):
                     si+=1
@@ -168,33 +162,74 @@ class Neural:
                     y=batch_y[i]
                     x.to(self.device)
                     y.to(self.device)
-                    y_pred = self.model(x)
+                    y_pred = self.model(x) 
+                    
+                    ### Add loss ###
                     loss = self.loss_f(y_pred, y.view((1)))
                     loss.backward()
                     self.optimizer.step()
                     self.optimizer.zero_grad()
                     tloss+=loss.detach()
+                        
+                    ### Add normalized accuracy ###
+                    if y_pred < 0.5 and y == 0 or y_pred > 0.5 and y == 1:
+                        n_correct += 1
+                    else:
+                        n_incorrect +=1
+                    
+                    ### Add F score ###
+
+                    
+            ### Average validation loss and score for all batches ###
+            # print(si)
             tloss = tloss/si
-            print("train: "+str(tloss))
-            #sumarywrite train
-            #validation
+            tscore = (n_correct)/(n_correct+n_incorrect)
+            # sfscore = sfscore/si
+            # sscore = sscore/si
+            print("------------------")
+            print("training loss: ", str(tloss), "training accuracy: "+str(tscore)) #, " fscore: ", str(sfscore))
+            print("------------------")
+
+            ###VALIDATION###
             self.model.eval()
-            sloss = 0
-            si=0
+            ### Add accuracy ###
+            sloss, sscore, n_correct, n_incorrect, si = 0, 0, 0, 0, 0
             with torch.no_grad():
                 for batch_x,batch_y in self.val_loader:
                     for i in range(len(batch_x)):
+                        ### Add opt.step? ###
                         si+=1
                         x=batch_x[i]
                         y=batch_y[i]
                         x.to(self.device)
                         y.to(self.device)
                         y_pred = self.model(x)
+                        
+                        ### Add loss ###
                         loss = self.loss_f(y_pred, y.view((1)))
                         sloss+=loss.detach()
+                        
+                        ### Add normalized accuracy ###
+                        if y_pred < 0.5 and y == 0 or y_pred > 0.5 and y == 1:
+                            n_correct += 1
+                        else:
+                            n_incorrect +=1
+                        
+                        ### Add F score ##
+                        
+                ### Average validation loss and score for all batches ###
+                # print(si)
                 sloss = sloss/si
-                print("val: "+str(sloss))
-            self.writer.add_scalars(main_tag=self.sumary_lab, tag_scalar_dict={"train":tloss,"validation":sloss},global_step=epoch)
+                sscore = (n_correct)/(n_correct+n_incorrect)
+                # print("------------------")
+                print("val loss: ", str(sloss), "val accuracy: "+str(sscore)) #, " fscore: ", str(sfscore))
+                print("------------------")
+            self.writer.add_scalars(main_tag=self.sumary_lab, 
+                                    tag_scalar_dict={"Loss/train":tloss,
+                                                     "Loss/validation":sloss, 
+                                                     "Accuracy/train":tscore, 
+                                                     "Accuracy/validation":sscore},
+                                    global_step=epoch)
         self.save_res(file_out,test_dataset)
         self._writer_close()
         
@@ -203,8 +238,25 @@ class Neural:
                 "val_loader":self.val_loader,"num_epochs":num_epochs,"loss_f":self.loss_f,"sumary_lab":self.sumary_lab,
                 "device":self.device}
         torch.save(mod, file)
+        
     def _writer_close(self):
         self.writer.close()
+        
+        
+    # def F_score(self, output, label, threshold=0.5, beta=1):
+    #     prob = output > threshold
+    #     label = label > threshold
+    
+    #     TP = (prob & label).sum(1).float()
+    #     # TN = ((~prob) & (~label)).sum(1).float()
+    #     FP = (prob & (~label)).sum(1).float()
+    #     FN = ((~prob) & label).sum(1).float()
+    
+    #     precision = torch.mean(TP / (TP + FP + 1e-12))
+    #     recall = torch.mean(TP / (TP + FN + 1e-12))
+    #     F2 = (1 + beta**2) * precision * recall / (beta**2 * precision + recall + 1e-12)
+    #     return F2.mean(0)
+    
     def save_res(self,file,test_dataset=None):
         self.model.eval()
         with torch.no_grad():
@@ -249,28 +301,32 @@ class Neural:
             pk.dump(mod, file)
             file.close()
 
-        
-
-
 # #####################################################################################################
 
 ### Define the hyperparameter values to explore ###
 batch_x,batch_y=next(iter(train_loader))
 batch_size=16
-lr = 0.00001
+lr = 0.0000001
+
 device = "cpu"
 loss_f = torch.nn.BCELoss()
 
-# model = Model_CVRobust(imput_size, num_markers=30)
-# # optimizer = torch.optim.Adam(model.parameters(), lr=lr) # Can define within Neural __init__
-# net = Neural(train_data,val_data,model=model, loss_f=loss_f,device=device,sumary_lab="modelCVRobust_bs16",bach_size=batch_size)                  
-# net.trainning(num_epochs=200, file_out=fold+"/ST2/cellCnn/modelRobust", test_dataset=None)  
+
+model = Model_CVRobust(imput_size, num_markers=30)
+optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVRobust_bs16_do02lr05",bach_size=batch_size)                  
+net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCVRobust_do02lr05", test_dataset=None)  
 
 
-model = Model_CV1(imput_size, num_markers=30)
-# optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-net = Neural(train_data,val_data,model=model, loss_f=loss_f,device=device,sumary_lab="modelCV1_bs16",bach_size=batch_size)                  
-net.trainning(num_epochs=200, test_dataset=None, file_out=fold+"/ST2/cellCnn/modelCV1")               
+# model = Model_Linear(imput_size, num_markers=30)
+# optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+# # optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelLinear_bs16",bach_size=batch_size)                  
+# net.trainning(num_epochs=500, test_dataset=None, file_out=fold+"/ST2/cellCnn/scoresmodelLinear")               
        
+model = Model_CVRobust_Dense(imput_size, num_markers=30)
+optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense10_do02lr05",bach_size=batch_size)                  
+net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCV_dense10_do02lr05", test_dataset=None)  
     
 
