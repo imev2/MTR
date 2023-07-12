@@ -8,8 +8,8 @@ class Data
 {
 private:
 	double** painel;
-
-	double* get_density(const char* file);
+	void binary_search(float value, double** table, int pos_i, int pos_f, int dim);
+	void get_density(const char* file,double** table);
 public:
 	int num_partition;
 	int dim;

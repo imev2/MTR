@@ -1,18 +1,44 @@
 #include "Data.h"
 
-double* Data::get_density(const char* file)
+void Data::binary_search(float value,double** table, int pos_i, int pos_f,int dim)
+{
+	if (pos_f - pos_i) {
+		table[dim][pos_f] += 1;
+		return;
+	}
+	int i = (pos_f - pos_i) / 2;
+	if (value > table[dim][i]) {
+		binary_search(value, table, i, pos_f, dim);
+	}
+	else {
+		binary_search(value, table, pos_i, i, dim);
+	}
+}
+
+void Data::get_density(const char* file,double** table)
 {
 	double* v;
 	std::ifstream f;
 	int aux[3];
+	float* d_aux;
 	f.open(file, std::ios::in | std::ios::binary);
 	f.read(reinterpret_cast<char*>(aux), sizeof(int)*3);
 	//"i i i",pheno ,nlin,ncol
+	d_aux = new float[aux[2]];
+	for (int l = 0; l < aux[1]; l++) {
+		f.read(reinterpret_cast<char*>(d_aux), sizeof(float) * aux[2]);
+		for (int d = aux[2]-1-dim; d < aux[2]; d++) {
+			binary_search(d_aux[d], table, -1, num_partition - 1,dim);
+		}
 
+	}
 
 	f.close();
-	return v;
+	//unalocate
+	delete[] d_aux;
 }
+
+
 
 Data::Data()
 {
@@ -126,7 +152,23 @@ void Data::load(const char* file_space)
 }
 
 void Data::apply_cells(const char* file)
-{
-	double* table = this->get_density(file);
+{	
+	//alocate
+	double** table = new double*[dim];
+	for (int d = 0; d < dim; d++) {
+		table[d] = new double[num_partition];
+		for (int i = 0; i < num_partition; i++) {
+			table[d][i] = 0;
+		}
+	}
+	get_density(file, table);
+
+
+
+	//unalocate
+	for (int d = 0; d < dim; d++) {
+		delete[] table[d];
+	}
+	delete[] table;
 
 }

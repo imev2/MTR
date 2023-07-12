@@ -31,7 +31,7 @@ fold
 data = Data()
 
 ### load and contruct dataset ###
-file = open(fold +"/ST2/dataset_cell_cnn.dat","rb")
+file = open(fold +"/data/ST1/dataset_cell_cnn.dat","rb")
 train_data, val_data  = pk.load(file)
 file.close()
 train_loader = DataLoader(dataset=train_data, batch_size=16, shuffle=True)
@@ -150,7 +150,7 @@ class Neural:
         self.model.train()
         for epoch in range(num_epochs):
             if(epoch%20==0):
-                self._save(fold+"/ST2/ST2_models/"+self.sumary_lab +".dat", epoch, num_epochs)
+                self._save(fold+"/data/ST1/models/"+self.sumary_lab +".dat", epoch, num_epochs)
             print(epoch)
             
             ###TRAINING###
@@ -312,10 +312,10 @@ device = "cpu"
 loss_f = torch.nn.BCELoss()
 
 
-model = Model_CVRobust(imput_size, num_markers=30)
+model = Model_CVRobust(imput_size, num_markers=28)
 optimizer=torch.optim.Adam(model.parameters(), lr=lr)
 net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVRobust_bs16_do02lr05",bach_size=batch_size)                  
-net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCVRobust_do02lr05", test_dataset=None)  
+net.trainning(num_epochs=100, file_out=fold+"/data/ST1/models/scoresModelCVRobust_do02lr05", test_dataset=None)  
 
 
 # model = Model_Linear(imput_size, num_markers=30)
@@ -324,9 +324,9 @@ net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCVRobust_do02lr05",
 # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelLinear_bs16",bach_size=batch_size)                  
 # net.trainning(num_epochs=500, test_dataset=None, file_out=fold+"/ST2/cellCnn/scoresmodelLinear")               
        
-model = Model_CVRobust_Dense(imput_size, num_markers=30)
+model = Model_CVRobust_Dense(imput_size, num_markers=28)
 optimizer=torch.optim.Adam(model.parameters(), lr=lr)
 net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense10_do02lr05",bach_size=batch_size)                  
-net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCV_dense10_do02lr05", test_dataset=None)  
+net.trainning(num_epochs=100, file_out=fold+"/data/ST1/models/scoresModelCV_dense10_do02lr05", test_dataset=None)  
     
 
