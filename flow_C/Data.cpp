@@ -1,88 +1,48 @@
 #include "Data.h"
 
-void Data::binary_search(float value,double** table, int pos_i, int pos_f,int dim)
-{
-	if (pos_f - pos_i) {
-		table[dim][pos_f] += 1;
-		return;
-	}
-	int i = (pos_f - pos_i) / 2;
-	if (value > table[dim][i]) {
-		binary_search(value, table, i, pos_f, dim);
-	}
-	else {
-		binary_search(value, table, pos_i, i, dim);
-	}
-}
-
-void Data::get_density(const char* file,double** table)
-{
-	double* v;
-	std::ifstream f;
-	int aux[3];
-	float* d_aux;
-	f.open(file, std::ios::in | std::ios::binary);
-	f.read(reinterpret_cast<char*>(aux), sizeof(int)*3);
-	//"i i i",pheno ,nlin,ncol
-	d_aux = new float[aux[2]];
-	for (int l = 0; l < aux[1]; l++) {
-		f.read(reinterpret_cast<char*>(d_aux), sizeof(float) * aux[2]);
-		for (int d = aux[2]-1-dim; d < aux[2]; d++) {
-			binary_search(d_aux[d], table, -1, num_partition - 1,dim);
-		}
-
-	}
-
-	f.close();
-	//unalocate
-	delete[] d_aux;
-}
-
-
-
 Data::Data()
 {
 	num_partition = 0;
 	dim = 0;
-	painel = nullptr;
+	split = nullptr;
 }
 
 Data::~Data()
 {
-	if (painel != nullptr) {
+	if (split != nullptr) {
 		for (int i = 0; i < dim; i++) {
-			delete[] painel[i];
+			delete[] split[i];
 		}
-		delete[] painel;
+		delete[] split;
 	}
 }
 
 Data::Data(const char* file_space, int num_partition)
 {
 	//std::sync_with_stdio(false);
-	double* values;
-	double max, min;
+	float* values;
+	float max, min;
 	std::ifstream file;
 	int n_lin, n_col;
 	int n_mark;
-	double** dim_value;
+	float** dim_value;
 	this->num_partition = num_partition;
 	file.open(file_space, std::ios::in);
 	file >> n_lin >> n_col >> dim;
 	//painel alocation
-	painel = new double*[dim];
+	split = new float*[dim];
 	for (int i = 0; i < dim; i++) {
-		painel[i] = new double[num_partition-1];
+		split[i] = new float[num_partition-1];
 	}
 
 	//dimmention alocation
 	n_mark = n_col - dim;
-	dim_value = new double* [dim];
+	dim_value = new float* [dim];
 	for (int i = 0; i < dim; i++) {
-		dim_value[i] = new double[n_lin];
+		dim_value[i] = new float[n_lin];
 	}
 	//load cells
-	values = new double[n_lin * n_mark];
+	values = new float[n_lin * n_mark];
 	for (int l = 0; l < n_lin; l++) {
 		if (l % 1000==0) std::cout << l / 1000 << " mil\n";
 		for (int c = 0; c < n_mark; c++) {
@@ -106,10 +66,10 @@ Data::Data(const char* file_space, int num_partition)
 				max = dim_value[d][l];
 			}
 		}
-		double range = (max - min)/num_partition;
+		float range = (max - min)/num_partition;
 		
 		for (int i = 1; i < num_partition; i++) {
-			painel[d][i-1] = range * i + min;
+			split[d][i-1] = range * i + min;
 		}
 	}
 	std::cout << "";
@@ -120,7 +80,6 @@ Data::Data(const char* file_space, int num_partition)
 	delete[] dim_value;
 
 	delete[] values;
-
 }
 
 void Data::save(const char* file_space)
@@ -130,7 +89,7 @@ void Data::save(const char* file_space)
 	file.write(reinterpret_cast<char*>(&dim), sizeof(int));
 	file.write(reinterpret_cast<char*>(&num_partition), sizeof(int));
 	for (int d = 0; d < dim; d++) {
-		file.write(reinterpret_cast<char*>(painel[d]), sizeof(double)*(num_partition-1));
+		file.write(reinterpret_cast<char*>(split[d]), sizeof(float)*(num_partition-1));
 	}
 	file.close();
 }
@@ -141,34 +100,81 @@ void Data::load(const char* file_space)
 	file.open(file_space, std::ios::in | std::ios::binary);
 	file.read(reinterpret_cast<char*>(&dim), sizeof(int));
 	file.read(reinterpret_cast<char*>(& num_partition), sizeof(int));
-	painel = new double* [dim];
+	split = new float* [dim];
 	for (int i = 0; i < dim; i++) {
-		painel[i] = new double[num_partition - 1];
+		split[i] = new float[num_partition - 1];
 	}
 	for (int d = 0; d < dim; d++) {
-		file.read(reinterpret_cast<char*>(painel[d]), sizeof(double) * (num_partition - 1));
+		file.read(reinterpret_cast<char*>(split[d]), sizeof(float) * (num_partition - 1));
 	}
 	file.close();
 }
 
 void Data::apply_cells(const char* file)
 {	
+	float* dados;
 	//alocate
-	double** table = new double*[dim];
-	for (int d = 0; d < dim; d++) {
-		table[d] = new double[num_partition];
-		for (int i = 0; i < num_partition; i++) {
-			table[d][i] = 0;
-		}
+	Table* tab;
+	if (dim == 1) {
+		Table1D* table = new Table1D(num_partition, split);
+		tab = (Table*)table;
+
 	}
-	get_density(file, table);
+	else {
+		if (dim == 2) {
+			Table2D* table = new Table2D(num_partition, split);
+			tab = (Table*)table;
+		}
+		else {
+			Table3D* table = new Table3D(num_partition, split);
+			tab = (Table*)table;
+		}
+	}	
+	tab->get_density(file, dados);
+	//generate density
+	//load file in memory
+	
+
 
 
 
 	//unalocate
-	for (int d = 0; d < dim; d++) {
-		delete[] table[d];
-	}
-	delete[] table;
-
+	delete[] dados;
 }
+
+
+/*
+
+void Data::log_transform(float** table)
+{
+	for (int d = 0; d < dim; d++)
+		for (int i = 0; i < num_partition; i++)
+			table[d][i] = log10(table[d][i] + 1);
+}
+
+void Data::standart(float** table)
+{
+	float mean, soma;
+
+	for (int d = 0; d < dim; d++) {
+		//mean
+		mean = 0.0f;
+		soma = 0.0f;
+		for (int i = 0; i < num_partition; i++)
+			soma += table[d][i];
+		mean = soma / num_partition;
+		//variancy
+		soma = 0.0f;
+		for (int i = 0; i < num_partition; i++)
+			soma += powf(table[d][i]-mean,2);
+		soma = soma / num_partition;
+		//sd
+		soma = sqrtf(soma);
+		//standart
+		for (int i = 0; i < num_partition; i++)
+			table[d][i] = (table[d][i]-mean)/soma ;
+	}
+		
+}
+*/
+

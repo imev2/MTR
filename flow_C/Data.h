@@ -1,15 +1,13 @@
 #pragma once
 #include<iostream>
 #include<fstream>
-#include<string>
-#include <sstream>
-#include <vector>
+#include"Table.h"
 class Data
 {
 private:
-	double** painel;
-	void binary_search(float value, double** table, int pos_i, int pos_f, int dim);
-	void get_density(const char* file,double** table);
+	float** split;
+	
+	//void get_density(const char* file,float** table);
 public:
 	int num_partition;
 	int dim;
@@ -20,8 +18,5 @@ public:
 	void save(const char* file);
 	void load(const char* file_space);
 	void apply_cells(const char* file);
-	
-
-
 };
 
