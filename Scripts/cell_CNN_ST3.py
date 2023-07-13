@@ -29,31 +29,30 @@ fold
 ### generate data
 
 data = Data()
-data.load(fold + "/data/ST3/ST3_base_train_val_batch")
-data.split_data_test(fold_train=fold + "/data/ST3/ST3_base_train_batch", fold_test=fold + "/data/ST3/ST3_base_val_batch",perc_train=0.8, seed=seed)
-data.load(fold + "/data/ST3/ST3_base_train_batch")
+data.load(fold + "/ST3/ST3_base_train_val_batch")
+data.split_data_test(fold_train=fold + "/ST3/ST3_base_train_batch", fold_test=fold + "/ST3/ST3_base_val_batch",perc_train=0.8, seed=seed)
+data.load(fold + "/ST3/ST3_base_train_batch")
 data.augmentation(factor=50, seed=seed)
 
 
-data.load(fold + "/data/ST3/ST3_base_train_batch")
-# data.save(fold + "/data/ST3/ST3_cell_train_batch")
-# data.load(fold + "/data/ST3/ST3_cell_train_batch")
+data.load(fold + "/ST3/ST3_base_train_batch")
+data.save(fold + "/ST3/ST3_cell_train_batch")
+data.load(fold + "/ST3/ST3_cell_train_batch")
 data.sample_all_cells(numcells=1000,seed=seed)
 
-data.load(fold + "/data/ST3/ST3_base_val_batch")
-data.save(fold + "/data/ST3/ST3_cell_val_batch")
-data.load(fold + "/data/ST3/ST3_cell_val_batch")
+data.load(fold + "/ST3/ST3_base_val_batch")
+data.save(fold + "/ST3/ST3_cell_val_batch")
+data.load(fold + "/ST3/ST3_cell_val_batch")
 data.sample_all_cells(numcells=1000,seed=seed)
 
-data.load(fold + "/data/ST3/ST3_base_test_batch")
-data.save(fold + "/data/ST3/ST3_cell_test_batch")
-data.load(fold + "/data/ST3/ST3_cell_test_batch")
+data.load(fold + "/ST3/ST3_base_test_batch")
+data.save(fold + "/ST3/ST3_cell_test_batch")
+data.load(fold + "/ST3/ST3_cell_test_batch")
 data.sample_all_cells(numcells=1000,seed=seed)
 
-save train and valalidation dataset
-dataset = data.get_dataload(fold_train=fold + "/data/ST3/ST3_base_train_batch", fold_test=fold + "/data/ST3/ST3_cell_val_batch")
-file = open(fold +"/data/ST3/dataset_cell_cnn.dat","wb")
+# save train and valalidation dataset
+dataset = data.get_dataload(fold_train=fold + "/ST3/ST3_cell_train_batch", fold_test=fold + "/ST3/ST3_cell_val_batch")
+file = open(fold +"/ST3/dataset_cell_cnn.dat","wb")
 pk.dump(dataset,file)
 file.close()
-
 
