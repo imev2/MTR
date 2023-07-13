@@ -16,18 +16,38 @@ void Table1D::get_density(const char* file, float*& dados)
 
 }
 
-Table1D::Table1D(int num_partition, float** split)
+void Table1D::log_transform()
 {
+	int l;
+	int n_che = num_channel + 1;
+	for (int c = 0; c < n_che; c++)
+	for (int l = 0; l < num_partition; l++) {
+			table[c][l] = log10(table[c][l] + 1);
+	}
+}
+
+Table1D::Table1D(int num_partition,int num_channel, float** split)
+{
+	int i;
 	dim = 1;
 	this->num_partition = num_partition;
 	this->split = split;
-	table = new float[num_partition];
-	for (int i = 0; i < num_partition; i++)
-		table[i] = 0.0f;
+	this->num_channel = num_channel;
+	int n_che = num_channel + 1;
+	table = new float*[n_che];
+	for (int c = 0; c < n_che; c++) {
+		table[c] = new float[num_partition];
+		for (i = 0; i < num_partition; i++)
+			table[c][i] = 0.0f;
+	}
+	
 }
 
 Table1D::~Table1D()
 {
+	int tam = num_channel + 1;
+	for (int i = 0; i < tam; i++)
+		delete[] table[i];
 	delete[] table;
 }
 
@@ -49,32 +69,58 @@ void Table2D::get_density(const char* file, float*& dados)
 	readFile(file, n_lin, n_col, y, dados);
 	col1 = n_col - 2;
 	col2 = n_col - 1;
+	int* dim1 = new int[n_lin];
+	int* dim2 = new int[n_lin];
 	for (int i = 0; i < n_lin; i++) {
-		pos1 = binary_search(dados[i*n_col+col1],split)
+		dim1[i] = binary_search(dados[i * n_col + col1], -1, num_partition, 0);
+		dim2[i] = binary_search(dados[i * n_col + col2], -1, num_partition, 1);
+		table[dim1[i] * num_partition + dim2[i]] += 1.0f;
 	}
 
+	log_transform();
 
 
-
-
-
-		delete[] dados;
+	delete[] dim2;
+	delete[] dim1;
+	delete[] dados;
 }
 
-Table2D::Table2D(int num_partition, float** split)
+void Table2D::log_transform()
 {
-	int j;
+	int i,l, lin;
+	int n_che = num_channel + 1;
+	for (int c = 0; c < n_che; c++)
+	for (int l = 0; l < num_partition; l++) {
+		lin = l * num_partition;
+		for (i = 0; i < num_partition; i++)
+			table[c][lin + i] = log10(table[c][lin + i] + 1);
+	}
+	
+}
+
+
+Table2D::Table2D(int num_partition, int num_channel, float** split)
+{
+	int j,i;
 	dim = 2;
 	this->num_partition = num_partition;
 	this->split = split;
-	table = new float[num_partition * dim];
-	for (int i = 0; i < num_partition; i++)
-		for (j = 0; j < num_partition; j++)
-			table[i * num_partition + j] = 0.0f;
+	this->num_channel = num_channel;
+	table = new float* [num_channel + 1];
+	for (int c = 0; c < num_channel + 1; c++) {
+		table[c] = new float[num_partition * dim];
+		for (i = 0; i < num_partition; i++)
+			for (j = 0; j < num_partition; j++)
+				table[c][i * num_partition + j] = 0.0f;
+	}
+		
 }
 
 Table2D::~Table2D()
 {
+	int tam = num_channel + 1;
+	for (int i = 0; i < tam; i++)
+		delete[] table[i];
 	delete[] table;
 }
 
@@ -92,30 +138,39 @@ void Table3D::get_density(const char* file, float*& dados)
 	readFile(file, n_lin, n_col, y, dados);
 }
 
-Table3D::Table3D(int num_partition, float** split)
+void Table3D::log_transform()
 {
-	int j;
+}
+
+Table3D::Table3D(int num_partition, int num_channel, float** split)
+{
+	int d1,d2,d3,pos1,pos2;
 	int i = 0;
-	int tam;
-	tam = num_partition * dim;
+	int tam1, tam2;
 	dim = 3;
+	this->num_channel = num_channel;
+	int n_chen = num_channel + 1;
 	this->num_partition = num_partition;
 	this->split = split;
-	table = new float* [num_partition];
-	for (; i < num_partition; i++) {
-		table[i] = new float[tam];
-	}
-	for (int d = 0; d < num_partition; d++) {
-		for (i = 0; i < num_partition; i++) {
-			for (j = 0; j < num_partition; j++)
-				table[d][i * num_partition + j] = 0.0f;
-		}
+	tam2 = num_partition * num_partition;
+	table = new float* [n_chen * num_partition];
+	for (int c = 0; c < n_chen; c++) {
+		tam1 = c * num_partition;
+		for (d1 = 0; d1 < num_partition; d1++)
+			pos1 = tam1 + d1;
+			table[pos1] = new float[tam2];
+			for (d2 = 0; d2 < num_partition; d2++) {
+				tam2 = d2 * num_partition;
+				for (d3 = 0; d3 < num_partition; d3++)
+					table[pos1][tam2+d3] = 0.0f;
+			}			
 	}
 }
 
 Table3D::~Table3D()
 {
-	for (int i = 0; i < num_partition; i++)
+	int tam1 = (num_channel + 1)*num_partition;
+	for (int i = 0; i < tam1; i++)
 		delete[] table[i];
 	delete[] table;
 }
