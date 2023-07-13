@@ -170,7 +170,7 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST1/batch_ST2_RF_test","wb")
+file = open(fold+"/ST1/ML_base/batch_ST1_RF_test","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -180,7 +180,7 @@ y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST1/batch_ST2_LR_test.dat","wb")
+file = open(fold+"/ST1/ML_base/batch_ST1_LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -204,7 +204,7 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST1/scaled_ST2_RF_test","wb")
+file = open(fold+"/ST1/ML_base/scaled_ST1_RF_test","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -214,7 +214,7 @@ y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST1/scaled_ST2_LR_test.dat","wb")
+file = open(fold+"/ST1/ML_base/scaled_ST1_LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -238,7 +238,7 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST1/logscaled_ST2_RF_test","wb")
+file = open(fold+"/ST1/ML_base/logscaled_ST1_RF_test","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -248,7 +248,7 @@ y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST1/logscaled_ST2_LR_test.dat","wb")
+file = open(fold+"/ST1/ML_base/logscaled_ST1_LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -272,7 +272,7 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST1/logbatch_ST2_RF_test","wb")
+file = open(fold+"/ST1/ML_base/logbatch_ST1_RF_test","wb")
 pk.dump(comb, file)
 file.close()
 
@@ -282,6 +282,6 @@ y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
 comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST1/logbatch_ST2_LR_test.dat","wb")
+file = open(fold+"/ST1/ML_base/logbatch_ST1_LR_test.dat","wb")
 pk.dump(comb, file)
 file.close()

@@ -31,7 +31,7 @@ fold
 data = Data()
 
 ### load and contruct dataset ###
-file = open(fold +"/data/ST1/dataset_cell_cnn.dat","rb")
+file = open(fold +"//ST2/dataset_cell_cnn.dat","rb")
 train_data, val_data  = pk.load(file)
 file.close()
 train_loader = DataLoader(dataset=train_data, batch_size=16, shuffle=True)
@@ -52,27 +52,26 @@ class Model_CVRobust(torch.nn.Module):
         torch.set_default_dtype(torch.float64)
         self.flatten = torch.flatten
         self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
-        self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=1, kernel_size=(1,1))
+        self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(1,1))
         # self.fc1 = torch.nn.Linear(in_features=3, out_features=1)
         self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000,1),stride =1)
         self.sigmoid = torch.nn.Sigmoid()
         self.relu = torch.nn.ReLU()
-        self.do = torch.nn.Dropout1d(p=0.2)
-        self.bn = torch.nn.BatchNorm1d(1000)
+        # self.do = torch.nn.Dropout1d(p=0.2)
+        # self.bn = torch.nn.BatchNorm1d(1000)
         self.optimizer=None
     def forward(self, x):
-        # print(x.shape)
-        x = self.do(self.relu(self.cov1(x)))
-        # print(x.shape)
-        x = self.bn(x)
-        # print(x.shape)
-        x = self.do(self.relu(self.cov2(x)))
+        print(x.shape)
+        x = self.relu(self.cov1(x))
+        # x = self.bn(x)
+        print(x.shape)
+        x = self.relu(self.cov2(x))
         # print(x.shape)
         # x = self.bn(x)
-        # print(x.shape)
+        print(x.shape)
         x = self.avPoll(x)
         x = self.flatten(x)
-        # x = self.fc1(x)
+        x = self.fc1(x)
         x = self.sigmoid(x)
         return x
     
@@ -150,7 +149,7 @@ class Neural:
         self.model.train()
         for epoch in range(num_epochs):
             if(epoch%20==0):
-                self._save(fold+"/data/ST1/models/"+self.sumary_lab +".dat", epoch, num_epochs)
+                self._save(fold+"/ST2/models/"+self.sumary_lab +".dat", epoch, num_epochs)
             print(epoch)
             
             ###TRAINING###
@@ -312,10 +311,10 @@ device = "cpu"
 loss_f = torch.nn.BCELoss()
 
 
-model = Model_CVRobust(imput_size, num_markers=28)
+model = Model_CVRobust(imput_size, num_markers=30)
 optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVRobust_bs16_do02lr05",bach_size=batch_size)                  
-net.trainning(num_epochs=100, file_out=fold+"/data/ST1/models/scoresModelCVRobust_do02lr05", test_dataset=None)  
+net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVRobust_bs16_1307_11_30",bach_size=batch_size)                  
+net.trainning(num_epochs=1, file_out=fold+"/Results/ST2/CVRobust/1307_11_30", test_dataset=None)  
 
 
 # model = Model_Linear(imput_size, num_markers=30)
@@ -324,9 +323,10 @@ net.trainning(num_epochs=100, file_out=fold+"/data/ST1/models/scoresModelCVRobus
 # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelLinear_bs16",bach_size=batch_size)                  
 # net.trainning(num_epochs=500, test_dataset=None, file_out=fold+"/ST2/cellCnn/scoresmodelLinear")               
        
-model = Model_CVRobust_Dense(imput_size, num_markers=28)
-optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense10_do02lr05",bach_size=batch_size)                  
-net.trainning(num_epochs=100, file_out=fold+"/data/ST1/models/scoresModelCV_dense10_do02lr05", test_dataset=None)  
+# model = Model_CVRobust_Dense(imput_size, num_markers=28)
+# optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense10_do02lr05",bach_size=batch_size)                  
+# net.trainning(num_epochs=100, file_out=fold+"//ST2/models/scoresModelCV_dense10_do02lr05", test_dataset=None)  
     
+
 
