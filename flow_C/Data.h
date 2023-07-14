@@ -11,6 +11,7 @@ private:
 public:
 	int num_partition;
 	int dim;
+	int num_channel;
 
 	Data();
 	~Data();
@@ -18,5 +19,6 @@ public:
 	void save(const char* file);
 	void load(const char* file_space);
 	void apply_cells(const char* file);
+	void apply_space(const char* file);
 };
 

@@ -2,6 +2,7 @@
 
 Data::Data()
 {
+	num_channel = 0;
 	num_partition = 0;
 	dim = 0;
 	split = nullptr;
@@ -24,7 +25,6 @@ Data::Data(const char* file_space, int num_partition)
 	float max, min;
 	std::ifstream file;
 	int n_lin, n_col;
-	int n_mark;
 	float** dim_value;
 	this->num_partition = num_partition;
 	file.open(file_space, std::ios::in);
@@ -36,16 +36,16 @@ Data::Data(const char* file_space, int num_partition)
 	}
 
 	//dimmention alocation
-	n_mark = n_col - dim;
+	num_channel = n_col - dim;
 	dim_value = new float* [dim];
 	for (int i = 0; i < dim; i++) {
 		dim_value[i] = new float[n_lin];
 	}
 	//load cells
-	values = new float[n_lin * n_mark];
+	values = new float[n_lin * num_channel];
 	for (int l = 0; l < n_lin; l++) {
 		if (l % 1000==0) std::cout << l / 1000 << " mil\n";
-		for (int c = 0; c < n_mark; c++) {
+		for (int c = 0; c < num_channel; c++) {
 			file>>values[c * n_lin + l];
 		}
 		for (int d = 0; d < dim; d++) {
@@ -88,6 +88,7 @@ void Data::save(const char* file_space)
 	file.open(file_space, std::ios::out | std::ios::binary);
 	file.write(reinterpret_cast<char*>(&dim), sizeof(int));
 	file.write(reinterpret_cast<char*>(&num_partition), sizeof(int));
+	file.write(reinterpret_cast<char*>(&num_channel), sizeof(int));
 	for (int d = 0; d < dim; d++) {
 		file.write(reinterpret_cast<char*>(split[d]), sizeof(float)*(num_partition-1));
 	}
@@ -100,6 +101,7 @@ void Data::load(const char* file_space)
 	file.open(file_space, std::ios::in | std::ios::binary);
 	file.read(reinterpret_cast<char*>(&dim), sizeof(int));
 	file.read(reinterpret_cast<char*>(& num_partition), sizeof(int));
+	file.read(reinterpret_cast<char*>(&num_channel), sizeof(int));
 	split = new float* [dim];
 	for (int i = 0; i < dim; i++) {
 		split[i] = new float[num_partition - 1];
@@ -116,21 +118,21 @@ void Data::apply_cells(const char* file)
 	//alocate
 	Table* tab;
 	if (dim == 1) {
-		Table1D* table = new Table1D(num_partition, split);
+		Table1D* table = new Table1D(num_partition,num_channel, split);
 		tab = (Table*)table;
 
 	}
 	else {
 		if (dim == 2) {
-			Table2D* table = new Table2D(num_partition, split);
+			Table2D* table = new Table2D(num_partition, num_channel, split);
 			tab = (Table*)table;
 		}
 		else {
-			Table3D* table = new Table3D(num_partition, split);
+			Table3D* table = new Table3D(num_partition, num_channel, split);
 			tab = (Table*)table;
 		}
 	}	
-	tab->get_density(file, dados);
+	tab->get_density(file, dados,true);
 	//generate density
 	//load file in memory
 	
@@ -139,7 +141,29 @@ void Data::apply_cells(const char* file)
 
 
 	//unalocate
-	delete[] dados;
+}
+
+void Data::apply_space(const char* file)
+{
+	float* dados;
+	//alocate
+	Table* tab;
+	if (dim == 1) {
+		Table1D* table = new Table1D(num_partition, num_channel, split);
+		tab = (Table*)table;
+
+	}
+	else {
+		if (dim == 2) {
+			Table2D* table = new Table2D(num_partition, num_channel, split);
+			tab = (Table*)table;
+		}
+		else {
+			Table3D* table = new Table3D(num_partition, num_channel, split);
+			tab = (Table*)table;
+		}
+	}
+	tab->get_density(file, dados, false);
 }
 
 

@@ -1,17 +1,27 @@
 #include"Data.h"
 
 int main(int argc, char** argv) {
-	const char* file_split = "C:\\repos\\MTR\\Scripts\\data\\ST1\\umap\\split.dat";
-	const char* file = "C:\\repos\\MTR\\Scripts\\data\\ST1\\umap\\val_copy\\AD018C.dat";
-	const char* file_space = "C:\\repos\\MTR\\Scripts\\data\\ST1\\umap\\space.txt";
-	int num_partition = 5;
-
+	/*
+	arguments:
+	p   file_quimera   num_partition  file_split
+	c   file_sample  file_split
+	s   file_sample  file_split
+	*/
+	std::cout << argv[1] << " " << argv[2];
+	if (argv[1][0] == 'p') {
+		Data data(argv[2], atoi(argv[3]));
+		data.save(argv[4]);
+	}
+	if (argv[1][0] == 'c') {
+		Data data2;
+		data2.load(argv[3]);
+		data2.apply_cells(argv[2]);
+	}
+	if (argv[1][0] == 's') {
+		Data data2;
+		data2.load(argv[3]);
+		data2.apply_space(argv[2]);
+	}
 	
-	Data data(file_space,num_partition);
-	data.save(file_split);
-	
-	Data data2;
-	data2.load(file_split);
-	data2.apply_cells(file);
 	return 0;
 }

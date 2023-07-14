@@ -1,29 +1,114 @@
 #include "Table.h"
-void Table1D::get_density(const char* file)
-{
-	float* dados;
-	get_density(file, dados);
-	//unalloc
-	delete[] dados;
-}
 
-void Table1D::get_density(const char* file, float*& dados)
+
+void Table1D::get_density(const char* file, float*& dados, bool save_data)
 {
-	int n_lin, n_col, y;
+	int n_lin, n_col,c,y,aux;
+	int d1;
 	readFile(file, n_lin, n_col, y, dados);
+	int che = num_channel + 1;
+	int col =  n_col-2;
+	int col2 = col+1;
+	int* dim1 = new int[n_lin];
+	//get position for each line
+	for (d1 = 0; d1 < n_lin; d1++) {
+		dim1[d1] = binary_search(dados[d1 * n_col + col], -1, num_partition - 1, 0);
+		//storege cell value for density and each chanel
+		table[0][dim1[d1]] += 1.0f;
+		for (c = 0; c < col2; c++)
+			table[c + 1][dim1[d1]] += dados[d1 * n_col + c];
+	}
+	//log transform
+	log_transform();
+	standart();
+	if (save_data) {
+		std::ofstream f;
+		f.open(file, std::ios::out | std::ios::binary);
+		//"i i i",pheno ,nlin,ncol
 
+		f.write(reinterpret_cast<const char*>(&y), sizeof(int));
+		f.write(reinterpret_cast<const char*>(&n_lin), sizeof(int));
+		col = n_col +che;
+		f.write(reinterpret_cast<const char*>(&col), sizeof(int));
+		for (d1 = 0; d1 < n_lin; d1++) {
+			col2 = n_col * d1;
+			f.write(reinterpret_cast<const char*>(&dados[col2]), sizeof(float)*col2);
+			for (c = 0; c < che; c++) {
+				aux = get(c, dim1[d1]);
+				f.write(reinterpret_cast<const char*>(&aux), sizeof(float) * col2);
+			}
+		}
+		f.close();
+	}
+	else {
+		std::ofstream f;
+		f.open(file, std::ios::out | std::ios::binary);
+		//"i i i",pheno ,nlin,ncol
 
+		f.write(reinterpret_cast<const char*>(&y), sizeof(int));
+		f.write(reinterpret_cast<const char*>(&che), sizeof(int));
+		f.write(reinterpret_cast<const char*>(&num_partition), sizeof(int));
+		aux = sizeof(float) * num_partition;
+		for(c=0;c<che;c++)
+			f.write(reinterpret_cast<const char*>(table[c]), aux);
+		f.close();
+	}
 
+		
+	
+
+	delete[] dim1;
+	delete[] dados;
 }
 
 void Table1D::log_transform()
 {
 	int l;
+	float mini;
 	int n_che = num_channel + 1;
-	for (int c = 0; c < n_che; c++)
-	for (int l = 0; l < num_partition; l++) {
-			table[c][l] = log10(table[c][l] + 1);
+	for (int c = 0; c < n_che; c++) {
+		mini = 100000;
+		for (int l = 0; l < num_partition; l++) {
+			if (table[c][l] < mini)
+				mini = table[c][l];
+		}
+
+		for (int l = 0; l < num_partition; l++) {
+			table[c][l] = log10(table[c][l]-mini + 1);
+		}
+
 	}
+	
+}
+
+void Table1D::standart()
+{
+	int l;
+	float mean, soma;
+	int n_che = num_channel + 1;
+	for (int c = 0; c < n_che; c++) {
+		mean = 0.0f;
+		soma = 0.0f;
+		//mean
+		for (int l = 0; l < num_partition; l++) {
+			soma += table[c][l]; 
+		}
+		mean = soma / num_partition;
+		//variancy
+		soma = 0.0f;
+		for (int l = 0; l < num_partition; l++) {
+			soma += powf(table[c][l] - mean, 2);
+		}
+		soma = soma / num_partition;
+		//sd
+		soma = sqrtf(soma);
+		//standart
+		for (int l = 0; l < num_partition; l++) {
+			table[c][l] = (table[c][l] - mean) / soma;
+		}
+	}
+
+
 }
 
 Table1D::Table1D(int num_partition,int num_channel, float** split)
@@ -51,51 +136,141 @@ Table1D::~Table1D()
 	delete[] table;
 }
 
-
-void Table2D::get_density(const char* file)
+float Table1D::get(int channel, int dim1)
 {
-	float* dados;
-	get_density(file, dados);
-
-
-	//unalloc
-	delete[] dados;
+	return table[channel][dim1];
 }
 
-void Table2D::get_density(const char* file, float*& dados)
+void Table1D::set(float value, int channel, int dim1)
 {
-	int pos1,pos2;
-	int n_lin, n_col, y, col1,col2;
+	table[channel][dim1] = value;
+}
+
+
+void Table2D::get_density(const char* file, float*& dados, bool save_data)
+{
+	int n_lin, n_col, c,y,aux;
+	int d1,d2;
 	readFile(file, n_lin, n_col, y, dados);
-	col1 = n_col - 2;
-	col2 = n_col - 1;
+	int che = num_channel + 1;
+	int col1 = n_col - 3;
+	int col2 = n_col - 2;
 	int* dim1 = new int[n_lin];
 	int* dim2 = new int[n_lin];
-	for (int i = 0; i < n_lin; i++) {
-		dim1[i] = binary_search(dados[i * n_col + col1], -1, num_partition, 0);
-		dim2[i] = binary_search(dados[i * n_col + col2], -1, num_partition, 1);
-		table[dim1[i] * num_partition + dim2[i]] += 1.0f;
+
+
+
+	//get position for each line
+	for (d1 = 0; d1 < n_lin; d1++) {
+		dim1[d1] = binary_search(dados[d1 * n_col + col1], -1, num_partition - 1, 0);
+		dim2[d1] = binary_search(dados[d1 * n_col + col2], -1, num_partition - 1, 1);
+		//storege cell value for density and each chanel
+		table[0][dim1[d1]* num_partition+ dim2[d1]] += 1.0f;
+		d2 = dim1[d1] * num_partition;
+		for (c = 0; c < col2; c++)
+			table[c + 1][d2 + dim2[d1]] += dados[d1 * n_col + c];
 	}
 
+	//log transform
 	log_transform();
+	standart();
+
+	if (save_data) {
+		std::ofstream f;
+		f.open(file, std::ios::out | std::ios::binary);
+		//"i i i",pheno ,nlin,ncol
+
+		f.write(reinterpret_cast<const char*>(&y), sizeof(int));
+		f.write(reinterpret_cast<const char*>(&n_lin), sizeof(int));
+		col1 = n_col + che;
+		f.write(reinterpret_cast<const char*>(&col1), sizeof(int));
+		for (d1 = 0; d1 < n_lin; d1++) {
+			col2 = n_col * d1;
+			f.write(reinterpret_cast<const char*>(&dados[col2]), sizeof(float) * col2);
+			for (c = 0; c < che; c++) {
+				aux = get(c, dim1[d1],dim2[d1]);
+				f.write(reinterpret_cast<const char*>(&aux), sizeof(float) * col2);
+			}
+		}
+		f.close();
+	}
+	else {
+		std::ofstream f;
+		f.open(file, std::ios::out | std::ios::binary);
+		//"i i i",pheno ,nlin,ncol
+
+		f.write(reinterpret_cast<const char*>(&y), sizeof(int));
+		aux = che * num_partition;
+		f.write(reinterpret_cast<const char*>(&aux), sizeof(int));
+		f.write(reinterpret_cast<const char*>(&num_partition), sizeof(int));
+		aux = sizeof(float) * num_partition * num_partition;
+		for (c = 0; c < che; c++)
+			f.write(reinterpret_cast<const char*>(table[c]), aux);
+		f.close();
+	}
 
 
-	delete[] dim2;
 	delete[] dim1;
+	delete[] dim2;
 	delete[] dados;
 }
 
 void Table2D::log_transform()
 {
-	int i,l, lin;
+	int i;
+	int	l;
+	int lin;
 	int n_che = num_channel + 1;
-	for (int c = 0; c < n_che; c++)
-	for (int l = 0; l < num_partition; l++) {
-		lin = l * num_partition;
-		for (i = 0; i < num_partition; i++)
-			table[c][lin + i] = log10(table[c][lin + i] + 1);
+	float mini;
+	for(int c = 0; c < n_che; c++) {
+		mini = 100000.0f;
+		for(l = 0; l < num_partition; l++) {
+			lin = l * num_partition;
+			for (i = 0; i < num_partition; i++)
+				if (table[c][lin + i] < mini)
+					mini = table[c][lin + i];
+		}
+		for(l = 0; l < num_partition; l++) {
+			lin = l * num_partition;
+			for (i = 0; i < num_partition; i++)
+				table[c][lin + i] = log10(table[c][lin + i]-mini + 1);
+		}
 	}
-	
+}
+
+void Table2D::standart()
+{
+	int i, l, lin;
+	int n_che = num_channel + 1;
+	float mean, soma;
+	for (int c = 0; c < n_che; c++) {
+		mean = 0.0f;
+		soma = 0.0f;
+		//mean
+		for (l = 0; l < num_partition; l++) {
+			lin = l * num_partition;
+			for (i = 0; i < num_partition; i++)
+				soma += table[c][lin + i];
+		}
+		mean = soma / (num_partition*num_partition);
+		//variancy
+		soma = 0.0f;
+		for (int l = 0; l < num_partition; l++) {
+			lin = l * num_partition;
+			for (i = 0; i < num_partition; i++)
+				soma += powf(table[c][lin + i] - mean, 2);
+		}
+		soma = soma / (num_partition * num_partition);
+		//sd
+		soma = sqrtf(soma);
+		//standart
+		for (int l = 0; l < num_partition; l++) {
+			lin = l * num_partition;
+			for (i = 0; i < num_partition; i++)
+				table[c][lin + i] = (table[c][lin + i] - mean) / soma;
+		}
+	}
+
 }
 
 
@@ -108,7 +283,7 @@ Table2D::Table2D(int num_partition, int num_channel, float** split)
 	this->num_channel = num_channel;
 	table = new float* [num_channel + 1];
 	for (int c = 0; c < num_channel + 1; c++) {
-		table[c] = new float[num_partition * dim];
+		table[c] = new float[num_partition * num_partition];
 		for (i = 0; i < num_partition; i++)
 			for (j = 0; j < num_partition; j++)
 				table[c][i * num_partition + j] = 0.0f;
@@ -124,22 +299,167 @@ Table2D::~Table2D()
 	delete[] table;
 }
 
-void Table3D::get_density(const char* file)
+float Table2D::get(int channel, int dim1, int dim2)
 {
-	float* dados;
-	get_density(file, dados);
-	//unalloc
-	delete[] dados;
+	return table[channel][dim1*num_partition+dim2];
 }
 
-void Table3D::get_density(const char* file, float*& dados)
+void Table2D::set(float value, int channel, int dim1, int dim2)
 {
-	int n_lin, n_col, y;
+	table[channel][dim1 * num_partition + dim2] = value;
+}
+
+
+
+void Table3D::get_density(const char* file, float*& dados, bool save_data)
+{
+	int n_lin, n_col, c, y,aux;
+	int d1, d2;
 	readFile(file, n_lin, n_col, y, dados);
+	int che = num_channel + 1;
+	int col1 = n_col - 4;
+	int col2 = n_col - 3;
+	int col3 = n_col - 2;
+	int* dim1 = new int[n_lin];
+	int* dim2 = new int[n_lin];
+	int* dim3 = new int[n_lin];
+	//get position for each line
+	for (d1 = 0; d1 < n_lin; d1++) {
+		dim1[d1] = binary_search(dados[d1 * n_col + col1], -1, num_partition - 1, 0);
+		dim2[d1] = binary_search(dados[d1 * n_col + col2], -1, num_partition - 1, 1);
+		dim3[d1] = binary_search(dados[d1 * n_col + col3], -1, num_partition - 1, 2);
+		//storege cell value for density and each chanel
+		table[dim1[d1]][dim2[d1] * num_partition + dim3[d1]] += 1.0f;
+		
+		d2 = dim2[d1] * num_partition+dim3[d1];
+		for (c = 0; c < col2; c++)
+			table[(c + 1)*num_partition+dim1[d1]][d2] += dados[d1 * n_col + c];
+	}
+	//log transform
+	log_transform();
+	standart();
+
+	if (save_data) {
+		std::ofstream f;
+		f.open(file, std::ios::out | std::ios::binary);
+		//"i i i",pheno ,nlin,ncol
+
+		f.write(reinterpret_cast<const char*>(&y), sizeof(int));
+		f.write(reinterpret_cast<const char*>(&n_lin), sizeof(int));
+		col1 = n_col + che;
+		f.write(reinterpret_cast<const char*>(&col1), sizeof(int));
+		for (d1 = 0; d1 < n_lin; d1++) {
+			col2 = n_col * d1;
+			f.write(reinterpret_cast<const char*>(&dados[col2]), sizeof(float) * col2);
+			for (c = 0; c < che; c++) {
+				aux = get(c, dim1[d1], dim2[d1],dim3[d1]);
+				f.write(reinterpret_cast<const char*>(&aux), sizeof(float) * col2);
+			}
+		}
+		f.close();
+	}
+	else {
+		std::ofstream f;
+		f.open(file, std::ios::out | std::ios::binary);
+		//"i i i",pheno ,nlin,ncol
+		f.write(reinterpret_cast<const char*>(&y), sizeof(int));
+		aux = che * num_partition* num_partition;
+		f.write(reinterpret_cast<const char*>(&aux), sizeof(int));
+		f.write(reinterpret_cast<const char*>(&num_partition), sizeof(int));
+		aux = sizeof(float) * num_partition * num_partition;
+		for (c = 0; c < che; c++)
+			d2 = c * num_partition;
+			for (d1 = 0; d1 < num_partition; d1++) {
+				f.write(reinterpret_cast<const char*>(table[d2+d1]), aux);
+			}
+			
+		f.close();
+	}
+
+	delete[] dim1;
+	delete[] dim2;
+	delete[] dim3;
+	delete[] dados;
 }
 
 void Table3D::log_transform()
 {
+	int d1, d2, d3, pos1, pos2;
+	int i = 0;
+	int tam1, tam2;
+	int n_chen = num_channel + 1;
+	int n_chen2 = num_partition * num_partition;
+	float mini;
+	for (int c = 0; c < n_chen; c++) {
+		tam1 = c * num_partition;
+		mini = 100000;
+		for (d1 = 0; d1 < num_partition; d1++) {
+			pos1 = tam1 + d1;
+			for (d2 = 0; d2 < num_partition; d2++) {
+				tam2 = d2 * num_partition;
+				for (d3 = 0; d3 < num_partition; d3++)
+					if (mini < table[pos1][tam2 + d3])
+						table[pos1][tam2 + d3] = mini;
+			}
+		}
+		for (d1 = 0; d1 < num_partition; d1++) {
+			pos1 = tam1 + d1;
+			for (d2 = 0; d2 < num_partition; d2++) {
+				tam2 = d2 * num_partition;
+				for (d3 = 0; d3 < num_partition; d3++)
+					table[pos1][tam2 + d3] = log10(table[pos1][tam2 + d3]-mini + 1);
+			}
+		}	
+	}
+}
+
+void Table3D::standart()
+{
+	int d1, d2, d3, pos1, pos2;
+	int i = 0;
+	int tam1, tam2;
+	int n_chen = num_channel + 1;
+	int n_chen2 = num_partition * num_partition;
+	float mean,soma;
+	for (int c = 0; c < n_chen; c++) {
+		tam1 = c * num_partition;
+		mean = 0.0f;
+		soma = 0.0f;
+		//mean
+		for (d1 = 0; d1 < num_partition; d1++) {
+			pos1 = tam1 + d1;
+			for (d2 = 0; d2 < num_partition; d2++) {
+				tam2 = d2 * num_partition;
+				for (d3 = 0; d3 < num_partition; d3++)
+					soma += table[pos1][tam2 + d3];
+			}
+		}
+		mean = soma / (num_partition*num_partition * num_partition);
+		//variancy
+		soma = 0.0f;
+		for (d1 = 0; d1 < num_partition; d1++) {
+			pos1 = tam1 + d1;
+			for (d2 = 0; d2 < num_partition; d2++) {
+				tam2 = d2 * num_partition;
+				for (d3 = 0; d3 < num_partition; d3++)
+					soma += powf(table[pos1][tam2 + d3] - mean, 2);
+			}
+		}
+		soma = soma / (num_partition*num_partition * num_partition);
+		//sd
+		soma = sqrtf(soma);
+		//standart
+		for (d1 = 0; d1 < num_partition; d1++) {
+			pos1 = tam1 + d1;
+			for (d2 = 0; d2 < num_partition; d2++) {
+				tam2 = d2 * num_partition;
+				for (d3 = 0; d3 < num_partition; d3++)
+					table[pos1][tam2 + d3] = (table[pos1][tam2 + d3] - mean) / soma;
+			}
+		}
+
+	}
+
 }
 
 Table3D::Table3D(int num_partition, int num_channel, float** split)
@@ -152,13 +472,13 @@ Table3D::Table3D(int num_partition, int num_channel, float** split)
 	int n_chen = num_channel + 1;
 	this->num_partition = num_partition;
 	this->split = split;
-	tam2 = num_partition * num_partition;
+	int n_chen2 = num_partition * num_partition;
 	table = new float* [n_chen * num_partition];
 	for (int c = 0; c < n_chen; c++) {
 		tam1 = c * num_partition;
 		for (d1 = 0; d1 < num_partition; d1++)
 			pos1 = tam1 + d1;
-			table[pos1] = new float[tam2];
+			table[pos1] = new float[n_chen2];
 			for (d2 = 0; d2 < num_partition; d2++) {
 				tam2 = d2 * num_partition;
 				for (d3 = 0; d3 < num_partition; d3++)
@@ -173,6 +493,16 @@ Table3D::~Table3D()
 	for (int i = 0; i < tam1; i++)
 		delete[] table[i];
 	delete[] table;
+}
+
+float Table3D::get(int channel, int dim1, int dim2, int dim3)
+{
+	return table[channel*num_partition+dim1][dim2*num_partition+dim3];
+}
+
+void Table3D::set(float value, int channel, int dim1, int dim2, int dim3)
+{
+	table[channel * num_partition + dim1][dim2 * num_partition + dim3] = value;
 }
 
 
