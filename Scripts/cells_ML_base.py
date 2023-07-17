@@ -10,7 +10,7 @@ import pickle as pk
 import os
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
+from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score, roc_curve, auc
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
@@ -23,10 +23,9 @@ fold
 # v = []
 # files = []
 
-# train_path = "/ST1/pooled/ST1_base_train_val_batch_pool"
+# train_path = "/data/ST1/pooled/ST1_base_train_val_batch_pool"
 # lab = "batch"
 # file = pd.read_csv(fold+train_path)
-# file = file.sample(n=20000,random_state=seed)
 
 # file=file.iloc[:,1:]
 
@@ -38,7 +37,7 @@ fold
 # x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.10, random_state=seed)
 # files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
-# train_path = "/ST1/pooled/ST1_base_train_val_log_batch_pool"
+# train_path = "/data/ST1/pooled/ST1_base_train_val_log_batch_pool"
 # lab = "log_batch"
 # file = pd.read_csv(fold+train_path)
 # file=file.iloc[:,1:]
@@ -50,7 +49,7 @@ fold
 # files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
 
-# train_path = "/ST1/pooled/ST1__base_train_val_scaled_pool"
+# train_path = "/data/ST1/pooled/ST1_base_train_val_scaled_pool"
 # lab = "scaled"
 # file = pd.read_csv(fold+train_path)
 # file=file.iloc[:,1:]
@@ -62,7 +61,7 @@ fold
 # files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
 
-# train_path = "/ST1/pooled/ST1_base_train_val_log_scaled_pool"
+# train_path = "/data/ST1/pooled/ST1_base_train_val_log_scaled_pool"
 # lab = "log_scaled"
 # file = pd.read_csv(fold+train_path)
 # file=file.iloc[:,1:]
@@ -147,86 +146,61 @@ fold
 #     model.append(m)
 # data = pd.DataFrame({"data":lab,"model":model,"par":par,"acuracy":res})
 
-# data.to_csv(fold+"/ST1/RF_LR_parameters.csv",index_label=False)
-# file = open(fold+"/ST1/RF_LR_paramiter.dat","wb")
+# data.to_csv(fold+"/data/ST1/RF_LR_parameters_2.csv",index_label=False)
 
 ### BATCH ###
-train_path = "/ST1/pooled/ST1_base_train_val_batch_pool"
+train_path = "/data/ST1/pooled/ST1_base_train_val_batch_pool"
 file = pd.read_csv(fold+train_path)
-# file = file.sample(n=20000,random_state=seed)
 file=file.iloc[:,1:]
 x_train= file.iloc[:, :-1]
 y_train = file.iloc[:, -1]
 
-test_path = "/ST1/pooled/ST1_base_test_batch_pool_unbalanced"
+test_path = "/data/ST1/pooled/ST1_base_test_batch_pool_unbalanced"
 file = pd.read_csv(fold+test_path)
 file=file.iloc[:,1:]
 x_test= file.iloc[:, :-1]
 y_test = file.iloc[:, -1]
 
-rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=20,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
-rf.fit(x_train, y_train)
-y_pred=rf.predict(x_test)
-y_prob=rf.predict_proba(x_test)
-print("RF Finished")
-comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST1/ML_base/batch_ST1_RF_test","wb")
-pk.dump(comb, file)
-file.close()
+# rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=40,random_state=seed,oob_score=False,n_jobs=15, verbose=0)
+# rf.fit(x_train, y_train)
+# y_pred=rf.predict(x_test)
+# y_prob=rf.predict_proba(x_test)
+# print("RF Finished")
+# comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
+# print("test accuracy BATCH RF: ", accuracy_score(y_test, y_pred))
+# print("test bas BATCH RF: ", balanced_accuracy_score(y_test, y_pred))
+# print("rocauc score BATCH RF: ", roc_auc_score(y_test, y_prob[:,1]))
+# file = open(fold+"/data/ST1/baseML/batch_ST1_RF","wb")
+# pk.dump(comb, file)
+# file.close()
 
-lr = LogisticRegression(random_state=seed,C=0.64,penalty="l1",solver="liblinear", verbose=2)
+lr = LogisticRegression(random_state=seed,C=0.13,penalty="l1",solver="liblinear", verbose=0)
 lr.fit(x_train, y_train)
+y_prde_train=lr.predict(x_train)
+y_prob_train=lr.predict_proba(x_train)
 y_pred=lr.predict(x_test)
 y_prob=lr.predict_proba(x_test)
 print("LR Finished")
-comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST1/ML_base/batch_ST1_LR_test.dat","wb")
-pk.dump(comb, file)
-file.close()
+# comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
+# file = open(fold+"/data/ST1/batch_ST1_LR_test.dat","wb")
+# pk.dump(comb, file)
+# file.close()
+print("train accuracy BATCH LR: ", accuracy_score(y_test, y_pred))
+print("train bas BATCH LR: ", balanced_accuracy_score(y_test, y_pred))
+print("train rocauc score BATCH LR: ", roc_auc_score(y_test, y_prob[:,1]))
+print("test accuracy BATCH LR: ", accuracy_score(y_test, y_pred))
+print("test bas BATCH LR: ", balanced_accuracy_score(y_test, y_pred))
+print("test rocauc score BATCH LR: ", roc_auc_score(y_test, y_prob[:,1]))
 
-### SCALED ###
-train_path = "/ST1/pooled/ST1_base_train_val_scaled_pool"
+# ### SCALED ###
+train_path = "/data/ST1/pooled/ST1_base_train_val_scaled_pool"
 file = pd.read_csv(fold+train_path)
 # file = file.sample(n=20000,random_state=seed)
 file=file.iloc[:,1:]
 x_train= file.iloc[:, :-1]
 y_train = file.iloc[:, -1]
 
-test_path = "/ST1/pooled/ST1_base_test_scaled_pool_unbalanced"
-file = pd.read_csv(fold+test_path)
-file=file.iloc[:,1:]
-x_test= file.iloc[:, :-1]
-y_test = file.iloc[:, -1]
-
-rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
-rf.fit(x_train, y_train)
-y_pred=rf.predict(x_test)
-y_prob=rf.predict_proba(x_test)
-print("RF Finished")
-comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST1/ML_base/scaled_ST1_RF_test","wb")
-pk.dump(comb, file)
-file.close()
-
-lr = LogisticRegression(random_state=seed,C=0.32768,penalty="l1",solver="liblinear", verbose=2)
-lr.fit(x_train, y_train)
-y_pred=lr.predict(x_test)
-y_prob=lr.predict_proba(x_test)
-print("LR Finished")
-comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST1/ML_base/scaled_ST1_LR_test.dat","wb")
-pk.dump(comb, file)
-file.close()
-
-### LOG SCALED ###
-train_path = "/ST1/pooled/ST1_base_train_val_log_scaled_pool"
-file = pd.read_csv(fold+train_path)
-# file = file.sample(n=20000,random_state=seed)
-file=file.iloc[:,1:]
-x_train= file.iloc[:, :-1]
-y_train = file.iloc[:, -1]
-
-test_path = "/ST1/pooled/ST1_base_test_log_scaled_pool_unbalanced"
+test_path = "/data/ST1/pooled/ST1_base_test_scaled_pool_unbalanced"
 file = pd.read_csv(fold+test_path)
 file=file.iloc[:,1:]
 x_test= file.iloc[:, :-1]
@@ -238,50 +212,97 @@ y_pred=rf.predict(x_test)
 y_prob=rf.predict_proba(x_test)
 print("RF Finished")
 comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST1/ML_base/logscaled_ST1_RF_test","wb")
+file = open(fold+"/data/ST1/scaled_ST2_RF_test","wb")
 pk.dump(comb, file)
 file.close()
+print("test accuracy SCA RF: ", accuracy_score(y_test, y_pred))
+print("test bas SCA RF: ", balanced_accuracy_score(y_test, y_pred))
+print("rocauc score SCA RF: ", roc_auc_score(y_test, y_prob[:,1]))
+# lr = LogisticRegression(random_state=seed,C=0.028147497671065603,penalty="l1",solver="liblinear", verbose=2)
+# lr.fit(x_train, y_train)
+# y_pred=lr.predict(x_test)
+# y_prob=lr.predict_proba(x_test)
+# print("LR Finished")
+# comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
+# file = open(fold+"/data/ST1/scaled_ST2_LR_test.dat","wb")
+# pk.dump(comb, file)
+# file.close()
+print("test accuracy SCA LR: ", accuracy_score(y_test, y_pred))
+print("test bas SCA LR: ", balanced_accuracy_score(y_test, y_pred))
+print("rocauc score SCA LR: ", roc_auc_score(y_test, y_prob[:,1]))
 
-lr = LogisticRegression(random_state=seed,C=0.10737418240000003,penalty="l1",solver="liblinear", verbose=2)
-lr.fit(x_train, y_train)
-y_pred=lr.predict(x_test)
-y_prob=lr.predict_proba(x_test)
-print("LR Finished")
-comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST1/ML_base/logscaled_ST1_LR_test.dat","wb")
-pk.dump(comb, file)
-file.close()
 
-### LOG BATCH SCALED ###
-train_path = "/ST1/pooled/ST1_base_train_val_log_batch_pool"
-file = pd.read_csv(fold+train_path)
-# file = file.sample(n=20000,random_state=seed)
-file=file.iloc[:,1:]
-x_train= file.iloc[:, :-1]
-y_train = file.iloc[:, -1]
+# ### LOG SCALED ###
+# train_path = "/data/ST1/pooled/ST1_base_train_val_log_scaled_pool"
+# file = pd.read_csv(fold+train_path)
+# # file = file.sample(n=20000,random_state=seed)
+# file=file.iloc[:,1:]
+# x_train= file.iloc[:, :-1]
+# y_train = file.iloc[:, -1]
 
-test_path = "/ST1/pooled/ST1_base_test_log_batch_pool_unbalanced"
-file = pd.read_csv(fold+test_path)
-file=file.iloc[:,1:]
-x_test= file.iloc[:, :-1]
-y_test = file.iloc[:, -1]
+# test_path = "/data/ST1/pooled/ST1_base_test_log_scaled_pool_unbalanced"
+# file = pd.read_csv(fold+test_path)
+# file=file.iloc[:,1:]
+# x_test= file.iloc[:, :-1]
+# y_test = file.iloc[:, -1]
 
-rf = RandomForestClassifier(n_estimators=501,max_features="log2",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
-rf.fit(x_train, y_train)
-y_pred=rf.predict(x_test)
-y_prob=rf.predict_proba(x_test)
-print("RF Finished")
-comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST1/ML_base/logbatch_ST1_RF_test","wb")
-pk.dump(comb, file)
-file.close()
+# rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
+# rf.fit(x_train, y_train)
+# y_pred=rf.predict(x_test)
+# y_prob=rf.predict_proba(x_test)
+# print("RF Finished")
+# comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
+# file = open(fold+"/data/ST1/logscaled_ST2_RF_test","wb")
+# pk.dump(comb, file)
+# file.close()
 
-lr = LogisticRegression(random_state=seed,C=0.08589934592000002,penalty="l1",solver="liblinear", verbose=2)
-lr.fit(x_train, y_train)
-y_pred=lr.predict(x_test)
-y_prob=lr.predict_proba(x_test)
-print("LR Finished")
-comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST1/ML_base/logbatch_ST1_LR_test.dat","wb")
-pk.dump(comb, file)
-file.close()
+# lr = LogisticRegression(random_state=seed,C=0.014411518807585589,penalty="l1",solver="liblinear", verbose=2)
+# lr.fit(x_train, y_train)
+# y_pred=lr.predict(x_test)
+# y_prob=lr.predict_proba(x_test)
+# print("LR Finished")
+# comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
+# file = open(fold+"/data/ST1/logscaled_ST2_LR_test.dat","wb")
+# pk.dump(comb, file)
+# file.close()
+print("test accuracy LOG SCA LR: ", accuracy_score(y_test, y_pred))
+print("test bas LOG SCA LR: ", balanced_accuracy_score(y_test, y_pred))
+print("rocauc score LOG SCA LR: ", roc_auc_score(y_test, y_prob[:,1]))
+
+
+# ### LOG BATCH SCALED ###
+# train_path = "/data/ST1/pooled/ST1_base_train_val_log_batch_pool"
+# file = pd.read_csv(fold+train_path)
+# # file = file.sample(n=20000,random_state=seed)
+# file=file.iloc[:,1:]
+# x_train= file.iloc[:, :-1]
+# y_train = file.iloc[:, -1]
+
+# test_path = "/data/ST1/pooled/ST1_base_test_log_batch_pool_unbalanced"
+# file = pd.read_csv(fold+test_path)
+# file=file.iloc[:,1:]
+# x_test= file.iloc[:, :-1]
+# y_test = file.iloc[:, -1]
+
+# rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
+# rf.fit(x_train, y_train)
+# y_pred=rf.predict(x_test)
+# y_prob=rf.predict_proba(x_test)
+# print("RF Finished")
+# comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
+# file = open(fold+"/data/ST1/logbatch_ST2_RF_test","wb")
+# pk.dump(comb, file)
+# file.close()
+
+# lr = LogisticRegression(random_state=seed,C=0.64,penalty="l1",solver="liblinear", verbose=2)
+# lr.fit(x_train, y_train)
+# y_pred=lr.predict(x_test)
+# y_prob=lr.predict_proba(x_test)
+# print("LR Finished")
+# comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
+# file = open(fold+"/data/ST1/logbatch_ST2_LR_test.dat","wb")
+# pk.dump(comb, file)
+# file.close()
+print("test accuracy LOG BATCH SCALED LR: ", accuracy_score(y_test, y_pred))
+print("test bas LOG BATCH SCALED LR: ", balanced_accuracy_score(y_test, y_pred))
+print("rocauc score LOG BATCH SCALED LR: ", roc_auc_score(y_test, y_prob[:,1]))

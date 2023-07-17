@@ -22,8 +22,8 @@ print(data._get_data(0))
 # data.save("Scripts/data/ST1_base_log")
 # df,y = data.get_poll_cells(seed=seed)
 # data.start("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
-# #split test group
-data.split_data_test(fold+"\data\ST2\ST2_base_train_val", fold+"\data\ST2\ST2_base_test",perc_train = 0.9,seed=seed+1)
+# # #split test group
+# data.split_data_test(fold+"\data\ST2\ST2_base_train_val", fold+"\data\ST2\ST2_base_test",perc_train = 0.9,seed=seed+1)
 # #split train val group
 #data.load("C:/repos/MTR/data/ST1/ST1_train_val")
 #data.split_data_test("C:/repos/MTR/data/ST1/ST1_train", "C:/repos/MTR/data/ST1/ST1_val",perc_train = 0.8,seed=seed+1)

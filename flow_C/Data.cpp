@@ -21,32 +21,32 @@ Data::~Data()
 Data::Data(const char* file_space, int num_partition)
 {
 	//std::sync_with_stdio(false);
-	float* values;
-	float max, min;
+	double* values;
+	double max, min;
 	std::ifstream file;
 	int n_lin, n_col;
-	float** dim_value;
+	double** dim_value;
 	this->num_partition = num_partition;
 	file.open(file_space, std::ios::in);
 	file >> n_lin >> n_col >> dim;
 	//painel alocation
-	split = new float*[dim];
+	split = new double* [dim];
 	for (int i = 0; i < dim; i++) {
-		split[i] = new float[num_partition-1];
+		split[i] = new double[num_partition - 1];
 	}
 
 	//dimmention alocation
 	num_channel = n_col - dim;
-	dim_value = new float* [dim];
+	dim_value = new double* [dim];
 	for (int i = 0; i < dim; i++) {
-		dim_value[i] = new float[n_lin];
+		dim_value[i] = new double[n_lin];
 	}
 	//load cells
-	values = new float[n_lin * num_channel];
+	values = new double[n_lin * num_channel];
 	for (int l = 0; l < n_lin; l++) {
-		if (l % 1000==0) std::cout << l / 1000 << " mil\n";
+		if (l % 1000 == 0) std::cout << l / 1000 << " mil\n";
 		for (int c = 0; c < num_channel; c++) {
-			file>>values[c * n_lin + l];
+			file >> values[c * n_lin + l];
 		}
 		for (int d = 0; d < dim; d++) {
 			file >> dim_value[d][l];
@@ -66,10 +66,10 @@ Data::Data(const char* file_space, int num_partition)
 				max = dim_value[d][l];
 			}
 		}
-		float range = (max - min)/num_partition;
-		
+		double range = (max - min) / num_partition;
+
 		for (int i = 1; i < num_partition; i++) {
-			split[d][i-1] = range * i + min;
+			split[d][i - 1] = range * i + min;
 		}
 	}
 	std::cout << "";
@@ -90,7 +90,7 @@ void Data::save(const char* file_space)
 	file.write(reinterpret_cast<char*>(&num_partition), sizeof(int));
 	file.write(reinterpret_cast<char*>(&num_channel), sizeof(int));
 	for (int d = 0; d < dim; d++) {
-		file.write(reinterpret_cast<char*>(split[d]), sizeof(float)*(num_partition-1));
+		file.write(reinterpret_cast<char*>(split[d]), sizeof(double) * (num_partition - 1));
 	}
 	file.close();
 }
@@ -100,25 +100,25 @@ void Data::load(const char* file_space)
 	std::ifstream file;
 	file.open(file_space, std::ios::in | std::ios::binary);
 	file.read(reinterpret_cast<char*>(&dim), sizeof(int));
-	file.read(reinterpret_cast<char*>(& num_partition), sizeof(int));
+	file.read(reinterpret_cast<char*>(&num_partition), sizeof(int));
 	file.read(reinterpret_cast<char*>(&num_channel), sizeof(int));
-	split = new float* [dim];
+	split = new double* [dim];
 	for (int i = 0; i < dim; i++) {
-		split[i] = new float[num_partition - 1];
+		split[i] = new double[num_partition - 1];
 	}
 	for (int d = 0; d < dim; d++) {
-		file.read(reinterpret_cast<char*>(split[d]), sizeof(float) * (num_partition - 1));
+		file.read(reinterpret_cast<char*>(split[d]), sizeof(double) * (num_partition - 1));
 	}
 	file.close();
 }
 
 void Data::apply_cells(const char* file)
-{	
-	float* dados;
+{
+	double* dados;
 	//alocate
 	Table* tab;
 	if (dim == 1) {
-		Table1D* table = new Table1D(num_partition,num_channel, split);
+		Table1D* table = new Table1D(num_partition, num_channel, split);
 		tab = (Table*)table;
 
 	}
@@ -131,11 +131,11 @@ void Data::apply_cells(const char* file)
 			Table3D* table = new Table3D(num_partition, num_channel, split);
 			tab = (Table*)table;
 		}
-	}	
-	tab->get_density(file, dados,true);
+	}
+	tab->get_density(file, dados, true);
 	//generate density
 	//load file in memory
-	
+
 
 
 
@@ -145,7 +145,7 @@ void Data::apply_cells(const char* file)
 
 void Data::apply_space(const char* file)
 {
-	float* dados;
+	double* dados;
 	//alocate
 	Table* tab;
 	if (dim == 1) {
@@ -167,38 +167,4 @@ void Data::apply_space(const char* file)
 }
 
 
-/*
-
-void Data::log_transform(float** table)
-{
-	for (int d = 0; d < dim; d++)
-		for (int i = 0; i < num_partition; i++)
-			table[d][i] = log10(table[d][i] + 1);
-}
-
-void Data::standart(float** table)
-{
-	float mean, soma;
-
-	for (int d = 0; d < dim; d++) {
-		//mean
-		mean = 0.0f;
-		soma = 0.0f;
-		for (int i = 0; i < num_partition; i++)
-			soma += table[d][i];
-		mean = soma / num_partition;
-		//variancy
-		soma = 0.0f;
-		for (int i = 0; i < num_partition; i++)
-			soma += powf(table[d][i]-mean,2);
-		soma = soma / num_partition;
-		//sd
-		soma = sqrtf(soma);
-		//standart
-		for (int i = 0; i < num_partition; i++)
-			table[d][i] = (table[d][i]-mean)/soma ;
-	}
-		
-}
-*/
 
