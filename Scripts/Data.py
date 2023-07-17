@@ -274,7 +274,7 @@ class Data:
                 ncol = len(data[0])
                 d = struct.pack("i i i",pheno ,nlin,ncol)
                 f.write(d)
-                df = data.flatten().astype(np.float32).tobytes()
+                df = data.flatten().astype(np.float64).tobytes()
                 f.write(df)
 
     def _get_data(self, index):
@@ -284,8 +284,8 @@ class Data:
                 d= f.read(12)
                 y,nlin,ncol =struct.unpack("i i i", d)
                 sz = nlin*ncol
-                d= f.read(sz*struct.calcsize("f"))
-                data = struct.unpack(str(sz)+"f", d)
+                d= f.read(sz*struct.calcsize("d"))
+                data = struct.unpack(str(sz)+"d", d)
                 data = np.array(data)
                 data = data.reshape((nlin, ncol))
                 return data,y
@@ -295,8 +295,8 @@ class Data:
                 d= f.read(12)
                 y,nlin,ncol =struct.unpack("i i i", d)
                 sz = nlin*ncol
-                d= f.read(sz*struct.calcsize("f"))
-                data = struct.unpack(str(sz)+"f", d)
+                d= f.read(sz*struct.calcsize("d"))
+                data = struct.unpack(str(sz)+"d", d)
                 data = np.array(data)
                 data = data.reshape((nlin, ncol))
                 return data,y
@@ -306,7 +306,7 @@ class Data:
             ncol = len(data[0])
             d = struct.pack("i i i", y,nlin,ncol)
             f.write(d)
-            df = data.flatten().astype(np.float32).tobytes()
+            df = data.flatten().astype(np.float64).tobytes()
             f.write(df)    
     def _get_pheno(self,index):
         file = self.data + self.id[index] + ".dat"
@@ -871,33 +871,12 @@ class Cell_Umap_tranformer:
     def fit(self,file_space,file_split):
         fold = os.getcwd()
         #p   file_quimera   num_partition  file_split
-        subprocess.Popen([fold+"/Flow_c.exe","p",file_space,str(self.num_partition),file_split]).wait()
         print("start")
-        subprocess.Popen(["C:/repos/MTR/Scripts/Flow_c.exe","c","C:/repos/MTR/Scripts/data/ST1/umap/space.txt",str(100),"C:/repos/MTR/Scripts/data/ST1/umap/split.dat"]).wait()
+        subprocess.Popen([fold+"/Flow_c.exe","p",file_space,str(self.num_partition),file_split]).wait()
         print("end")
         
     def transform(self,data):
         print("")
-        
-    
-    def transform(self,data,umap_space,n_jobs=15):
-        def cal_st2(i,data,umap_space):
-            x,y = data._get_data(i)
-            space = Umap_tranformer()
-            space.load(umap_space)
-            space = space.space
-            x_ = space.transform(x)
-            x_ = np.concatenate((x, x_),axis=1)
-            data._save_data(i,x_)
-        tam = len(data.id)
-        v = list(range(tam))
-        Parallel(n_jobs=n_jobs,verbose=10)(delayed(cal_st2)(p,data,umap_space) for p in v)
-        #cal_st2(self.space,0,data)
-        data.painel=data.painel+["dim"+str(i+1) for i in range(self.dimention)]
-        data.dim = self.dimention
-        data.sizes = None
-        data._save_meta()    
-        
     
     def save(self,file):
         f = open(file,"wb")

@@ -5,7 +5,7 @@
 class Data
 {
 private:
-	float** split;
+	double** split;
 	
 	//void get_density(const char* file,float** table);
 public:
