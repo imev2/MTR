@@ -116,6 +116,7 @@ class Data:
                 print(str(count) + " of " + str(len(files)))
                 count+=1
                 s = f.replace(" ", "").replace("-", "").replace("_", "")
+                #print(re.findall(r"AD(\d\d\d)([CP])",s ))
                 x = re.findall(r"AD(\d\d\d)([CP])",s )[0]
                 idd = "AD"+x[0]+x[1]
                 if idd in self.id:
@@ -130,42 +131,43 @@ class Data:
                     self.pheno.append(1)
                 file = folder_in + "/" + b + "/" + f
                 df = pd.read_csv(file)
+   
                 
                 # LABELS
                 # incorrect:correct
-                # if panel=="ST1":
-                #     mapa = {'KI67':'Ki67',"CTLA4":"CTLA-4","FOXP3":"FoxP3","CD11c":"FoxP3","ICOS(CD278)":"ICOS","CD80":"ICOS","CD123":"CD28","CD141":"Ki67","CD86":"CD95","IgM":"CD127","IL7Ra(CD127)":"CD127",
-                #             "CD19":"CD31","HLADR":"HLA-DR","CD94":"CCR2","CCR2(CD192)":"CCR2","BAFF-R":"CXCR5","CD24":"CD25","CD27":"PD-1","CD21":"CXCR3","Comp-BYG584-A":"RORgT","CD10":"CTLA-4","CTLA-4(CD152)":"CTLA-4",
-                #             "IgD":"CCR7", "CCR7(CD197)":"CCR7","CD57":"CD45RA","CD38":"CCR4","CCR4(CD194)":"CCR4","CD40":"-","CD16":"-","RORgt":"RORgT","CD56":"-","CCR7(CD197":"CCR7","IL1Ra(CD127)":"CD127","IL7RA":"CD127",
-                #             "PD1":"PD-1"}
-                if (panel=="ST3"):
-                    mapa = {'KI67':'Ki67',"FOXP3":"FoxP3","CD11c":"FoxP3","ICOS(CD278)":"ICOS","CD80":"ICOS","CD141":"Ki67","IgM":"CD127","IL7Ra(CD127)":"CD127",
-                            "CD19":"CD31","HLADR":"HLA-DR","CD94":"CCR2","CCR2(CD192)":"CCR2","BAFF-R":"CXCR5","CD24":"CD25","CD27":"PD-1","Comp-BYG584-A":"RORgT",
-                            "IgD":"CCR7", "CCR7(CD197)":"CCR7","CD57":"CD45RA","CCR4(CD194)":"CCR4","CD40":"-","CCR7(CD197":"CCR7","IL1Ra(CD127)":"CD127","IL7RA":"CD127",
-                            "PD1":"PD-1", "CD27":"PD-1",
-                            "CD57":"TNFa", "CD21":"CD40L", 
-                            "BAFFR":"IL-10", "IL10":"IL-10", 
+                if (panel=="ST1"):
+                    mapa = {'KI67':'Ki67',"CTLA4":"CTLA-4","FOXP3":"FoxP3","CD11c":"FoxP3","ICOS(CD278)":"ICOS","CD80":"ICOS","CD123":"CD28","CD141":"Ki67","CD86":"CD95","IgM":"CD127","IL7Ra(CD127)":"CD127",
+                            "CD19":"CD31","HLADR":"HLA-DR","CD94":"CCR2","CCR2(CD192)":"CCR2","BAFF-R":"CXCR5","CD24":"CD25","CD27":"PD-1","CD21":"CXCR3","Comp-BYG584-A":"RORgT","CD10":"CTLA-4","CTLA-4(CD152)":"CTLA-4",
+                            "IgD":"CCR7", "CCR7(CD197)":"CCR7","CD57":"CD45RA","CD38":"CCR4","CCR4(CD194)":"CCR4","CD40":"-","CD16":"-","RORgt":"RORgT","CD56":"-","CCR7(CD197":"CCR7","IL1Ra(CD127)":"CD127","IL7RA":"CD127",
+                            "PD1":"PD-1"}
+                elif (panel=="ST2"):
+                    mapa = {}
+                    
+                elif (panel=="ST3"):
+                    mapa = {"PD1":"PD-1", "CD27":"PD-1",
+                            "CD57":"TNFa", 
+                            "CD21":"CD40L", 
+                            "BAFFR":"IL-10", "IL10":"IL-10",
+                            "CD24":"CD25",
                             "CD94":"4-1BB", "4-IBB":"4-1BB", 
                             "IL7RA":"IL-4", "IgM":"IL-4", 
                             "CD86":"IFNg", 
                             "Ki67":"Tbet", "CD141":"Tbet", 
                             "CD56":"CD45RA", 
                             "CD80":"IL-2", "IL2":"IL-2", 
-                            "FOX-P3":"FoxP3", 
-                            # CHECK BELOW col IL-17 "['IL-17a'] not in index"
+                            "FOX-P3":"FoxP3", "FOXP3":"FoxP3","CD11c":"FoxP3",
                             "CD40":"IL-17a", "IL-17":"IL-17a", 
-                            # 
                             "HLADR":"HLA-DR", 
                             "CD21":"CD40L",
                             "Gata3":"GATA-3","CD16":"GATA-3", "GATA3":"GATA-3",
-                            "CD56":"CD45RA",
                             "CD27":"PD-1",
                             "CD38":"IL-6",
-                            "CTLA-4":"CTLA4", "CD10":"CTLA4",
-                            "CTLA-4":"CTLA4", "RORgt":"RORgT", 
+                            "CTLA-4":"CTLA4", "CD10":"CTLA4", "CTLA-4":"CTLA4",
+                            "RORgt":"RORgT","Comp-BYG584-A":"RORgT", 
+                            "IgD":"CCR7",
                             "CD123":"-"}
 
-                    df.rename(columns = mapa, inplace = True)
+                df.rename(columns = mapa, inplace = True)
                 my_cols = list(df.columns)    
                 for c in df.columns:
                     if c.startswith("-"):
@@ -188,7 +190,7 @@ class Data:
                             print("painel "+ self.painel[i] + " \t col " + my_cols[i])
                 
                 df = df[self.painel]
-                if len(df) < 1000:
+                if len(df) < 10000:
                     lowcell.append("Less than 1000 cells\t"+b + "\t"+ f + "\tnum of cells sample: " + str(len(df)))
                 self._save_data(index, df.to_numpy())
                 index+=1
@@ -679,8 +681,10 @@ class Data:
         train.load(fold_train)
         test = Data()
         test.load(fold_test)
-        aux =train._get_data(0)
-        shape = [1]+ list(aux[0].shape)
+        aux1 =train._get_data(0)
+        shape = [1]+ list(aux1[0].shape)
+        # aux2 =test._get_data(0)
+        # shape2 = [1]+ list(aux2[0].shape)
         return self.AdDataset(train,shape),self.AdDataset(test,shape)
                   
     def umap_space(self,num_cells=1000):
@@ -727,7 +731,7 @@ class Standard_tranformer:
                 print("generate sample")
                 for i in range(1,tam):
                     print(str(i)+ " of "+str(tam))
-                    df = np.concatenate(df, data._sample_data(idd[i], self.num_cells,self.seed), axis=0)
+                    df = np.concatenate((df, data._sample_data(idd[i], self.num_cells,self.seed)), axis=0)
                     self.seed+=1
                     df_y = np.concatenate((df_y,np.repeat(data.pheno[yd[i]], self.num_cells)))
                 df = data._oversample(df, df_y,self.seed+1)[0]
@@ -803,6 +807,41 @@ class Log_transformer():
             df = data._get_data(i)[0]
             df = np.log1p(df)
             data._save_data(i, df)
+            
+class Oversample():
+    def __init__(self,seed):
+        np.random.seed(seed)
+        random.seed(seed)
+    def fit_transform(self,folder):
+        data = Data()
+        data.load(folder)
+        y = data.pheno
+        neg = [i for i in range(len(y)) if y[i]==0]
+        pos = [i for i in range(len(y)) if y[i]==1]
+        s_neg = len(neg)
+        s_pos = len(pos)
+        while s_neg !=s_pos:
+            if s_neg>s_pos:
+                idd = pos[random.randint(0, len(pos)-1)]
+                nidd = data.id[idd]+"_"
+                data.id.append(nidd)
+                data.pheno.append(data.pheno[idd])
+                data.batch.append(data.batch[idd])
+                src = data.data + data.id[idd] + ".dat"
+                dest = data.data + nidd + ".dat"
+                shutil.copyfile(src,dest)
+                s_pos+=1
+            else:
+                idd = neg[random.randint(0, len(neg)-1)]
+                nidd = data.id[idd]+"_"
+                data.id.append(nidd)
+                data.pheno.append(data.pheno[idd])
+                data.batch.append(data.batch[idd])
+                src = data.data + data.id[idd] + ".dat"
+                dest = data.data + nidd + ".dat"
+                shutil.copyfile(src,dest)
+                s_neg+=1
+        data._save_meta()
 
 class Umap_tranformer:
     def __init__(self,dimentions=2):

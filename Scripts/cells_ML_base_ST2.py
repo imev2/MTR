@@ -23,7 +23,7 @@ fold
 v = []
 files = []
 
-train_path = "/data/ST3/pooled/ST3_base_train_val_batch_pool"
+train_path = "/data/ST2/pooled/ST2_train_val_batch_pool"
 lab = "batch"
 file = pd.read_csv(fold+train_path)
 
@@ -37,7 +37,7 @@ y = file.iloc[:, -1]
 x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.10, random_state=seed)
 files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
-train_path = "/data/ST3/pooled/ST3_base_train_val_log_batch_pool"
+train_path = "/data/ST2/pooled/ST2_train_val_log_batch_pool"
 lab = "log_batch"
 file = pd.read_csv(fold+train_path)
 file=file.iloc[:,1:]
@@ -49,7 +49,7 @@ x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.1
 files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
 
-train_path = "/data/ST3/pooled/ST3_base_train_val_scaled_pool"
+train_path = "/data/ST2/pooled/ST2_train_val_scaled_pool"
 lab = "scaled"
 file = pd.read_csv(fold+train_path)
 file=file.iloc[:,1:]
@@ -61,7 +61,7 @@ x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.1
 files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
 
-train_path = "/data/ST3/pooled/ST3_base_train_val_log_scaled_pool"
+train_path = "/data/ST2/pooled/ST2_train_val_log_scaled_pool"
 lab = "log_scaled"
 file = pd.read_csv(fold+train_path)
 file=file.iloc[:,1:]
@@ -146,10 +146,10 @@ for i in range(len(v)):
     model.append(m)
 data = pd.DataFrame({"data":lab,"model":model,"par":par,"acuracy":res})
 
-data.to_csv(fold+"/data/ST3/RF_LR_parameters_2.csv",index_label=False)
+data.to_csv(fold+"/data/ST2/RF_LR_parameters.csv",index_label=False)
 
 # ### BATCH ###
-# train_path = "/data/ST3/pooled/ST3_base_train_val_batch_pool"
+# train_path = "/data/ST3/pooled/ST3_train_val_batch_pool"
 # file = pd.read_csv(fold+train_path)
 # file=file.iloc[:,1:]
 # x_train= file.iloc[:, :-1]

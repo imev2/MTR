@@ -16,14 +16,15 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from joblib import Parallel, delayed
+from sklearn.model_selection import cross_val_score
 #generate data ST1
 seed = 1235711
 fold = os.getcwd()
 fold
-# v = []
-# files = []
+v = []
+files = []
 
-# train_path = "/ST3/pooled/ST3_base_train_val_batch_pool"
+# train_path = "/data/ST3_wout801/pooled/ST3_train_val_batch_pool"
 # lab = "batch"
 # file = pd.read_csv(fold+train_path)
 # file = file.sample(n=20000,random_state=seed)
@@ -38,7 +39,7 @@ fold
 # x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.10, random_state=seed)
 # files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
-# train_path = "/ST3/pooled/ST3_base_train_val_log_batch_pool"
+# train_path = "/data/ST3_wout801/pooled/ST3_train_val_log_batch_pool"
 # lab = "log_batch"
 # file = pd.read_csv(fold+train_path)
 # file=file.iloc[:,1:]
@@ -50,64 +51,64 @@ fold
 # files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
 
-# train_path = "/ST3/pooled/ST3__base_train_val_scaled_pool"
-# lab = "scaled"
-# file = pd.read_csv(fold+train_path)
-# file=file.iloc[:,1:]
-# x= file.iloc[:, :-1]
-# y = file.iloc[:, -1]
+train_path = "/data/ST3/pooled/ST3_train_val_scaled_pool"
+lab = "scaled"
+file = pd.read_csv(fold+train_path)
+file=file.iloc[:,1:]
+x= file.iloc[:, :-1]
+y = file.iloc[:, -1]
 
 
-# x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.10, random_state=seed)
-# files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
+x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.10, random_state=seed)
+files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
 
-# train_path = "/ST3/pooled/ST3_base_train_val_log_scaled_pool"
-# lab = "log_scaled"
-# file = pd.read_csv(fold+train_path)
-# file=file.iloc[:,1:]
-# x= file.iloc[:, :-1]
-# y = file.iloc[:, -1]
+train_path = "/data/ST3/pooled/ST3_train_val_log_scaled_pool"
+lab = "log_scaled"
+file = pd.read_csv(fold+train_path)
+file=file.iloc[:,1:]
+x= file.iloc[:, :-1]
+y = file.iloc[:, -1]
 
-# x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.10, random_state=seed)
-# files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
+x_train, x_val, y_train, y_val = train_test_split(x, y,stratify=y, test_size=0.10, random_state=seed)
+files.append((x_train.copy(), x_val.copy(), y_train.copy(), y_val.copy(),lab))
 
 
-# v = []
-# for data in files:
-#     for model in ["RF","LR","SVM"]:
+v = []
+for data in files:
+    for model in ["RF","LR","SVM"]:
         
-#         if model=="RF":
-#             res_max_features = ["sqrt","log2"]
-#             res_max_depth = [10,15,20,30]
-#             for max_features in res_max_features:
-#                 for max_depth in res_max_depth:
-#                     par= {}
-#                     par["max_features"]=max_features
-#                     par["max_depth"]=max_depth
-#                     v.append((data,model,par)) 
-#         if model=="LR":    
-#             c = 1
-#             for a in range(20):
-#                 par = {}
-#                 par["c"]=c
-#                 c = c-c*1/5
-#                 print(c)
-#                 v.append((data,model,par)) 
-#         # if model=="SVM":
-#         #     res_c = [0.8]
-#         #     res_gamma = [0.1]
-#         #     #res_c = [1,0.9,0.8,0.5,0.1]
-#         #     #res_gamma = [1,0.5,0.1,0.01,0.001,0.0001]
-#         #     res_kernel = ["linear",'rbf', 'sigmoid']
-#         #     for c in res_c:
-#         #         for gamma in res_gamma:
-#         #             for kernel in res_kernel:
-#         #                 par = {}
-#         #                 par["c"]=c
-#         #                 par["kernel"]=kernel
-#         #                 par["gamma"]=gamma
-#         #                 v.append((data,model,par)) 
+        if model=="RF":
+            res_max_features = ["sqrt","log2"]
+            res_max_depth = [10,15,20,30]
+            for max_features in res_max_features:
+                for max_depth in res_max_depth:
+                    par= {}
+                    par["max_features"]=max_features
+                    par["max_depth"]=max_depth
+                    v.append((data,model,par)) 
+        if model=="LR":    
+            c = 1
+            for a in range(20):
+                par = {}
+                par["c"]=c
+                c = c-c*1/5
+                print(c)
+                v.append((data,model,par)) 
+        # if model=="SVM":
+        #     res_c = [0.8]
+        #     res_gamma = [0.1]
+        #     #res_c = [1,0.9,0.8,0.5,0.1]
+        #     #res_gamma = [1,0.5,0.1,0.01,0.001,0.0001]
+        #     res_kernel = ["linear",'rbf', 'sigmoid']
+        #     for c in res_c:
+        #         for gamma in res_gamma:
+        #             for kernel in res_kernel:
+        #                 par = {}
+        #                 par["c"]=c
+        #                 par["kernel"]=kernel
+        #                 par["gamma"]=gamma
+        #                 v.append((data,model,par)) 
                     
 # def calcu(v):
 #     data,model,par = v
@@ -131,156 +132,184 @@ fold
 #         y_pred=svc.predict(x_val)
 #         return accuracy_score(y_true=y_val,y_pred=y_pred)
 #     return None
-# print("start")
-# res = Parallel(n_jobs=15,verbose=10)(delayed(calcu)(p) for p in v)
-# print("stop")              
+def calcu(v):
+    data, model, par = v
+    x_train, x_val, y_train, y_val, lab = data
+    if model == "RF":
+        rf = RandomForestClassifier(n_estimators=501, max_features=par["max_features"], max_depth=par["max_depth"], random_state=seed, oob_score=False)
+        scores = cross_val_score(rf, x_train, y_train, cv=5)
+        accuracy = scores.mean()
+        return accuracy, par
+    if model == "LR":
+        lr = LogisticRegression(random_state=seed, C=par["c"], penalty="l1", solver="liblinear", max_iter=100)
+        scores = cross_val_score(lr, x_train, y_train, cv=5)
+        accuracy = scores.mean()
+        return accuracy, par
+    if model == "SVM":
+        svc = SVC(C=par["c"], gamma=par["gamma"], kernel=par["kernel"], cache_size=3000)
+        scores = cross_val_score(svc, x_train, y_train, cv=5)
+        accuracy = scores.mean()
+        return accuracy, par
+    return None
+print("start")
+res = Parallel(n_jobs=15, verbose=10)(delayed(calcu)(p) for p in v)
+print("stop")
 
-# output = {"v":v,"res":res}
+best_params = []
+# Extract the best parameters for each model
+for r, params in res:
+    best_params.append((r, params))
+# Sort the best parameters based on accuracy in descending order
+best_params.sort(reverse=True)
+# Select the top parameters for each model
+top_params = best_params[:3]  # Change the number as needed
 
-# lab =[]
-# par = []
-# model = []
-# for i in range(len(v)):
-#     data,m,p = v[i]
-#     lab.append(data[4])
-#     par.append(p)
-#     model.append(m)
-# data = pd.DataFrame({"data":lab,"model":model,"par":par,"acuracy":res})
+output = {"v": v, "res": res, "best_params": top_params}
 
-# data.to_csv(fold+"/ST3/RF_LR_parameters.csv",index_label=False)
+lab =[]
+par = []
+model = []
+for i in range(len(v)):
+    data,m,p = v[i]
+    lab.append(data[4])
+    par.append(p)
+    model.append(m)
+data = pd.DataFrame({"data":lab,"model":model,"par":par,"acuracy":res})
 
-### BATCH ###
-train_path = "/ST3/pooled/ST3_base_train_val_batch_pool"
-file = pd.read_csv(fold+train_path)
-# file = file.sample(n=20000,random_state=seed)
-file=file.iloc[:,1:]
-x_train= file.iloc[:, :-1]
-y_train = file.iloc[:, -1]
+data.to_csv(fold+"/data/ST3/RF_LR_parameters.csv",index_label=False)
 
-test_path = "/ST3/pooled/ST3_base_test_batch_pool_unbalanced"
-file = pd.read_csv(fold+test_path)
-file=file.iloc[:,1:]
-x_test= file.iloc[:, :-1]
-y_test = file.iloc[:, -1]
+# ### BATCH ###
+# train_path = "/data/ST3_wout801/pooled/ST3_train_val_batch_pool"
+# file = pd.read_csv(fold+train_path)
+# # file = file.sample(n=20000,random_state=seed)
+# file=file.iloc[:,1:]
+# x_train= file.iloc[:, :-1]
+# y_train = file.iloc[:, -1]
 
-rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=20,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
-rf.fit(x_train, y_train)
-y_pred=rf.predict(x_test)
-y_prob=rf.predict_proba(x_test)
-print("RF Finished")
-comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST3/batch_ST3_RF_test","wb")
-pk.dump(comb, file)
-file.close()
+# test_path = "/data/ST3_wout801/pooled/ST3_test_batch_pool_unbalanced"
+# file = pd.read_csv(fold+test_path)
+# file=file.iloc[:,1:]
+# x_test= file.iloc[:, :-1]
+# y_test = file.iloc[:, -1]
 
-lr = LogisticRegression(random_state=seed,C=0.014411518807585589,penalty="l1",solver="liblinear", verbose=2)
-lr.fit(x_train, y_train)
-y_pred=lr.predict(x_test)
-y_prob=lr.predict_proba(x_test)
-print("LR Finished")
-comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST3/batch_ST3_LR_test.dat","wb")
-pk.dump(comb, file)
-file.close()
+# rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=20,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
+# rf.fit(x_train, y_train)
+# y_pred=rf.predict(x_test)
+# y_prob=rf.predict_proba(x_test)
+# print("RF Finished")
+# comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
+# file = open(fold+"/data/ST3/batch_ST3_RF_test","wb")
+# pk.dump(comb, file)
+# file.close()
 
-### SCALED ###
-train_path = "/ST3/pooled/ST3_base_train_val_scaled_pool"
-file = pd.read_csv(fold+train_path)
-# file = file.sample(n=20000,random_state=seed)
-file=file.iloc[:,1:]
-x_train= file.iloc[:, :-1]
-y_train = file.iloc[:, -1]
+# lr = LogisticRegression(random_state=seed,C= 0.04398046511104001,penalty="l1",solver="liblinear", verbose=2)
+# lr.fit(x_train, y_train)
+# y_pred=lr.predict(x_test)
+# y_prob=lr.predict_proba(x_test)
+# print("LR Finished")
+# comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
+# file = open(fold+"/data/ST3/batch_ST3_LR_test.dat","wb")
+# pk.dump(comb, file)
+# file.close()
 
-test_path = "/ST3/pooled/ST3_base_test_scaled_pool_unbalanced"
-file = pd.read_csv(fold+test_path)
-file=file.iloc[:,1:]
-x_test= file.iloc[:, :-1]
-y_test = file.iloc[:, -1]
+# ### SCALED ###
+# train_path = "/data/ST3_wout801/pooled/ST3_train_val_scaled_pool"
+# file = pd.read_csv(fold+train_path)
+# # file = file.sample(n=20000,random_state=seed)
+# file=file.iloc[:,1:]
+# x_train= file.iloc[:, :-1]
+# y_train = file.iloc[:, -1]
 
-rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
-rf.fit(x_train, y_train)
-y_pred=rf.predict(x_test)
-y_prob=rf.predict_proba(x_test)
-print("RF Finished")
-comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST3/scaled_ST3_RF_test","wb")
-pk.dump(comb, file)
-file.close()
+# test_path = "/data/ST3_wout801/pooled/ST3_test_scaled_pool_unbalanced"
+# file = pd.read_csv(fold+test_path)
+# file=file.iloc[:,1:]
+# x_test= file.iloc[:, :-1]
+# y_test = file.iloc[:, -1]
 
-lr = LogisticRegression(random_state=seed,C= 0.014411518807585589,penalty="l1",solver="liblinear", verbose=2)
-lr.fit(x_train, y_train)
-y_pred=lr.predict(x_test)
-y_prob=lr.predict_proba(x_test)
-print("LR Finished")
-comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST3/scaled_ST3_LR_test.dat","wb")
-pk.dump(comb, file)
-file.close()
+# rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
+# rf.fit(x_train, y_train)
+# y_pred=rf.predict(x_test)
+# y_prob=rf.predict_proba(x_test)
+# print("RF Finished")
+# comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
+# file = open(fold+"/data/ST3/scaled_ST3_RF_test","wb")
+# pk.dump(comb, file)
+# file.close()
 
-### LOG SCALED ###
-train_path = "/ST3/pooled/ST3_base_train_val_log_scaled_pool"
-file = pd.read_csv(fold+train_path)
-# file = file.sample(n=20000,random_state=seed)
-file=file.iloc[:,1:]
-x_train= file.iloc[:, :-1]
-y_train = file.iloc[:, -1]
+# lr = LogisticRegression(random_state=seed,C= 0.02251799813685248,penalty="l1",solver="liblinear", verbose=2)
+# lr.fit(x_train, y_train)
+# y_pred=lr.predict(x_test)
+# y_prob=lr.predict_proba(x_test)
+# print("LR Finished")
+# comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
+# file = open(fold+"/data/ST3/scaled_ST3_LR_test.dat","wb")
+# pk.dump(comb, file)
+# file.close()
 
-test_path = "/ST3/pooled/ST3_base_test_log_scaled_pool_unbalanced"
-file = pd.read_csv(fold+test_path)
-file=file.iloc[:,1:]
-x_test= file.iloc[:, :-1]
-y_test = file.iloc[:, -1]
+# ### LOG SCALED ###
+# train_path = "/data/ST3_wout801/pooled/ST3_train_val_log_scaled_pool"
+# file = pd.read_csv(fold+train_path)
+# # file = file.sample(n=20000,random_state=seed)
+# file=file.iloc[:,1:]
+# x_train= file.iloc[:, :-1]
+# y_train = file.iloc[:, -1]
 
-rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
-rf.fit(x_train, y_train)
-y_pred=rf.predict(x_test)
-y_prob=rf.predict_proba(x_test)
-print("RF Finished")
-comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST3/logscaled_ST3_RF_test","wb")
-pk.dump(comb, file)
-file.close()
+# test_path = "/data/ST3_wout801/pooled/ST3_test_log_scaled_pool_unbalanced"
+# file = pd.read_csv(fold+test_path)
+# file=file.iloc[:,1:]
+# x_test= file.iloc[:, :-1]
+# y_test = file.iloc[:, -1]
 
-lr = LogisticRegression(random_state=seed,C=0.014411518807585589,penalty="l1",solver="liblinear", verbose=2)
-lr.fit(x_train, y_train)
-y_pred=lr.predict(x_test)
-y_prob=lr.predict_proba(x_test)
-print("LR Finished")
-comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST3/logscaled_ST3_LR_test.dat","wb")
-pk.dump(comb, file)
-file.close()
+# rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
+# rf.fit(x_train, y_train)
+# y_pred=rf.predict(x_test)
+# y_prob=rf.predict_proba(x_test)
+# print("RF Finished")
+# comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
+# file = open(fold+"/data/ST3/logscaled_ST3_RF_test","wb")
+# pk.dump(comb, file)
+# file.close()
 
-### LOG BATCH SCALED ###
-train_path = "/ST3/pooled/ST3_base_train_val_log_batch_pool"
-file = pd.read_csv(fold+train_path)
-# file = file.sample(n=20000,random_state=seed)
-file=file.iloc[:,1:]
-x_train= file.iloc[:, :-1]
-y_train = file.iloc[:, -1]
+# lr = LogisticRegression(random_state=seed,C=1,penalty="l1",solver="liblinear", verbose=2)
+# lr.fit(x_train, y_train)
+# y_pred=lr.predict(x_test)
+# y_prob=lr.predict_proba(x_test)
+# print("LR Finished")
+# comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
+# file = open(fold+"/data/ST3/logscaled_ST3_LR_test.dat","wb")
+# pk.dump(comb, file)
+# file.close()
 
-test_path = "/ST3/pooled/ST3_base_test_log_batch_pool_unbalanced"
-file = pd.read_csv(fold+test_path)
-file=file.iloc[:,1:]
-x_test= file.iloc[:, :-1]
-y_test = file.iloc[:, -1]
+# ### LOG BATCH SCALED ###
+# train_path = "/data/ST3_wout801/pooled/ST3_train_val_log_batch_pool"
+# file = pd.read_csv(fold+train_path)
+# # file = file.sample(n=20000,random_state=seed)
+# file=file.iloc[:,1:]
+# x_train= file.iloc[:, :-1]
+# y_train = file.iloc[:, -1]
 
-rf = RandomForestClassifier(n_estimators=501,max_features="sqrt",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
-rf.fit(x_train, y_train)
-y_pred=rf.predict(x_test)
-y_prob=rf.predict_proba(x_test)
-print("RF Finished")
-comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
-file = open(fold+"/ST3/logbatch_ST3_RF_test","wb")
-pk.dump(comb, file)
-file.close()
+# test_path = "/data/ST3_wout801/pooled/ST3_test_log_batch_pool_unbalanced"
+# file = pd.read_csv(fold+test_path)
+# file=file.iloc[:,1:]
+# x_test= file.iloc[:, :-1]
+# y_test = file.iloc[:, -1]
 
-lr = LogisticRegression(random_state=seed,C=0.10737418240000003,penalty="l1",solver="liblinear", verbose=2)
-lr.fit(x_train, y_train)
-y_pred=lr.predict(x_test)
-y_prob=lr.predict_proba(x_test)
-print("LR Finished")
-comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
-file = open(fold+"/ST3/logbatch_ST3_LR_test.dat","wb")
-pk.dump(comb, file)
-file.close()
+# rf = RandomForestClassifier(n_estimators=501,max_features="log2",max_depth=30,random_state=seed,oob_score=False,n_jobs=15, verbose=2)
+# rf.fit(x_train, y_train)
+# y_pred=rf.predict(x_test)
+# y_prob=rf.predict_proba(x_test)
+# print("RF Finished")
+# comb = {"y_true":y_test, "RF_y_pred":y_pred, "RF_y_prob":y_prob}
+# file = open(fold+"/data/ST3/logbatch_ST3_RF_test","wb")
+# pk.dump(comb, file)
+# file.close()
+
+# lr = LogisticRegression(random_state=seed,C=0.018014398509481985,penalty="l1",solver="liblinear", verbose=2)
+# lr.fit(x_train, y_train)
+# y_pred=lr.predict(x_test)
+# y_prob=lr.predict_proba(x_test)
+# print("LR Finished")
+# comb = {"y_true":y_test, "LR_y_pred":y_pred, "LR_y_prob":y_prob}
+# file = open(fold+"/data/ST3/logbatch_ST3_LR_test.dat","wb")
+# pk.dump(comb, file)
+# file.close()
