@@ -26,15 +26,18 @@ from sklearn import metrics
 seed = 1235711
 fold = os.getcwd()
 fold
-
+torch.manual_seed(seed+1)
 ### generate data
-
+print("load Data")
 data = Data()
 
 ### load and contruct dataset ###
-file = open(fold +"/data/ST1/dataset_cell_cnn_batch_noaug.dat","rb")
-train_data, val_data  = pk.load(file)
-file.close()
+train_data, val_data = data.get_dataload(fold +"/data/ST2/ST2_train_scale",fold +"/data/ST2/ST2_val_scale")
+data.load(fold+"/data/ST2/ST2_base")
+tam = len(data.pheno)
+pos = sum(data.pheno)
+pos_weight = (tam-pos)/pos
+
 #train_loader = DataLoader(dataset=train_data, batch_size=64, shuffle=True)
 #val_loader = DataLoader(dataset=val_data, batch_size=64, shuffle=False)
 
@@ -47,14 +50,13 @@ for v in imput_shape:
 
 
 ### defining model ###
-class Model_CVRobust(torch.nn.Module):
+class Model_CVsimp(torch.nn.Module):
     def __init__(self,imput_size, num_markers):
         super().__init__()
         torch.set_default_dtype(torch.float64)
         self.flatten = torch.flatten
-        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
-        self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(1,1))
-        self.fc1 = torch.nn.Linear(in_features=3, out_features=1)
+        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1,num_markers))
+        #self.cov2 = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1,1))
         self.avPoll=torch.nn.AvgPool2d(kernel_size=(10000,1),stride =1)
         self.sigmoid = torch.nn.Sigmoid()
         self.relu = torch.nn.ReLU()
@@ -64,17 +66,14 @@ class Model_CVRobust(torch.nn.Module):
     def forward(self, x):
         #print(x.shape)
         x = self.relu(self.cov1(x))
+        
         # x = self.bn(x)
         #print(x.shape)
-        x = self.relu(self.cov2(x))
         # print(x.shape)
         # x = self.bn(x)
         #print(x.shape)
         x = self.avPoll(x)
-        x = self.flatten(x,start_dim=1)
         #print(x.shape)
-        x = self.fc1(x)
-        x = self.sigmoid(x)
         return x
     
 class Model_CVRobust_Dense(torch.nn.Module):
@@ -157,9 +156,9 @@ class Model_CV2(torch.nn.Module):
 
 class Neural:
     def __init__(self,train_dataset,val_dataset,model,optimizer,loss_f, device,sumary_lab=False,bach_size=16):
-        self.train_loader = train_loader = DataLoader(dataset=train_data, batch_size=bach_size, shuffle=True)
+        self.train_loader = DataLoader(dataset=train_data, batch_size=bach_size, shuffle=True)
         self.bach_size = bach_size
-        self.val_loader = DataLoader(dataset=val_data, batch_size=bach_size, shuffle=False)
+        self.val_loader = DataLoader(dataset=val_data, batch_size=bach_size, shuffle=True)
         self.model = model
         self.optimizer = optimizer
         self.loss_f = loss_f
@@ -174,44 +173,33 @@ class Neural:
     def trainning(self,num_epochs,file_out,test_dataset=None):
         for epoch in range(num_epochs):
             ###TRAINING###
-            tloss,b_acuracy,si = 0, 0, 0
-            
+            tloss = []
+            vloss = []
+            si=0
+            t_y = []
+            v_y = []
+            t_yp = []
+            v_yp = []
             for batch_x,batch_y in self.train_loader:
                 self.model.train()
-                si+=1
                 batch_x.to(self.device)
                 batch_y.to(self.device)
                 y_pred = self.model(batch_x) 
-                
                 ### Add loss ###
-                loss = self.loss_f(y_pred, batch_y.unsqueeze(1))
+                loss = self.loss_f(torch.flatten(y_pred), batch_y)
                 loss.backward()
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-                tloss+=loss.detach().item()
-                y_pred = y_pred.detach().tolist()
-                batch_y = batch_y.detach().tolist()
-                y_pred = [a[0] for a in y_pred]
-                fpr, tpr, thresholds = metrics.roc_curve(batch_y,y_pred, pos_label=1)
-                b_acuracy+=metrics.auc(fpr, tpr)
-                # self.model.eval()
-                # with torch.no_grad():
-                #     yhat1 = self.model(batch_x)
-                #     losses = self.loss_f(yhat1, batch_y.unsqueeze(1))
-                #     print("")
-                    ### Add normalized accuracy ###
-                # if y_pred < 0.5 and y == 0 or y_pred > 0.5 and y == 1:
-                #     n_correct += 1
-                # else:
-                #     n_incorrect +=1
-                    
-                    ### Add F score ###
-            
-                    
+                tloss.append(loss.detach().item())
+                t_y = t_y + batch_y.detach().tolist()
+                t_yp = t_yp + torch.flatten(y_pred.detach()).tolist()
+                
+                
+            fpr, tpr, thresholds = metrics.roc_curve(t_y,t_yp, pos_label=1)
+            b_acuracy = metrics.auc(fpr, tpr)        
             ### Average validation loss and score for all batches ###
             # print(si)
-            tloss = tloss/si
-            b_acuracy = b_acuracy/si
+            tloss = np.mean(np.array(tloss))
             # sfscore = sfscore/si
             # sscore = sscore/si
             print("------------------")
@@ -220,26 +208,24 @@ class Neural:
 
             ###VALIDATION###
             self.model.eval()
-            ### Add accuracy ###
-            vloss,vb_acuracy,si = 0, 0, 0
+            ### Add accuracy ###  
             with torch.no_grad():
                 for batch_x,batch_y in self.val_loader:
-                    si+=1
+                    self.model.train()
                     batch_x.to(self.device)
                     batch_y.to(self.device)
-                    y_pred = self.model(batch_x)
-                    loss = self.loss_f(y_pred, batch_y.unsqueeze(1))
-                    vloss+=loss.detach().item()
-                    y_pred = y_pred.detach().tolist()
-                    batch_y = batch_y.detach().tolist()
-                    y_pred = [a[0] for a in y_pred]
-                    fpr, tpr, thresholds = metrics.roc_curve(batch_y,y_pred, pos_label=1)
-                    vb_acuracy+=metrics.auc(fpr, tpr)
+                    y_pred = self.model(batch_x) 
+                    ### Add loss ###
+                    loss = self.loss_f(torch.flatten(y_pred), batch_y)
+                    vloss.append(loss.detach().item())
+                    v_y = v_y + batch_y.detach().tolist()
+                    v_yp = v_yp + torch.flatten(y_pred.detach()).tolist()
                         
                 ### Average validation loss and score for all batches ###
                 # print(si)
-                vloss = vloss/si
-                vb_acuracy = vb_acuracy/si
+                fpr, tpr, thresholds = metrics.roc_curve(v_y,v_yp, pos_label=1)
+                vb_acuracy = metrics.auc(fpr, tpr)
+                vloss = np.mean(np.array(vloss))
                     # print("------------------")
                 print("val loss: ", str(vloss), "val accuracy: "+str(vb_acuracy)) #, " fscore: ", str(sfscore))
                 print("------------------")
@@ -310,96 +296,16 @@ class Neural:
 # #####################################################################################################
 
 ### Define the hyperparameter values to explore ###
-batch_size=100
-lr = 0.001
+batch_size=8
+lr = 0.0005
 
 device = "cpu"
 torch.set_num_threads(16)
-loss_f = torch.nn.BCELoss()
+loss_f = torch.nn.BCEWithLogitsLoss(reduction="mean",pos_weight=torch.as_tensor(pos_weight))
+print("run model")
 
-
-# model = Model_CVRobust(imput_size, num_markers=30)
-# optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVRobust_bs16_do02lr05",bach_size=batch_size)                  
-# net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCVRobust_do02lr05", test_dataset=None)  
-
-
-# # model = Model_Linear(imput_size, num_markers=30)
-# # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-# # # optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-# # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelLinear_bs16",bach_size=batch_size)                  
-# # net.trainning(num_epochs=500, test_dataset=None, file_out=fold+"/ST2/cellCnn/scoresmodelLinear")               
-       
-# model = Model_CVRobust_Dense(imput_size, num_markers=30)
-# optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense10_do02lr05",bach_size=batch_size)                  
-# net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCV_dense10_do02lr05", test_dataset=None)  
-
-# model = Model_CV2(imput_size, num_markers=28)
-# optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV2_1307_9_45s",bach_size=batch_size)                  
-# net.trainning(num_epochs=1, file_out=fold+"/Results/ST1/CV2/1307_8_38", test_dataset=None)  
-
-
-model = Model_CVRobust(imput_size, num_markers=28)
+model = Model_CVsimp(imput_size, num_markers=30)
 optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVRobust_19_07_1600",bach_size=batch_size)                  
-net.trainning(num_epochs=2000, file_out=fold+"/data/Results/ST1/CVRobust_19_07_1600.dat", test_dataset=None)  
-
-# model = Model_Linear(imput_size, num_markers=28)
-# optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelLinear_1307_8_5channels",bach_size=batch_size)                  
-# net.trainning(num_epochs=1, test_dataset=None, file_out=fold+"/Results/ST1/Linear/Linear_1206_18_10")               
-       
-# model = Model_CVRobust_Dense(imput_size, num_markers=28)
-# optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense_1307_8_5channels",bach_size=batch_size)                  
-# net.trainning(num_epochs=1, file_out=fold+"/Results/ST1/Dense/Dense_1307_8_38", test_dataset=None)  
-
-
-
-
-
-
-# # ### definning model
-# # class Model_CVRobust(torch.nn.Module):
-# #     def __init__(self,imput_size):
-# #         super().__init__()
-# #         torch.set_default_dtype(torch.float64)
-# #         self.flatten = torch.flatten
-# #         self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,28))
-# #         self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=1, kernel_size=(1,1))
-# #         # self.fc1 = torch.nn.Linear(in_features=1, out_features=1)
-# #         self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000,1),stride =1)
-# #         self.sigmoid = torch.nn.Sigmoid()
-# #         self.relu = torch.nn.ReLU()
-# #         self.do = torch.nn.Dropout1d(p=0.1)
-# #         self.optimizer=None
-# #     def forward(self, x):
-# #         x = self.do(self.relu(self.cov1(x)))
-# #         x = self.do(self.relu(self.cov2(x)))
-# #         x = self.avPoll(x)
-# #         x = self.flatten(x)
-# #         x = self.sigmoid(x)
-# #         return x
-    
-# # class Model_CV1(torch.nn.Module):
-# #     def __init__(self,imput_size):
-# #         super().__init__()
-# #         torch.set_default_dtype(torch.float64)
-# #         self.flatten = torch.flatten
-# #         self.fc1 = torch.nn.Linear(in_features=imput_size, out_features=1)
-# #         self.sigmoid = torch.nn.Sigmoid()
-# #         self.relu = torch.nn.ReLU()
-# #         self.do = torch.nn.Dropout1d(p=0.1)
-# #         self.optimizer=None
-# #     def forward(self, x):
-# #         x = self.do(self.relu(self.cov1(x)))
-# #         x = self.maxPoll(x)
-# #         x = self.flatten(x)
-# #         x = self.sigmoid(self.fc1(x))
-# #         return x
-    
-
-    
+net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVsimp_19_07_1600",bach_size=batch_size)                  
+net.trainning(num_epochs=5000, file_out=fold+"/data/Results/ST1/modelCVsimp_19_07_1600.dat", test_dataset=None)
 
