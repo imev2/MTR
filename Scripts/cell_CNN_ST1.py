@@ -157,7 +157,7 @@ class Model_CV2(torch.nn.Module):
 
 class Neural:
     def __init__(self,train_dataset,val_dataset,model,optimizer,loss_f, device,sumary_lab=False,bach_size=16):
-        self.train_loader = train_loader = DataLoader(dataset=train_data, batch_size=bach_size, shuffle=True)
+        self.train_loader = DataLoader(dataset=train_data, batch_size=bach_size, shuffle=True)
         self.bach_size = bach_size
         self.val_loader = DataLoader(dataset=val_data, batch_size=bach_size, shuffle=False)
         self.model = model
@@ -194,19 +194,6 @@ class Neural:
                 y_pred = [a[0] for a in y_pred]
                 fpr, tpr, thresholds = metrics.roc_curve(batch_y,y_pred, pos_label=1)
                 b_acuracy+=metrics.auc(fpr, tpr)
-                # self.model.eval()
-                # with torch.no_grad():
-                #     yhat1 = self.model(batch_x)
-                #     losses = self.loss_f(yhat1, batch_y.unsqueeze(1))
-                #     print("")
-                    ### Add normalized accuracy ###
-                # if y_pred < 0.5 and y == 0 or y_pred > 0.5 and y == 1:
-                #     n_correct += 1
-                # else:
-                #     n_incorrect +=1
-                    
-                    ### Add F score ###
-            
                     
             ### Average validation loss and score for all batches ###
             # print(si)

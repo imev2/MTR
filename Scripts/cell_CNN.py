@@ -21,40 +21,64 @@ import torch
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import itertools
-#generate data ST1
+#generate data ST2
 seed = 1235711
 fold = os.getcwd()
 fold
 
 ### GENERATE DATA FOR CELL CNN ###
 data = Data()
-data.load(fold + "/data/ST1/ST1_train_val_batch")
-data.split_data_test(fold_train=fold + "/data/ST1/ST1_cell/ST1_train_batch", fold_test=fold + "/data/ST1/ST1_cell/ST1_val_batch",perc_train=0.8, seed=seed)
-over = Oversample(seed)
-over.fit_transform(fold + "/data/ST1/ST1_cell/ST1_train_batch")
-# data.augmentation(factor=20, seed=seed)
+# data.load(fold + "/data/ST2/ST2_train_val_batch")
+# data.split_data_test(fold_train=fold + "/data/ST2/ST2_cell/ST2_train_batch", fold_test=fold + "/data/ST2/ST2_cell/ST2_val_batch",perc_train=0.8, seed=seed)
+# over = Oversample(seed)
+# over.fit_transform(fold + "/data/ST2/ST2_cell/ST2_train_batch")
+# # data.augmentation(factor=20, seed=seed)
 
 
-data.load(fold + "/data/ST1/ST1_cell/ST1_train_batch")
-data.save(fold + "/data/ST1/ST1_cell/ST1_cell_train_batch")
-data.load(fold + "/data/ST1/ST1_cell/ST1_cell_train_batch")
-data.sample_all_cells(numcells=10000,seed=seed+1)
+# data.load(fold + "/data/ST2/ST2_cell/ST2_train_batch")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_train_batch")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_train_batch")
+# data.sample_all_cells(numcells=10000,seed=seed+1)
 
-data.load(fold + "/data/ST1/ST1_cell/ST1_val_batch")
-data.save(fold + "/data/ST1/ST1_cell/ST1_cell_val_batch")
-data.load(fold + "/data/ST1/ST1_cell/ST1_cell_val_batch")
-over.fit_transform(fold + "/data/ST1/ST1_cell/ST1_cell_val_batch")
-data.load(fold + "/data/ST1/ST1_cell/ST1_cell_val_batch")
-data.sample_all_cells(numcells=10000,seed=seed+2)
+# data.load(fold + "/data/ST2/ST2_cell/ST2_val_batch")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_val_batch")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_val_batch")
+# over.fit_transform(fold + "/data/ST2/ST2_cell/ST2_cell_val_batch")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_val_batch")
+# data.sample_all_cells(numcells=10000,seed=seed+2)
 
-data.load(fold + "/data/ST1/ST1_test_batch")
-data.save(fold + "/data/ST1/ST1_cell/ST1_cell_test_batch")
-data.load(fold + "/data/ST1/ST1_cell/ST1_cell_test_batch")
-data.sample_all_cells(numcells=10000,seed=seed+3)
+# data.load(fold + "/data/ST2/ST2_test_batch")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_test_batch")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_test_batch")
+# data.sample_all_cells(numcells=10000,seed=seed+3)
+
+# data = Data()
+# data.load(fold + "/data/ST2/ST2_base_train_val_batch")
+# data.split_data_test(fold_train=fold + "/data/ST2/ST2_cell/ST2_train_batch", fold_test=fold + "/data/ST2/ST2_cell/ST2_val_batch",perc_train=0.8, seed=seed)
+# over = Oversample(seed)
+# over.fit_transform(fold + "/data/ST2/ST2_cell/ST2_train_batch")
+# # data.augmentation(factor=20, seed=seed)
+
+# data.load(fold + "/data/ST2/ST2_cell/ST2_train_batch")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_train_batch")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_train_batch")
+# data.sample_all_cells(numcells=10000,seed=seed+1)
+
+# data.load(fold + "/data/ST2/ST2_cell/ST2_val_batch")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_val_batch")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_val_batch")
+# over.fit_transform(fold + "/data/ST2/ST2_cell/ST2_cell_val_batch")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_val_batch")
+# data.sample_all_cells(numcells=10000,seed=seed+2)
+
+# data.load(fold + "/data/ST2/ST2_test_batch")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_test_batch")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_test_batch")
+# data.sample_all_cells(numcells=10000,seed=seed+3)
 
 # save train and valalidation dataset
-dataset = data.get_dataload(fold_train=fold + "/data/ST1/ST1_cell/ST1_cell_train_batch", fold_test=fold + "/data/ST1/ST1_cell/ST1_cell_val_batch")
-file = open(fold +"/data/ST1/dataset_cell_cnn_batch_noaug.dat","wb")
+dataset = data.get_dataload(fold_train=fold + "/data/ST3/ST3_cell_train_batch", fold_test=fold + "/data/ST3/ST3_cell_val_batch")
+file = open(fold +"/data/ST3/dataset_cell_cnn_batch_noaug.dat","wb")
 pk.dump(dataset,file)
 file.close()
 
