@@ -21,3 +21,15 @@ repetitions = nrow(csv_unbalanced)/length(sample_names)
 samples <- rep(sample_names, each=repetitions)
 batches <- rep(batch_names, each=repetitions)
 csv_pooled <- cbind(csv_unbalanced, batches, samples)
+
+hist(csv_pooled$CD4)
+# dragons$bodyLength2 <- scale(dragons$bodyLength, center = TRUE, scale = TRUE)
+
+basic.lm <- lm(CD4 ~ batches, data = csv_pooled)
+summary(basic.lm)
+
+library(tidyverse)  # load the package containing both ggplot2 and dplyr
+
+(prelim_plot <- ggplot(csv_pooled, aes(x = batches, y = CD4)) +
+    geom_point() +
+    geom_smooth(method = "lm"))
