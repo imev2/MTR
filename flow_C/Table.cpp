@@ -18,6 +18,12 @@ void Table1D::get_density(const char* file, double*& dados, bool save_data)
 		for (c = 0; c < col2; c++)
 			table[c + 1][dim1[d1]] += dados[d1 * n_col + c];
 	}
+
+	for (d1 = 0; d1 < num_partition; d1++) {
+			for (c = 0; c < col2; c++)
+				table[c + 1][d1] = table[c + 1][d1] / table[0][d1];
+	}
+
 	//log transform
 	log_transform();
 	standart();
@@ -66,18 +72,17 @@ void Table1D::log_transform()
 	int l;
 	double mini;
 	int n_che = num_channel + 1;
-	for (int c = 0; c < n_che; c++) {
 		mini = 100000;
 		for (int l = 0; l < num_partition; l++) {
-			if (table[c][l] < mini)
-				mini = table[c][l];
+			if (table[0][l] < mini)
+				mini = table[0][l];
 		}
 
 		for (int l = 0; l < num_partition; l++) {
-			table[c][l] = log10(table[c][l] - mini + 1);
+			table[0][l] = log10(table[0][l] - mini + 1);
 		}
 
-	}
+	
 
 }
 
@@ -171,6 +176,21 @@ void Table2D::get_density(const char* file, double*& dados, bool save_data)
 			table[c + 1][d2 + dim2[d1]] += dados[d1 * n_col + c];
 	}
 
+	for (d1 = 0; d1 < num_partition; d1++) {
+		for (d2 = 0; d2 < num_partition; d2++) {
+			aux = dim1[d1] * num_partition;
+			for (c = 0; c < col2; c++)
+				table[c + 1][aux + d2] = table[c + 1][aux + d2] / table[0][aux + d2];
+		}
+	}
+	/*c = 0;
+	for (d1 = 0; d1 < num_partition; d1++) {
+		for (d2 = 0; d2 < num_partition; d2++) {
+			std::cout << table[c][d1*num_partition+d2] << " ";
+		}
+		std::cout << std::endl;
+	}
+	*/
 	//log transform
 	log_transform();
 	standart();
@@ -335,6 +355,16 @@ void Table3D::get_density(const char* file, double*& dados, bool save_data)
 		for (c = 0; c < col2; c++)
 			table[(c + 1) * num_partition + dim1[d1]][d2] += dados[d1 * n_col + c];
 	}
+
+	for (d1 = 0; d1 < num_partition; d1++) {
+		for (d2 = 0; d2 < num_partition; d2++) {
+			for (int d3 = 0; d3 < num_partition; d3++) {
+				for (c = 0; c < col2; c++)
+					table[c* num_partition + d1][d2*num_partition + d3] = table[c * num_partition + d1][d2 * num_partition + d3] / table[d1][d2 * num_partition + d3];
+			}		
+		}
+	}
+
 	//log transform
 	log_transform();
 	standart();

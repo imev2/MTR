@@ -75,6 +75,33 @@ class Model_CVsimp(torch.nn.Module):
         x = self.avPoll(x)
         #print(x.shape)
         return x
+
+
+class Model_CVsimp2(torch.nn.Module):
+    def __init__(self,imput_size, num_markers):
+        super().__init__()
+        torch.set_default_dtype(torch.float64)
+        self.flatten = torch.flatten
+        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1,num_markers))
+        #self.cov2 = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1,1))
+        self.avPoll=torch.nn.AvgPool2d(kernel_size=(10000,1),stride =1)
+        self.sigmoid = torch.nn.Sigmoid()
+        #self.relu = torch.nn.ReLU()
+        # self.do = torch.nn.Dropout1d(p=0.2)
+        # self.bn = torch.nn.BatchNorm1d(1000)
+        self.optimizer=None
+    def forward(self, x):
+        #print(x.shape)
+        x = self.cov1(x)
+        # x = self.bn(x)
+        #print(x.shape)
+        # print(x.shape)
+        # x = self.bn(x)
+        #print(x.shape)
+        x = self.avPoll(x)
+        #print(x.shape)
+        return x
+
     
 class Model_CVRobust_Dense(torch.nn.Module):
     def __init__(self,imput_size, num_markers):
@@ -296,18 +323,18 @@ class Neural:
 # #####################################################################################################
 
 ### Define the hyperparameter values to explore ###
-batch_size=8
-lr = 0.0005
+batch_size=16
+lr = 0.0001
 
 device = "cpu"
 torch.set_num_threads(16)
 loss_f = torch.nn.BCEWithLogitsLoss(reduction="mean",pos_weight=torch.as_tensor(pos_weight))
 print("run model")
 
-model = Model_CVsimp(imput_size, num_markers=30)
+model = Model_CVsimp2(imput_size, num_markers=30)
 optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVsimp_19_07_1600",bach_size=batch_size)                  
-net.trainning(num_epochs=5000, file_out=fold+"/data/Results/ST1/modelCVsimp_19_07_1600.dat", test_dataset=None)
+net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVsimp2_21_07__0001bs16",bach_size=batch_size)                  
+net.trainning(num_epochs=5000, file_out=fold+"/data/Results/ST1/modelCVsimp2_21_07__0001bs16.dat", test_dataset=None)
 
 # model = Model_CVRobust(imput_size, num_markers=30)
 # optimizer=torch.optim.Adam(model.parameters(), lr=lr)

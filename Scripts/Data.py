@@ -206,12 +206,12 @@ class Data:
             tam = len(self.id)
             #dim
             f.write(str(self.dim)+"\n")
-            #size
+            #shape
             if self.dim != 0:
-                if self.size!=None:
-                    s = str(self.size[0])
-                    for i in range(len(self.size)):
-                        s+=" "+str(self.size[i])
+                if self.sizes!=None:
+                    s = str(self.sizes[0])
+                    for i in range(1,len(self.sizes)):
+                        s+=" "+str(self.sizes[i])
                     f.write(s+"\n")
                 else:
                     f.write("-1\n")
@@ -282,15 +282,15 @@ class Data:
     def _get_data(self, index):
         file = self.data + self.id[index] + ".dat"
         with open(file,"rb") as f:
-            if self.dim ==0:
-                d= f.read(12)
-                y,nlin,ncol =struct.unpack("i i i", d)
-                sz = nlin*ncol
-                d= f.read(sz*struct.calcsize("d"))
-                data = struct.unpack(str(sz)+"d", d)
-                data = np.array(data)
-                data = data.reshape((nlin, ncol))
-                return data,y
+            #if self.dim ==0:
+            d= f.read(12)
+            y,nlin,ncol =struct.unpack("i i i", d)
+            sz = nlin*ncol
+            d= f.read(sz*struct.calcsize("d"))
+            data = struct.unpack(str(sz)+"d", d)
+            data = np.array(data)
+            data = data.reshape((nlin, ncol))
+            return data,y
             
     def readfile(self, file):
         with open(file,"rb") as f:
@@ -803,8 +803,8 @@ class Umap_tranformer:
         self.dimention=dimentions
         self.x = None
         
-    def fit(self,data,seed):
-        x,y = data.get_poll_cells()
+    def fit(self,data,seed=0,num_cells=1000):
+        x,y = data.get_poll_cells(num_cells=num_cells,seed =seed)
         
         self.space = umap.UMAP(n_components=self.dimention,densmap=False, random_state=seed,low_memory=False,min_dist = 0.0)
         self.space.fit(x)
@@ -858,19 +858,32 @@ class Umap_tranformer:
         self.x = a.x
         
 class Cell_Umap_tranformer:
-    def __init__(self,num_partition=100,n_jobs = 15):
-        self.num_partition=num_partition
+    def __init__(self,n_jobs = 15):
+        self.num_partition=None
         self.n_jobs=n_jobs
+        self.file_split = None
         
-    def fit(self,file_space,file_split):
+    def fit(self,file_space,file_split,num_partition):
+        self.num_partition=num_partition
+        self.file_split = file_split
         fold = os.getcwd()
         #p   file_quimera   num_partition  file_split
         print("start")
         subprocess.Popen([fold+"/Flow_c.exe","p",file_space,str(self.num_partition),file_split]).wait()
         print("end")
         
+        
     def transform(self,data):
-        print("")
+        v = []
+        for i in range(len(data.id)):
+            v.append((fold+"/Flow_c.exe",data.data + data.id[i] + ".dat",self.file_split))
+        def multi(v):
+            program,file, file_split = v
+            subprocess.Popen([program,"c",file,file_split]).wait()
+            
+        Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)             
+        data.sizes = [-2,len(data.painel),self.num_partition] 
+        data._save_meta()
     
     def save(self,file):
         f = open(file,"wb")
