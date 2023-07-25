@@ -1,114 +1,104 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Jun 12 15:07:46 2023
-
-@author: rafae, Nina
+ST1 Processing
+@author: Nina
 """
 
-from Data import Data,Log_transformer,Standard_tranformer
+from Data import Data,Log_transformer,Standard_tranformer,Oversample
 import pickle as pk
 import os
 import numpy as np
 import pandas as pd
-from ToolsNina import RF, LR, SVM
+from Tools import RF
 from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
-from joblib import Parallel, delayed
-
 #generate data ST1
 seed = 1235711
 fold = os.getcwd()
 data = Data()
 
-# data.load(fold + "/data/ST1_base")
-# print(data._get_data(0))
-# data.save("Scripts/data/ST1_base_log")
-# df,y = data.get_poll_cells(seed=seed)
-# data.start("C:/repos/MTR/data/ST1_transformed","C:/repos/MTR/data/ST1_base")
+# ### TRANFORMED --> BASE DATA ###
+# # data.start(fold+"/ST3_10/ST3_transformed","ST3_10/ST3_base", panel="ST3")
+
+# # # ### BASE --> TRAIN/VAL/TEST ###
+# # ## load base data ##
+# data.load(fold+"/data/ST3/ST3_base")
+
+# ## split test/train ##
 # #split test group
-# data.split_data_test(fold+"/data/ST1_base_train_val", fold+"/data/ST1_base_test",perc_train = 0.9,seed=seed+1)
-# #split train val group
-#data.load("C:/repos/MTR/data/ST1/ST1_train_val")
-#data.split_data_test("C:/repos/MTR/data/ST1/ST1_train", "C:/repos/MTR/data/ST1/ST1_val",perc_train = 0.8,seed=seed+1)
+# data.split_data_test(fold+"/data/ST3/ST3_base_train_val", fold+"/data/ST3/ST3_base_test",perc_train = 0.9,seed=seed+1)
 
-# log transformation
-# data.load(fold + "/data/ST1_base_train")
+# # # NOT PERFORMED ## split train/val ##
+# data.load(fold+"/data/ST3/ST3_base_train_val")
+# data.split_data_test(fold+"/data/ST3/ST3_base_train", fold+"/data/ST3/ST3_base_val",perc_train = 0.8,seed=seed+2)
+
+
+# # ### LOG TRANSFORM ALL DATA ###
+
+# ## log transformation - train_val ##
+# data.load(fold+"/data/ST3/ST3_base_train")
+# data.save(fold+"/data/ST3/ST3_logscale/ST3_train_log")
 # logt = Log_transformer()
-# logt.fit_transform("Scripts/data/ST1_base_log")
-# data.load("Scripts/data/ST1_base_log")
-# print(data._get_data(0))
-# data.load("C:/repos/MTR/data/ST1/ST1_test")
-# data.save("C:/repos/MTR/data/ST1/ST1_test_log")
-# logt.fit_transform("C:/repos/MTR/data/ST1/ST1_test_log")
+# logt.fit_transform(fold+"/data/ST3/ST3_logscale/ST3_train_log")
 
-#log transformation - train_val
-# data.load(fold + "/data/ST1_base_train_val")
-# data.save(fold + "/data/ST1_base_train_val_log")
+# # # ## log transformation - val ##
+# data.load(fold+"/data/ST3/ST3_base_val")
+# data.save(fold+"/data/ST3/ST3_logscale/ST3_val_log")
 # logt = Log_transformer()
-# logt.fit_transform(fold + "/data/ST1_base_train_val_log")
+# logt.fit_transform(fold+"/data/ST3/ST3_logscale/ST3_val_log")
 
-# log transformation - test
-# data.load(fold + "/data/ST1_base_test")
-# data.save(fold + "/data/ST1_base_test_log")
+
+# # # ## log transformation - test ##
+# data.load(fold+"/data/ST3/ST3_base_test")
+# data.save(fold+"/data/ST3/ST3_logscale/ST3_test_log")
 # logt = Log_transformer()
-# logt.fit_transform(fold + "/data/ST1_base_test_log")
+# logt.fit_transform(fold+"/data/ST3/ST3_logscale/ST3_test_log")
 
-# STANDARD FITS
-#standard fit - batch
-# scaler = Standard_tranformer(by_batch=True,seed=seed+2,num_cells=1000)
-# scaler.fit(fold + "/data/ST1_base_train_val")
-# scaler.save(fold + "/data/ST1_base_train_val_scaler_batch")
-# scaler.fit(fold + "/data/ST1_base_train_val_log")
-# scaler.save(fold + "/data/ST1_base_train_val_scaler_batch_log")
 
-#standard fit - no batch
-# scaler = Standard_tranformer(by_batch=False,seed=seed+2,num_cells=1000)
-# scaler.fit(fold + "/data/ST1_base_train_val")
-# scaler.save(fold + "/data/ST1_base_train_val_scaler")
-# scaler.fit(fold + "/data/ST1_base_train_val_log")
-# scaler.save(fold + "/data/ST1_base_train_val_scaler_log")
+# # ### STANDARD FITS ###
 
-# STANDARD TRANFORMS
+# ## standard fit ##
+# scaler = Standard_tranformer(seed=seed+4,num_cells=1000, by_batch=False)
+# scaler.fit(fold +"/data/ST3/ST3_base_train")
+# scaler.save(fold +"/data/ST3/ST3_scale/ST3_scaler")
+# scaler.fit(fold +"/data/ST3/ST3_logscale/ST3_train_log")
+# scaler.save(fold +"/data/ST3/ST3_logscale/ST3_scaler_log")
 
-# standard transform - batch - no log
-# data.load(fold + "/data/ST1_base_train_val")
-# data.save(fold + "/data/ST1_base_train_val_batch")
-# data.load(fold + "/data/ST1_base_test")
-# data.save(fold + "/data/ST1_base_test_batch")
+# ## standard transform - ##
+# data.load(fold +"/data/ST3/ST3_base_train")
+# data.save(fold +"/data/ST3/ST3_scale/ST3_train_scale")
+# data.load(fold +"/data/ST3/ST3_base_test")
+# data.save(fold +"/data/ST3/ST3_scale/ST3_test_scale")
+# data.load(fold +"/data/ST3/ST3_base_val")
+# data.save(fold +"/data/ST3/ST3_scale/ST3_val_scale")
 # scaler = Standard_tranformer()
-# scaler.load(fold + "/data/ST1_base_train_val_scaler_batch")
-# scaler.transform(fold + "/data/ST1_base_train_val_batch")
-# scaler.transform(fold + "/data/ST1_base_test_batch")
+# scaler.load(fold +"/data/ST3/ST3_scale/ST3_scaler")
+# scaler.transform(fold +"/data/ST3/ST3_scale/ST3_train_scale")
+# scaler.transform(fold +"/data/ST3/ST3_scale/ST3_val_scale")
+# scaler.transform(fold +"/data/ST3/ST3_scale/ST3_test_scale")
 
-# standard transform - batch - log
-# data.load(fold + "/data/ST1_base_train_val_log")
-# data.save(fold + "/data/ST1_base_train_val_log_batch")
-# data.load(fold + "/data/ST1_base_test_log")
-# data.save(fold + "/data/ST1_base_test_log_batch")
+# data.load(fold +"/data/ST3/ST3_logscale/ST3_train_log")
+# data.save(fold +"/data/ST3/ST3_logscale/ST3_train_log_scale")
+# data.load(fold +"/data/ST3/ST3_logscale/ST3_val_log")
+# data.save(fold +"/data/ST3/ST3_logscale/ST3_val_log_scale")
+# data.load(fold +"/data/ST3/ST3_logscale/ST3_test_log")
+# data.save(fold +"/data/ST3/ST3_logscale/ST3_test_log_scale")
 # scaler = Standard_tranformer()
-# scaler.load(fold + "/data/ST1_base_train_val_scaler_batch_log")
-# scaler.transform(fold + "/data/ST1_base_train_val_log_batch")
-# scaler.transform(fold + "/data/ST1_base_test_log_batch")
+# scaler.load(fold +"/data/ST3/ST3_logscale/ST3_scaler_log")
+# scaler.transform(fold +"/data/ST3/ST3_logscale/ST3_train_log_scale")
+# scaler.transform(fold +"/data/ST3/ST3_logscale/ST3_val_log_scale")
+# scaler.transform(fold +"/data/ST3/ST3_logscale/ST3_test_log_scale")
 
-# standard transform - no batch - no log
-# data.load(fold + "/data/ST1_base_train_val")
-# data.save(fold + "/data/ST1_base_train_val_scaled")
-# data.load(fold + "/data/ST1_base_test")
-# data.save(fold + "/data/ST1_base_test_scaled")
-# scaler = Standard_tranformer()
-# scaler.load(fold + "/data/ST1_base_train_val_scaler")
-# scaler.transform(fold + "/data/ST1_base_train_val_scaled")
-# scaler.transform(fold + "/data/ST1_base_test_scaled")
+# ### sample 10000 cells
+# data.load(fold +"/data/ST3/ST3_cell/ST3_train_scale")
+# data.sample_all_cells(numcells=10000, seed=seed+5)
+# data.load(fold +"/data/ST3//ST3_cell/ST3_val_scale")
+# data.sample_all_cells(numcells=10000, seed=seed+6)
+# data.load(fold +"/data/ST3//ST3_cell/ST3_test_scale")
+# data.sample_all_cells(numcells=10000, seed=seed+7)
 
-# standard transform - no batch - log
-# data.load(fold + "/data/ST1_base_train_val_log")
-# data.save(fold + "/data/ST1_base_train_val_log_scaled")
-# data.load(fold + "/data/ST1_base_test_log")
-# data.save(fold + "/data/ST1_base_test_log_scaled")
-# scaler = Standard_tranformer()
-# scaler.load(fold + "/data/ST1_base_train_val_scaler_log")
-# scaler.transform(fold + "/data/ST1_base_train_val_log_scaled")
-# scaler.transform(fold + "/data/ST1_base_test_log_scaled")
 
+# =============================================================================
 #augment
 #data.load("C:/repos/MTR/data/ST1_train")
 #data.save("C:/repos/MTR/data/ST1_train_augment")
@@ -120,325 +110,45 @@ data = Data()
 #data.load("C:/repos/MTR/data/ST1_train_augment_log")
 #data.augmentation(10,seed=seed+3)
 
-# CELL POOL - TODO, SAVE CSV
+# =============================================================================
 
-# batch - no log
-# train
-# data.load(fold + "/data/ST1_base_train_val_batch")
-# df_batch_train, df_y_batch_train = data.get_poll_cells(fold=fold, filename="/data/ST1_base_train_val_batch_pool", save=True)
-# test 
-# data.load(fold + "/data/ST1_base_test_batch")
-# df_batch_test, df_y_batch_test = data.get_poll_cells(fold=fold, filename="/data/ST1_base_test_batch_pool", save=True)
 
-# batch - log
-# train
-# data.load(fold + "/data/ST1_base_train_val_log_batch")
-# df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST1_base_train_val_log_batch_pool", save=True)
-# test
-# data.load(fold + "/data/ST1_base_test_log_batch")
-# df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST1_base_test_log_batch_pool", save=True)
-
-# no batch - no log
-# train
-# data.load(fold + "/data/ST1_base_train_val_scaled")
-# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_train_val_scaled_pool", save=True)
-# # test
-# data.load(fold + "/data/ST1_base_test_scaled")
-# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_test_scaled_pool", save=True)
-
-# # no batch - log
+# ## POOLING ###
+# # batch - no log ##
 # # train
-# data.load(fold + "/data/ST1_base_train_val_log_scaled")
-# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_train_val_log_scaled_pool", save=True)
+# data.load(fold + "/data/ST1/ST1_base_train_val_batch")
+# df_batch_train, df_y_batch_train = data.get_poll_cells(fold=fold, filename="/data/ST1/ST1_base_train_val_batch_pool", num_cells=10000,save=True)
+# # test 
+# data.load(fold + "/data/ST1/ST1_base_test_batch")
+# df_batch_test, df_y_batch_test = data.get_poll_cells(fold=fold, filename="/data/ST1/ST1_base_test_batch_pool_unbalanced", balanciate=False, num_cells=10000,save=True)
+
+# ## batch - log ##
+# # train
+# data.load(fold + "/data/ST1/ST1_base_train_val_log_batch")
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST1/ST1_base_train_val_log_batch_pool", save=True)
 # # test
-# data.load(fold + "/data/ST1_base_test_log_scaled")
-# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_test_log_scaled_pool", save=True)
+# data.load(fold + "/data/ST1/ST1_base_test_log_batch")
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST1/ST1_base_test_log_batch_pool_unbalanced", balanciate=False, num_cells=10000,save=True)
 
+## SCALED - no log ##
+# train
+data.load(fold + "/data/ST2/ST2_scale/ST2_train_scale")
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST2/ST2_scale/ST2_train_scale_pool", save=True, num_cells=1000)
+# val
+data.load(fold + "/data/ST2/ST2_scale/ST2_val_scale")
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST2/ST2_scale/ST2_val_scale_pool", save=True, num_cells=1000)
+# # test
+data.load(fold + "/data/ST2/ST2_scale/ST2_test_scale")
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST2/ST2_scale/ST2_test_scale_pool_unbalanced", balanciate=False, num_cells=1000,save=True)
 
-# FEATURE SELECTION
- 
-# batch - no log
-
-def FeatureSelectionRF(fold, train_path, test_path, verbose=2):
-    # Read in sampled cell file, extract df and df_y. 
-    # Perform RF feature selection and save output. 
-    print('Reading training file')
-    file = pd.read_csv(fold+train_path) 
-    df_train = file.iloc[:, :-2].to_numpy()
-    df_y_train = file.iloc[:, -1].to_numpy().reshape(-1,)
-    
-    print('Fitting using training data')
-    rf = RF(random_state=0 ,n_jobs = 15)
-    rf.fit(df_train, df_y_train, verbose=verbose)
-    
-    print('Reading test file')
-    file = pd.read_csv(fold+test_path) 
-    df_test = file.iloc[:, :-2].to_numpy()
-    df_y_test = file.iloc[:, -1].to_numpy().reshape(-1,)
-    
-    print('Predicting')
-    y_pred = rf.predict(df_test)
-    y_ppred = rf.predict_proba(df_test)[:,1]
-    
-    print('Saving results')
-    mod = {}
-    mod["accuracy"] = accuracy_score(df_y_test,y_pred)
-    mod["b_accuracy"] = balanced_accuracy_score(df_y_test,y_pred)
-    mod["ROC"] = roc_auc_score(df_y_test,y_ppred)
-    # TODO: Edit with painel!
-    mod["importance"] = pd.DataFrame({"importance":rf.rf.feature_importances_}) 
-    mod["y_t"] = df_y_test
-    mod["y_t_pred"] = y_pred
-    mod["y_t_ppred"] = y_ppred
-    mod["par"] = rf.par
-    # TODO: Fix so that compatible! Just testing here
-    # rf.fit(x,y)
-    # mod["x"] = x
-    # mod["y"] = y
-    # mod["y_pred"] = rf.predict_proba(x)[:,1]
-    # TODO: Edit with painel!
-    # mod["painel"] = self.painel
-    
-    return mod
-
-MOD_batch = FeatureSelectionRF(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_batch_pool",
-                         test_path="/data/pooled/ST1_base_test_batch_pool")
-
-file = open(fold+"/data/MOD_RF/batch.dat","wb")
-pk.dump(MOD_batch, file)
-file.close()
-
-MOD_logbatch = FeatureSelectionRF(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_log_batch_pool",
-                         test_path="/data/pooled/ST1_base_test_log_batch_pool")
-
-file = open(fold+"/data/MOD_RF/log_batch.dat","wb")
-pk.dump(MOD_logbatch, file)
-file.close()
-
-MOD_scaled = FeatureSelectionRF(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_scaled_pool",
-                         test_path="/data/pooled/ST1_base_test_scaled_pool")
-
-file = open(fold+"/data/MOD_RF/scaled.dat","wb")
-pk.dump(MOD_scaled, file)
-file.close()
-
-MOD_logscaled = FeatureSelectionRF(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_log_scaled_pool",
-                         test_path="/data/pooled/ST1_base_test_log_scaled_pool")
-
-file = open(fold+"/data/MOD_RF/log_scaled.dat","wb")
-pk.dump(MOD_logscaled, file)
-file.close()
-
-# LOGISTIC REGRESSION
-
-def FeatureSelectionLR(fold, train_path, test_path, verbose=2):
-    # Read in sampled cell file, extract df and df_y. 
-    # Perform LR feature selection and save output. 
-    print('Reading training file')
-    file = pd.read_csv(fold+train_path) 
-    df_train = file.iloc[:, :-2].to_numpy()
-    df_y_train = file.iloc[:, -1].to_numpy().reshape(-1,)
-
-    print('Fitting using training data')
-    lr = LR(random_state=0 ,n_jobs = 15)
-    lr.fit(pd.DataFrame(df_train), pd.DataFrame(df_y_train))
-
-    print('Reading test file')
-    file = pd.read_csv(fold+test_path) 
-    df_test = file.iloc[:, :-2].to_numpy()
-    df_y_test = file.iloc[:, -1].to_numpy().reshape(-1,)
-
-    print('Predicting')
-    y_pred = lr.predict(df_test)
-    y_ppred = lr.predict_proba(df_test)[:,1]
-
-    
-    print('Saving results')
-    mod = {}
-    mod["accuracy"] = accuracy_score(df_y_test,y_pred)
-    mod["b_accuracy"] = balanced_accuracy_score(df_y_test,y_pred)
-    mod["ROC"] = roc_auc_score(df_y_test,y_ppred)
-    # TODO: Edit with painel!
-    mod["importance"] = pd.DataFrame({"importance":lr.lr.feature_importances_}) 
-    mod["y_t"] = df_y_test
-    mod["y_t_pred"] = y_pred
-    mod["y_t_ppred"] = y_ppred
-    mod["par"] = lr.par
-    # TODO: Fix so that compatible! Just testing here
-    # rf.fit(x,y)
-    # mod["x"] = x
-    # mod["y"] = y
-    # mod["y_pred"] = rf.predict_proba(x)[:,1]
-    # TODO: Edit with painel!
-    # mod["painel"] = self.painel
-    
-    return mod
-
-MOD_batch = FeatureSelectionLR(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_batch_pool",
-                         test_path="/data/pooled/ST1_base_test_batch_pool")
-
-file = open(fold+"/data/MOD_LR/batch.dat","wb")
-pk.dump(MOD_batch, file)
-file.close()
-
-MOD_logbatch = FeatureSelectionLR(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_log_batch_pool",
-                         test_path="/data/pooled/ST1_base_test_log_batch_pool")
-
-file = open(fold+"/data/MOD_LR/log_batch.dat","wb")
-pk.dump(MOD_logbatch, file)
-file.close()
-
-MOD_scaled = FeatureSelectionLR(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_scaled_pool",
-                         test_path="/data/pooled/ST1_base_test_scaled_pool")
-
-file = open(fold+"/data/MOD_LR/scaled.dat","wb")
-pk.dump(MOD_scaled, file)
-file.close()
-
-MOD_logscaled = FeatureSelectionLR(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_log_scaled_pool",
-                         test_path="/data/pooled/ST1_base_test_log_scaled_pool")
-
-file = open(fold+"/data/MOD_LR/log_scaled.dat","wb")
-pk.dump(MOD_logscaled, file)
-file.close()
-
-# SVM
-
-def FeatureSelectionSVM(fold, train_path, test_path, verbose=2):
-    # Read in sampled cell file, extract df and df_y. 
-    # Perform SVM feature selection and save output. 
-    print('Reading training file')
-    file = pd.read_csv(fold+"/data/pooled/ST1_base_train_val_batch_pool") 
-    df_train = file.iloc[:, :-2].to_numpy()
-    df_y_train = file.iloc[:, -1].to_numpy().reshape(-1,)
-
-    print('Fitting using training data')
-    svm = SVM(random_state=0 ,n_jobs = 15)
-    svm.fit(pd.DataFrame(df_train), pd.DataFrame(df_y_train))
-
-    print('Reading test file')
-    file = pd.read_csv(fold+test_path) 
-    df_test = file.iloc[:, :-2].to_numpy()
-    df_y_test = file.iloc[:, -1].to_numpy().reshape(-1,)
-
-    print('Predicting')
-    y_pred = svm.predict(df_test)
-    y_ppred = svm.predict_proba(df_test)[:,1]
-
-    print('Saving results')
-    mod = {}
-    mod["accuracy"] = accuracy_score(df_y_test,y_pred)
-    mod["b_accuracy"] = balanced_accuracy_score(df_y_test,y_pred)
-    mod["ROC"] = roc_auc_score(df_y_test,y_ppred)
-    # TODO: Edit with painel!
-    mod["importance"] = pd.DataFrame({"importance":svm.svm.feature_importances_}) 
-    mod["y_t"] = df_y_test
-    mod["y_t_pred"] = y_pred
-    mod["y_t_ppred"] = y_ppred
-    mod["par"] = svm.par
-    # TODO: Fix so that compatible! Just testing here
-    # rf.fit(x,y)
-    # mod["x"] = x
-    # mod["y"] = y
-    # mod["y_pred"] = rf.predict_proba(x)[:,1]
-    # TODO: Edit with painel!
-    # mod["painel"] = self.painel
-    
-    return mod
-
-MOD_batch = FeatureSelectionSVM(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_batch_pool",
-                         test_path="/data/pooled/ST1_base_test_batch_pool")
-
-file = open(fold+"/data/MOD_SVM/batch.dat","wb")
-pk.dump(MOD_batch, file)
-file.close()
-
-MOD_logbatch = FeatureSelectionSVM(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_log_batch_pool",
-                         test_path="/data/pooled/ST1_base_test_log_batch_pool")
-
-file = open(fold+"/data/MOD_SVM/log_batch.dat","wb")
-pk.dump(MOD_logbatch, file)
-file.close()
-
-MOD_scaled = FeatureSelectionSVM(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_scaled_pool",
-                         test_path="/data/pooled/ST1_base_test_scaled_pool")
-
-file = open(fold+"/data/MOD_SVM/scaled.dat","wb")
-pk.dump(MOD_scaled, file)
-file.close()
-
-MOD_logscaled = FeatureSelectionSVM(fold=fold, 
-                         train_path="/data/pooled/ST1_base_train_val_log_scaled_pool",
-                         test_path="/data/pooled/ST1_base_test_log_scaled_pool")
-
-file = open(fold+"/data/MOD_SVM/log_scaled.dat","wb")
-pk.dump(MOD_logscaled, file)
-file.close()
-
-# RAFAEL'S CODE BELOW!
-
-#data.save("C:/repos/MTR/data/ST1__train_standard")
-#data.load("C:/repos/MTR/data/ST1_train_val")
-#data.save("C:/repos/MTR/data/umap_no_stdar")
-#data.save("C:/repos/MTR/data/umap_stdar")
-#data.load("C:/repos/MTR/data/umap_stdar")
-#data.standard_by_batch(1000)
-#data.load("C:/repos/MTR/data/umap_stdar")
-#data.augmentation(1.2,seed+1)
-#data.load("C:/repos/MTR/data/umap_no_stdar")
-#data.augmentation(1.2,seed+1)
-# data.load("C:/repos/MTR/data/umap_no_stdar")
-# df = data.umap_space()
-# data.writefile("C:/repos/MTR/umap_no_stdar.dat", df, 1)
-#data.load("C:/repos/MTR/data/umap_stdar")
-#df = data.umap_space()
-#data.writefile("C:/repos/MTR/umap_stdar.dat", df, 1)
-#data.load("C:/repos/MTR/data/ST1__train_standard")
-#data.save("C:/repos/MTR/data/ST1__train_argument")
-#data.load("C:/repos/MTR/data/ST1__train_argument")
-#
-#data.load("C:/repos/MTR/data/ST1__train_standard")
-#df = data.umap_space()
-#data.save("C:/repos/MTR/data/test1")
-#data.load("C:/repos/MTR/data/test1/train")
-#train,test = data.get_dataload("C:/repos/MTR/data/test1/train", "C:/repos/MTR/data/test1/test",perc_train= 0.9,numcells=1000,seed=0)
-#df1 = data._get_data(1000)[0]
-#mod = {"mixsample_standard":df,"df1":df1}
-
-#file = open("C:/repos/MTR/data/umap.dat","wb")
-#pk.dump(df,file)
-#file.close()
-
-# file = open("C:/repos/MTR/data/test_test1.dat","wb")
-# pk.dump(test,file)
-# file.close()
-#split
-#data.split_data_test("C:/repos/MTR/data/ST1_train_val", "C:/repos/MTR/data/ST1_test",perc_train=0.8,seed = seed)
-
-#feature selection
-#data.load("C:/repos/MTR/data/ST1_train_val")
-#mod = data._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+1)
-#file = open("C:/repos/MTR/data/randomforest_no_standart.dat","wb")
-#pk.dump(mod, file)
-#file.close()
-
-#data.save("C:/repos/MTR/data/teste")
-
-#data.load("C:/repos/MTR/data/teste")
-#data.standard_by_batch(1000)
-#data.load("C:/repos/MTR/data/teste")
-#mod = data._feature_inportance(num_cells=1000,cv = 1,n_jobs = 15,seed = seed+2)
-#file = open("C:/repos/MTR/data/randomforest_with_standart.dat","wb")
-#pk.dump(mod, file)
-#file.close()
+## BATCH SCALED - log ##
+# train
+data = Data()
+data.load(fold + "/data/ST2/ST2_logscale/ST2_train_logscale")
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST2/ST2_logscale/ST2_train_logscale_pool", save=True, num_cells=1000)
+# val
+data.load(fold + "/data/ST2/ST2_logscale/ST2_val_logscale")
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST2/ST2_logscale/ST2_val_logscale_pool", save=True, num_cells=1000)
+# # test
+data.load(fold + "/data/ST2/ST2_logscale/ST2_test_logscale")
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST2/ST2_logscale/ST2_test_logscale_pool_unbalanced", balanciate=False, num_cells=1000,save=True)

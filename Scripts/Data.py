@@ -141,7 +141,7 @@ class Data:
                             "IgD":"CCR7", "CCR7(CD197)":"CCR7","CD57":"CD45RA","CD38":"CCR4","CCR4(CD194)":"CCR4","CD40":"-","CD16":"-","RORgt":"RORgT","CD56":"-","CCR7(CD197":"CCR7","IL1Ra(CD127)":"CD127","IL7RA":"CD127",
                             "PD1":"PD-1"}
                 elif (panel=="ST2"):
-                    mapa = {"HLADR":"HLA-DR", "BAFFR":"BAFF-R"}
+                    mapa = {}
                     
                 elif (panel=="ST3"):
                     mapa = {"PD1":"PD-1", "CD27":"PD-1",
@@ -272,6 +272,13 @@ class Data:
             file = self.data + self.id[index] + ".dat"
         with open(file,"wb") as f:
             if self.dim ==0:
+                nlin = len(data)
+                ncol = len(data[0])
+                d = struct.pack("i i i",pheno ,nlin,ncol)
+                f.write(d)
+                df = data.flatten().astype(np.float64).tobytes()
+                f.write(df)
+            elif self.sizes[0] <0:
                 nlin = len(data)
                 ncol = len(data[0])
                 d = struct.pack("i i i",pheno ,nlin,ncol)
@@ -676,7 +683,7 @@ class Data:
             df =self._sample_data(i,numcells,seed=seed)
             self._save_data(i, df)
     
-    def get_dataload(self,fold_train,fold_test):
+    def get_dataload(self,fold_train,fold_test,perc_train= 0.7,numcells=1000,factor=10,seed=0):
         train = Data()
         train.load(fold_train)
         test = Data()
@@ -698,7 +705,9 @@ class Data:
         
 
 class Standard_tranformer:
-    def __init__(self,seed=0,num_cells=1000):
+    def __init__(self,by_batch=True,seed=0,num_cells=1000):
+        self.by_batch=by_batch
+        self.batch = None
         self.mean = None
         self.sd = None
         self.num_cells=num_cells
@@ -708,32 +717,76 @@ class Standard_tranformer:
     def fit(self,fold):
         data = Data()
         data.load(fold)
-        df,_=data.get_poll_cells(balanciate=False,num_cells=self.num_cells,seed = self.seed+10, save=False)
-        scaler = StandardScaler()
-        scaler.fit(df)
-        self.sd = scaler.scale_
-        self.mean = scaler.mean_
-    def fit_transform(self,fold):
-        data = Data()
-        data.load(fold)
-        for i in range(len(data.id)):
-            df = data._get_data(i)[0]
+        if self.by_batch:
+            self.batch = []
+            self.sd = []
+            self.mean = []
+            u_batch = np.unique(data.batch)
+            for b in u_batch:
+                self.batch.append(b)
+                print(b)
+                idd = []
+                yd = []
+                for i in range(len(data.id)):
+                    if b==data.batch[i]:
+                        idd.append(i)
+                        yd.append(i)
+                df = data._sample_data(idd[0], self.num_cells,self.seed)
+                self.seed+=1
+                df_y = np.repeat(data.pheno[yd[0]], self.num_cells)
+                tam = len(idd)
+                print("generate sample")
+                for i in range(1,tam):
+                    print(str(i)+ " of "+str(tam))
+                    df = np.concatenate((df, data._sample_data(idd[i], self.num_cells,self.seed)), axis=0)
+                    self.seed+=1
+                    df_y = np.concatenate((df_y,np.repeat(data.pheno[yd[i]], self.num_cells)))
+                df = data._oversample(df, df_y,self.seed+1)[0]
+                scaler = StandardScaler()
+                scaler.fit(df)
+                self.sd.append(scaler.scale_)
+                self.mean.append(scaler.mean_)
+        else:
+            tam = len(data.id)
+            self.seed+=1
+            df = data._sample_data(0, self.num_cells,seed=self.seed)
+            print("generate sample")
+            for i in range(1,tam):
+                print(str(i)+ " of "+str(tam))
+                self.seed+=1
+                df = np.concatenate((df, data._sample_data(i, self.num_cells,self.seed)), axis=0)
             scaler = StandardScaler()
-            df = np.array(scaler.fit_transform(df))
-            data._save_data(i, df)
+            scaler.fit(df)
+            self.sd = scaler.scale_
+            self.mean = scaler.mean_
             
     def transform(self,folder):
         data = Data()
         data.load(folder)
-        scaler = StandardScaler()
-        tam = len(data.id)
-        for i in range(tam):
-            scaler.mean_=self.mean
-            scaler.scale_ = self.sd
-            print(str(i)+ " of "+str(tam))
-            df = data._get_data(i)[0]
-            df = np.array(scaler.transform(df))
-            data._save_data(i, df)
+        if self.by_batch:
+            scaler = StandardScaler()
+            for b in range(len(self.batch)):
+                print(self.batch[b])
+                tam = len(data.id)
+                for i in range(tam):
+                    
+                    if self.batch[b]==data.batch[i]:
+                        print(str(i))
+                        scaler.mean_=self.mean[b]
+                        scaler.scale_ = self.sd[b]
+                        df = data._get_data(i)[0]                
+                        df = np.array(scaler.transform(df))
+                        data._save_data(i, df)
+        else:
+            scaler = StandardScaler()
+            tam = len(data.id)
+            for i in range(tam):
+                scaler.mean_=self.mean
+                scaler.scale_ = self.sd
+                print(str(i)+ " of "+str(tam))
+                df = data._get_data(i)[0]
+                df = np.array(scaler.transform(df))
+                data._save_data(i, df)
     
     def save(self,file):
         f = open(file,"wb")
@@ -747,8 +800,8 @@ class Standard_tranformer:
         self.mean = a.mean
         self.sd = a.sd
         self.num_cells = a.num_cells
-        self.seed = a.seed
-
+        self.batch = a.batch
+        self.by_batch=a.by_batch
         
     
 class Log_transformer():
@@ -756,7 +809,6 @@ class Log_transformer():
         data = Data()
         data.load(folder)
         tam = len(data.id)
-        print("log transformer")
         for i in range(tam):
             print(str(i)+" of "+str(tam))
             df = data._get_data(i)[0]

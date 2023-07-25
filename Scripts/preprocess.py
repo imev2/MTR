@@ -15,7 +15,7 @@ fold = os.getcwd()
 data = Data()
 
 #generate data ST1
-# data.start(fold+"/data/ST1/ST1_transformed",fold+"/data/ST1/ST1_base", panel="ST1")
+data.start(fold+"/data/ST1/ST1_transformed",fold+"/data/ST1/ST1_base", panel="ST1")
 #split test group
 #data.split_data_test(fold+"/data/ST1/ST1_base_train_val", fold+"/data/ST1/ST1_base_test",perc_train = 0.9,seed=seed+1)
 #split train val group
@@ -33,9 +33,9 @@ data.start(fold+"/data/ST2/ST2_transformed",fold+"/data/ST2/ST2_base", panel="ST
 
 
 
-# data = Data()
+data = Data()
 #generate data ST3
-# data.start(fold+"/data/ST3/ST3_transformed",fold+"/data/ST3/ST3_base", panel="ST3")
+data.start(fold+"/data/ST3/ST3_transformed",fold+"/data/ST3/ST3_base", panel="ST3")
 #split test group
 #data.split_data_test(fold+"/data/ST3/ST3_base_train_val", fold+"/data/ST3/ST3_base_test",perc_train = 0.9,seed=seed+1)
 #split train val group
