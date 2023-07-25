@@ -19,12 +19,46 @@ import torch
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import itertools
+
 #generate data ST3
+
 seed = 1235711
 fold = os.getcwd()
 fold
 
-### GENERATE DATA FOR CELL CNN ###
+# # ### GENERATE DATA FOR CELL CNN ###
+# data = Data()
+# data.load(fold + "/data/ST2/ST2_train_scale")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_train_scale")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_train_scale")
+# over = Oversample(seed)
+# over.fit_transform(fold + "/data/ST2/ST2_cell/ST2_train_scale")
+# # data.augmentation(factor=20, seed=seed)
+
+# data.load(fold + "/data/ST2/ST2_cell/ST2_train_scale")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_train_scale")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_train_scale")
+# data.sample_all_cells(numcells=10000,seed=seed+1)
+
+# data.load(fold + "/data/ST2/ST2_val_scale")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
+# over.fit_transform(fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
+# data.sample_all_cells(numcells=10000,seed=seed+2)
+
+# data.load(fold + "/data/ST2/ST2_test_scale")
+# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_test_scale")
+# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_test_scale")
+# data.sample_all_cells(numcells=10000,seed=seed+3)
+
+# # save train and valalidation dataset
+# dataset = data.get_dataload(fold_train=fold + "/data/ST2/ST2_cell/ST2_cell_train_scale", fold_test=fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
+# file = open(fold +"/data/ST2/dataset_cell_cnn_scale_noaug.dat","wb")
+# pk.dump(dataset,file)
+# file.close()
+
+### Load and contruct dataset ###
 data = Data()
 data.load(fold + "/data/ST3/ST3_logscale/ST3_train_logscale")
 data.save(fold + "/data/ST3/ST3_logscale/ST3_cell_logscale/ST3_train_logscale")
@@ -91,10 +125,15 @@ class Model_CV2(torch.nn.Module):
         self.optimizer=None
     def forward(self, x):
         x = self.relu(self.cov1(x))
+        print(x.shape)
         x = self.relu(self.cov2(x))
+        print(x.shape)
         x = self.avPoll(x)
+        print(x.shape)
         x = self.flatten(x, start_dim=1)
+        print(x.shape)
         x = self.relu(self.fc1(x))
+        print(x.shape)
 
 
         return x
@@ -302,5 +341,3 @@ model = Model_CV2(imput_size, num_markers=30)
 optimizer=torch.optim.Adam(model.parameters(), lr=lr)
 net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="scale_modelCV2_2307_1900",bach_size=batch_size)                  
 net.trainning(num_epochs=5000, file_out=fold+"/data/ST3/ST3_cell/Results/scale_modelCV2_2307_1900.dat", test_dataset=None)
-
-

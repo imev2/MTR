@@ -49,7 +49,6 @@ boxplot(CD4 ~ batches, data = csv_pooled)
     theme_classic() +
     theme(legend.position="none"))
 
-(split_plot <- )
 (prelim_plot <- ggplot(csv_pooled, aes(x = samples, y = CD4)) +
     geom_point() +
     geom_smooth(method = "lm"))

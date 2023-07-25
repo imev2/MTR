@@ -45,6 +45,11 @@ data = Data()
 
 data.load(fold + "/data/ST3/ST3_base")
 
+<<<<<<< HEAD
 df, df_y = data.get_poll_cells(fold=fold, filename="/data/ST3/pooled/ST3_base_LMM_1000.csv", balanciate = False, save=True, num_cells=1000)
 # df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_10_balanced.csv", save=True, num_cells=10)
+=======
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_1000.csv", balanciate = False, save=True, num_cells=1000)
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_1000_balanced.csv", save=True, num_cells=1000)
+>>>>>>> 1612312cf5bd0f43547e9388280dfda7f78cd5c1
 
