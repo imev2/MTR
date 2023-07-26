@@ -30,10 +30,8 @@ fold = os.getcwd()
 class Data:
     class AdDataset(Dataset):
         def __init__(self,data,shape):
-            
              self.data = data
              self.shape = shape
-    
         def __len__(self):
             ## Size of whole data set
             return len(self.data.id)
@@ -46,7 +44,7 @@ class Data:
             #dimensions = data.shape  # Get the dimensions of the data  
             return data, y
 
-    def __init__(self,seed = 123571113):
+    def __init__(self,seed = 0):
         self.id = None
         self.pheno = None
         self.data = None 
@@ -56,7 +54,7 @@ class Data:
         self.sizes = None
         np.random.seed(seed)
         random.seed(seed)
-    
+        self.seed = seed
 
     def save(self,folder):
         data = Data()
@@ -206,12 +204,12 @@ class Data:
             tam = len(self.id)
             #dim
             f.write(str(self.dim)+"\n")
-            #size
+            #shape
             if self.dim != 0:
-                if self.size!=None:
-                    s = str(self.size[0])
-                    for i in range(len(self.size)):
-                        s+=" "+str(self.size[i])
+                if self.sizes!=None:
+                    s = str(self.sizes[0])
+                    for i in range(1,len(self.sizes)):
+                        s+=" "+str(self.sizes[i])
                     f.write(s+"\n")
                 else:
                     f.write("-1\n")
@@ -278,19 +276,26 @@ class Data:
                 f.write(d)
                 df = data.flatten().astype(np.float64).tobytes()
                 f.write(df)
+            elif self.sizes[0] <0:
+                nlin = len(data)
+                ncol = len(data[0])
+                d = struct.pack("i i i",pheno ,nlin,ncol)
+                f.write(d)
+                df = data.flatten().astype(np.float64).tobytes()
+                f.write(df)
 
     def _get_data(self, index):
         file = self.data + self.id[index] + ".dat"
         with open(file,"rb") as f:
-            if self.dim ==0:
-                d= f.read(12)
-                y,nlin,ncol =struct.unpack("i i i", d)
-                sz = nlin*ncol
-                d= f.read(sz*struct.calcsize("d"))
-                data = struct.unpack(str(sz)+"d", d)
-                data = np.array(data)
-                data = data.reshape((nlin, ncol))
-                return data,y
+            #if self.dim ==0:
+            d= f.read(12)
+            y,nlin,ncol =struct.unpack("i i i", d)
+            sz = nlin*ncol
+            d= f.read(sz*struct.calcsize("d"))
+            data = struct.unpack(str(sz)+"d", d)
+            data = np.array(data)
+            data = data.reshape((nlin, ncol))
+            return data,y
             
     def readfile(self, file):
         with open(file,"rb") as f:
@@ -316,9 +321,7 @@ class Data:
             d = f.read(4)
             return struct.unpack("i", d)[0]
         
-    def _sample_data(self,index ,num_lin,seed=0):
-        np.random.seed(seed)
-        random.seed(seed)
+    def _sample_data(self,index ,num_lin):
         df,y = self._get_data(index)
         if num_lin > len(df):
             print("sample " + str(index) + " num cells large " + str(len(df)))
@@ -329,32 +332,28 @@ class Data:
             df = df[ilin[:num_lin],:]
             return df
                 
-    def get_poll_cells(self,fold=None, filename=None, balanciate=True,num_cells=1000,seed = 0, save=False):
-        df = self._sample_data(0,num_cells,seed=seed)
+    def get_poll_cells(self,fold=None, filename=None, balanciate=True,num_cells=1000, save=False):
+        df = self._sample_data(0,num_cells)
         df_y = np.repeat(self.pheno[0], num_cells)
         tam = len(self.id)
         print("generate sample")
         for i in range(1,tam):
             print(str(i)+ " of "+str(tam))
-            df = np.concatenate((df, self._sample_data(i,num_cells,seed=seed+i)), axis=0)
+            df = np.concatenate((df, self._sample_data(i,num_cells)), axis=0)
             df_y = np.concatenate((df_y,np.repeat(self.pheno[i], num_cells)))
         if balanciate:
-            df,df_y = self._oversample(df, df_y,seed+11)
-            
+            df,df_y = self._oversample(df, df_y)  
         if save:
             print("Saving pooled cells.")
             df_y = df_y.reshape(-1, 1)
             df_combined = np.hstack((df, df_y))
             df = pd.DataFrame(df_combined)
             df.to_csv(fold+filename)
-            print("Saved pooled cell file.")
-            
+            print("Saved pooled cell file.")  
         return(df,df_y)
         
             
-    def split_data_test(self,fold_train,fold_test,perc_train = 0.7,seed=123571113):
-        np.random.seed(seed)
-        random.seed(seed)
+    def split_data_test(self,fold_train,fold_test,perc_train = 0.7):
         pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
         neg = [i for i in range(len(self.id)) if self.pheno[i]==0]
         np.random.shuffle(pos)
@@ -405,9 +404,7 @@ class Data:
             shutil.copyfile(src,dest)
 
         
-    def augmentation(self,factor,seed = 0,n_jobs=15):
-        np.random.seed(seed)
-        random.seed(seed)
+    def augmentation(self,factor,n_jobs=15):
         #balanciate
         print("balanciate")
         pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
@@ -503,9 +500,7 @@ class Data:
             self.pheno.append(d["pheno"][1])
         self._save_meta()
             
-    def augmentation_by_batch(self,factor,seed = 0):
-        np.random.seed(seed)
-        random.seed(seed)
+    def augmentation_by_batch(self,factor):
         #balanciate
         print("balanciate")
         pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
@@ -600,9 +595,7 @@ class Data:
              
 
     
-    def _feature_inportance(self,num_cells=1000,cv = 5,n_jobs = 15,seed = 0):
-        np.random.seed(seed)
-        random.seed(seed)
+    def _feature_inportance(self,num_cells=1000,cv = 5,n_jobs = 15):
         neg = pd.DataFrame()
         pos = pd.DataFrame()
         print("sample data")
@@ -620,9 +613,10 @@ class Data:
         x.drop('y', axis=1, inplace=True)
         
         
-        x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.10,stratify=y,shuffle=True,random_state=seed)
+        x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.10,stratify=y,shuffle=True,random_state=self.seed)
         print("train model")
-        rf = RF(random_state=seed ,n_jobs = n_jobs)
+        self.seed +=1
+        rf = RF(random_state=self.seed ,n_jobs = n_jobs)
         rf.fit(x_train, y_train)
         y_pred = rf.predict(x_test)
         y_ppred = rf.predict_proba(x_test)[:,1]
@@ -642,9 +636,7 @@ class Data:
         mod["painel"] = self.painel
         return mod
     
-    def _oversample(self,df,y,seed=0):
-        np.random.seed(seed)
-        random.seed(seed)
+    def _oversample(self,df,y):
         neg = [i for i in range(len(y)) if y[i]==0]
         pos = [i for i in range(len(y)) if y[i]==1]
         s_neg = len(neg)
@@ -666,17 +658,16 @@ class Data:
         y_n = np.array(y_n)
         return df,y_n
                  
-    def sample_all_cells(self,numcells,seed):
+    def sample_all_cells(self,numcells):
         
         tam = len(self.id)
         print("sample cells")
         for i in range(tam):
             print(str(i)+" of "+str(tam))
-            seed +=1
-            df =self._sample_data(i,numcells,seed=seed)
+            df =self._sample_data(i,numcells)
             self._save_data(i, df)
     
-    def get_dataload(self,fold_train,fold_test,perc_train= 0.7,numcells=1000,factor=10,seed=0):
+    def get_dataload(self,fold_train,fold_test):
         train = Data()
         train.load(fold_train)
         test = Data()
@@ -698,15 +689,12 @@ class Data:
         
 
 class Standard_tranformer:
-    def __init__(self,by_batch=True,seed=0,num_cells=1000):
+    def __init__(self,by_batch=False,num_cells=1000):
         self.by_batch=by_batch
         self.batch = None
         self.mean = None
         self.sd = None
         self.num_cells=num_cells
-        self.seed = seed
-        np.random.seed(seed)
-        random.seed(seed)
     def fit(self,fold):
         data = Data()
         data.load(fold)
@@ -724,30 +712,26 @@ class Standard_tranformer:
                     if b==data.batch[i]:
                         idd.append(i)
                         yd.append(i)
-                df = data._sample_data(idd[0], self.num_cells,self.seed)
-                self.seed+=1
+                df = data._sample_data(idd[0], self.num_cells)
                 df_y = np.repeat(data.pheno[yd[0]], self.num_cells)
                 tam = len(idd)
                 print("generate sample")
                 for i in range(1,tam):
                     print(str(i)+ " of "+str(tam))
-                    df = np.concatenate((df, data._sample_data(idd[i], self.num_cells,self.seed)), axis=0)
-                    self.seed+=1
+                    df = np.concatenate((df, data._sample_data(idd[i], self.num_cells)), axis=0)
                     df_y = np.concatenate((df_y,np.repeat(data.pheno[yd[i]], self.num_cells)))
-                df = data._oversample(df, df_y,self.seed+1)[0]
+                df = data._oversample(df, df_y)[0]
                 scaler = StandardScaler()
                 scaler.fit(df)
                 self.sd.append(scaler.scale_)
                 self.mean.append(scaler.mean_)
         else:
             tam = len(data.id)
-            self.seed+=1
-            df = data._sample_data(0, self.num_cells,seed=self.seed)
+            df = data._sample_data(0, self.num_cells)
             print("generate sample")
             for i in range(1,tam):
                 print(str(i)+ " of "+str(tam))
-                self.seed+=1
-                df = np.concatenate((df, data._sample_data(i, self.num_cells,self.seed)), axis=0)
+                df = np.concatenate((df, data._sample_data(i, self.num_cells)), axis=0)
             scaler = StandardScaler()
             scaler.fit(df)
             self.sd = scaler.scale_
@@ -809,9 +793,6 @@ class Log_transformer():
             data._save_data(i, df)
             
 class Oversample():
-    def __init__(self,seed):
-        np.random.seed(seed)
-        random.seed(seed)
     def fit_transform(self,folder):
         data = Data()
         data.load(folder)
@@ -848,10 +829,10 @@ class Umap_tranformer:
         self.dimention=dimentions
         self.x = None
         
-    def fit(self,data,seed):
-        x,y = data.get_poll_cells()
+    def fit(self,data,num_cells=1000):
+        x,y = data.get_poll_cells(num_cells=num_cells)
         
-        self.space = umap.UMAP(n_components=self.dimention,densmap=False, random_state=seed,low_memory=False,min_dist = 0.0)
+        self.space = umap.UMAP(n_components=self.dimention,densmap=False, low_memory=False,min_dist = 0.0)
         self.space.fit(x)
         x_ = self.space.transform(x)
         x_ = np.concatenate((x, x_),axis=1)
@@ -903,19 +884,32 @@ class Umap_tranformer:
         self.x = a.x
         
 class Cell_Umap_tranformer:
-    def __init__(self,num_partition=100,n_jobs = 15):
-        self.num_partition=num_partition
+    def __init__(self,n_jobs = 15):
+        self.num_partition=None
         self.n_jobs=n_jobs
+        self.file_split = None
         
-    def fit(self,file_space,file_split):
+    def fit(self,file_space,file_split,num_partition):
+        self.num_partition=num_partition
+        self.file_split = file_split
         fold = os.getcwd()
         #p   file_quimera   num_partition  file_split
         print("start")
         subprocess.Popen([fold+"/Flow_c.exe","p",file_space,str(self.num_partition),file_split]).wait()
         print("end")
         
+        
     def transform(self,data):
-        print("")
+        v = []
+        for i in range(len(data.id)):
+            v.append((fold+"/Flow_c.exe",data.data + data.id[i] + ".dat",self.file_split))
+        def multi(v):
+            program,file, file_split = v
+            subprocess.Popen([program,"c",file,file_split]).wait()
+            
+        Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)             
+        data.sizes = [-2,len(data.painel),self.num_partition] 
+        data._save_meta()
     
     def save(self,file):
         f = open(file,"wb")
@@ -929,3 +923,47 @@ class Cell_Umap_tranformer:
         self.dimention=a.dimention
         self.space = a.space
         self.x = a.x
+        
+        
+class Density_tranformer:
+    def __init__(self,n_jobs = 15):
+        self.num_partition=None
+        self.n_jobs=n_jobs
+        self.file_split = None
+        
+    def fit(self,file_space,file_split,num_partition):
+        self.num_partition=num_partition
+        self.file_split = file_split
+        fold = os.getcwd()
+        #p   file_quimera   num_partition  file_split
+        print("start")
+        subprocess.Popen([fold+"/Flow_c.exe","p",file_space,str(self.num_partition),file_split]).wait()
+        print("end")
+        
+        
+    def transform(self,data):
+        v = []
+        for i in range(len(data.id)):
+            v.append((fold+"/Flow_c.exe",data.data + data.id[i] + ".dat",self.file_split))
+        def multi(v):
+            program,file, file_split = v
+            subprocess.Popen([program,"s",file,file_split]).wait()
+            
+        Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)             
+        data.sizes = [len(data.painel)+1]
+        for d in range(data.dim):
+            data.sizes += [self.num_partition]
+        data._save_meta()
+    
+    def save(self,file):
+        f = open(file,"wb")
+        pk.dump(self,f,pk.HIGHEST_PROTOCOL)
+        f.close()
+    
+    def load(self,file):
+        f = open(file,"rb")
+        a = pk.load(f)
+        f.close()
+        self.dimention=a.dimention
+        self.space = a.space
+        self.x = a.x 

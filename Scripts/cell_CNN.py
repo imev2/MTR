@@ -1,157 +1,302 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 30 10:00 2023
+Created on Tue Jul 25 10:44:43 2023
+
+@author: rafae
 """
 
-from Data import Data,Log_transformer,Standard_tranformer, Oversample
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jun 30 10:00 2023
+
+@author: PLATEAU LR
+"""
+
+from Data import Data,Log_transformer,Standard_tranformer,Umap_tranformer,Cell_Umap_tranformer
 import pickle as pk
 import os
 import numpy as np
 import pandas as pd
+from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score, fbeta_score, auc, roc_curve
+from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
 from sklearn.linear_model import LogisticRegression
 from joblib import Parallel, delayed
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import itertools
-#generate data ST2
-seed = 1235711
+from sklearn import metrics
+import torch.optim as optim
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
+
+#generate data ST1
+seed = 46
 fold = os.getcwd()
 fold
+torch.manual_seed(seed+1)
 
-# # ### GENERATE DATA FOR CELL CNN ###
-# data = Data()
-# data.load(fold + "/data/ST2/ST2_train_scale")
-# data.save(fold + "/data/ST2/ST2_cell/ST2_train_scale")
-# data.load(fold + "/data/ST2/ST2_cell/ST2_train_scale")
-# over = Oversample(seed)
-# over.fit_transform(fold + "/data/ST2/ST2_cell/ST2_train_scale")
-# # data.augmentation(factor=20, seed=seed)
 
-# data.load(fold + "/data/ST2/ST2_cell/ST2_train_scale")
-# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_train_scale")
-# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_train_scale")
-# data.sample_all_cells(numcells=10000,seed=seed+1)
+data = Data(seed=seed)
+# data.load(fold+"/data/ST2/ST2_base")
 
-# data.load(fold + "/data/ST2/ST2_val_scale")
-# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
-# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
-# over.fit_transform(fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
-# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
-# data.sample_all_cells(numcells=10000,seed=seed+2)
+# ## split test/train ##
+#split test group
+#data.split_data_test(fold+"/data/ST2/ST2_base_train_val", fold+"/data/ST2/ST2_base_test",perc_train = 0.9)
 
-# data.load(fold + "/data/ST2/ST2_test_scale")
-# data.save(fold + "/data/ST2/ST2_cell/ST2_cell_test_scale")
-# data.load(fold + "/data/ST2/ST2_cell/ST2_cell_test_scale")
-# data.sample_all_cells(numcells=10000,seed=seed+3)
+# # NOT PERFORMED ## split train/val ##
+# data.load(fold+"/data/ST2/ST2_base")
+# data.split_data_test(fold+"/data/ST2/ST2_base_train", fold+"/data/ST2/ST2_base_val",perc_train = 0.7)
 
-# # save train and valalidation dataset
-# dataset = data.get_dataload(fold_train=fold + "/data/ST2/ST2_cell/ST2_cell_train_scale", fold_test=fold + "/data/ST2/ST2_cell/ST2_cell_val_scale")
-# file = open(fold +"/data/ST2/dataset_cell_cnn_scale_noaug.dat","wb")
-# pk.dump(dataset,file)
-# file.close()
 
-### Load and contruct dataset ###
-data = Data()
+
+# # ### STANDARD FITS ###
+
+## standard fit ##
+# scaler = Standard_tranformer(num_cells=1000)
+# scaler.fit(fold +"/data/ST2/ST2_base_train")
+# scaler.save(fold +"/data/ST2/ST2_scaler")
+
+
+# ## standard transform - ##
+# data.load(fold +"/data/ST2/ST2_base_train")
+# data.save(fold +"/data/ST2/ST2_train_scale")
+# data.load(fold +"/data/ST2/ST2_base_test")
+# data.save(fold +"/data/ST2/ST2_test_scale")
+# data.load(fold +"/data/ST2/ST2_base_val")
+# data.save(fold +"/data/ST2/ST2_val_scale")
+# scaler = Standard_tranformer()
+# scaler.load(fold +"/data/ST2/ST2_scaler")
+# scaler.transform(fold +"/data/ST2/ST2_train_scale")
+# scaler.transform(fold +"/data/ST2/ST2_val_scale")
+# scaler.transform(fold +"/data/ST2/ST2_test_scale")
+
+### generate umap space
+
+# umap = Umap_tranformer(dimentions=2)
+# data.load(fold+"/data/ST2/ST2_train_scale")
+# data.save(fold+"/data/ST2/ST2_2D_train_scale")
+# data.load(fold+"/data/ST2/ST2_2D_train_scale")
+# print("umap fit")
+# umap.fit(data,num_cells=1000)
+# print("umap save")
+# umap.save(fold+"/data/ST2/umap_fit_2D_train_scale.dat")
+# umap.save_umap_points(fold+"/data/ST2/umap_fit_2D_train_scale.csv")
+
+# ## umap transform
+# umap = Umap_tranformer(dimentions=2)
+# data.load(fold+"/data/ST2/ST2_2D_train_scale")
+# print("umap transform train")
+# umap.transform(data, umap_space=fold+"/data/ST2/umap_fit_2D_train_scale.dat")
+# print("umap transform val")
+# data.load(fold+"/data/ST2/ST2_val_scale")
+# data.save(fold+"/data/ST2/ST2_2D_val_scale")
+# data.load(fold+"/data/ST2/ST2_2D_val_scale")
+# umap.transform(data, umap_space=fold+"/data/ST2/umap_fit_2D_train_scale.dat")
+# print("umap transform test")
+# data.load(fold+"/data/ST2/ST2_test_scale")
+# data.save(fold+"/data/ST2/ST2_2D_test_scale")
+# data.load(fold+"/data/ST2/ST2_2D_test_scale")
+# umap.transform(data, umap_space=fold+"/data/ST2/umap_fit_2D_train_scale.dat")
+
+
+# ###Calculate density cells
+# ### create grid
+# density = Cell_Umap_tranformer(n_jobs=15)
+# density.fit(fold+"/data/ST2/umap_fit_2D_train_scale.csv",fold+"/data/ST2/fit_2D.dat",num_partition=50)
+# print("density for train")
+# data.load(fold+"/data/ST2/ST2_2D_train_scale")
+# data.save(fold+"/data/ST2/ST2_2D_train_dens")
+# data.load(fold+"/data/ST2/ST2_2D_train_dens")
+# print("density for validation")
+# density.transform(data)
+# data.load(fold+"/data/ST2/ST2_2D_val_scale")
+# data.save(fold+"/data/ST2/ST2_2D_val_dens")
+# data.load(fold+"/data/ST2/ST2_2D_val_dens")
+# density.transform(data)
+# print("density for test")
+# density.transform(data)
+# data.load(fold+"/data/ST2/ST2_2D_test_scale")
+# data.save(fold+"/data/ST2/ST2_2D_test_dens")
+# data.load(fold+"/data/ST2/ST2_2D_test_dens")
+# density.transform(data)
+
+### sampler cells 
+# data.load(fold+"/data/ST2/ST2_base_train")
+# data.sample_all_cells(numcells=10000)
+# data.load(fold+"/data/ST2/ST2_base_val")
+# data.sample_all_cells(numcells=10000)
+# # data.load(fold+"/data/ST2/ST2_base_test")
+# data.sample_all_cells(numcells=10000)
+
+# data.load(fold+"/data/ST2/ST2_2D_train_dens")
+# a = data._get_data(10)
+
+
+# ### load and contruct dataset ###
+train_data, val_data = data.get_dataload(fold +"/data/ST2/ST2_base_train",fold +"/data/ST2/ST2_base_val")
 data.load(fold+"/data/ST2/ST2_base")
 tam = len(data.pheno)
 pos = sum(data.pheno)
 pos_weight = (tam-pos)/pos
 
-# EQUIVALENT BELOW train_cell_data, val_cell_data = data.get_dataload(fold +"/data/ST2/ST2_cell/ST2_cell_train_scale",fold +"/data/ST2/ST2_cell/ST2_cell_val_scale")
-file = open(fold +"/data/ST2/dataset_cell_cnn_scale_noaug.dat","rb")
-train_data, val_data  = pk.load(file)
-file.close()
+
 
 # Input shape is determined by the number of cells sampled from each sample and the number of markers (30 = ST2)
 imput_shape = train_data.__getitem__(0)[0].size()
 imput_size = 1
 for v in imput_shape:
     imput_size*=v
-    
+
+
+
 ### defining model ###
-class Model_CV2(torch.nn.Module):
-    def __init__(self,imput_size, num_markers):
-        super().__init__()
-        torch.set_default_dtype(torch.float64)
-        self.flatten = torch.flatten
-        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
-        self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(1,1))
-        self.fc1 = torch.nn.Linear(in_features=3, out_features=1)
-        self.avPoll=torch.nn.AvgPool2d(kernel_size=(10000,1),stride =1)
-        self.sigmoid = torch.nn.Sigmoid()
-        self.relu = torch.nn.ReLU()
-        # self.do = torch.nn.Dropout1d(p=0.2)
-        # self.bn = torch.nn.BatchNorm1d(1000)
-        self.optimizer=None
-    def forward(self, x):
-        x = self.relu(self.cov1(x))
-        print(x.shape)
-        x = self.relu(self.cov2(x))
-        print(x.shape)
-        x = self.avPoll(x)
-        print(x.shape)
-        x = self.flatten(x, start_dim=1)
-        print(x.shape)
-        x = self.relu(self.fc1(x))
-        print(x.shape)
-
-
-        return x
-    
-# class Model_CV1(torch.nn.Module):
-#     def __init__(self,imput_size, num_markers):
-#         super().__init__()
-#         torch.set_default_dtype(torch.float64)
-#         self.flatten = torch.flatten
-#         self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
-#         self.fc1 = torch.nn.Linear(in_features=3, out_features=1)
-#         # self.sigmoid = torch.nn.Sigmoid()
-#         self.relu = torch.nn.ReLU()
-#         self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000, 1),stride =1)
-#         # self.do = torch.nn.Dropout1d(p=0.2)
-#         self.optimizer=None
-#     def forward(self, x):
-#         x = self.relu(self.cov1(x))
-#         x = self.fc1(x)
-#         x = self.avPoll(x)
-#         x = self.flatten(x)
-#         return x
-
-class Model_CV1(torch.nn.Module):
+class Model_CVsimp(torch.nn.Module):
     def __init__(self,imput_size, num_markers):
         super().__init__()
         torch.set_default_dtype(torch.float64)
         self.flatten = torch.flatten
         self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1,num_markers))
+        #self.cov2 = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1,1))
         self.avPoll=torch.nn.AvgPool2d(kernel_size=(10000,1),stride =1)
+        self.sigmoid = torch.nn.Sigmoid()
         self.relu = torch.nn.ReLU()
+        # self.do = torch.nn.Dropout1d(p=0.2)
+        # self.bn = torch.nn.BatchNorm1d(1000)
+    def forward(self, x):
+        #print(x.shape)
+        x = self.relu(self.cov1(x))
+        
+        # x = self.bn(x)
+        #print(x.shape)
+        # print(x.shape)
+        # x = self.bn(x)
+        #print(x.shape)
+        x = self.avPoll(x)
+        #print(x.shape)
+        return x
+
+
+class Model_CVsimp2(torch.nn.Module):
+    def __init__(self,imput_size, num_markers):
+        super().__init__()
+        torch.set_default_dtype(torch.float64)
+        self.flatten = torch.flatten
+        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1,num_markers))
+        #self.cov2 = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1,1))
+        self.avPoll=torch.nn.AvgPool2d(kernel_size=(10000,1),stride =1)
+        self.sigmoid = torch.nn.Sigmoid()
+        #self.relu = torch.nn.ReLU()
+        # self.do = torch.nn.Dropout1d(p=0.2)
+        # self.bn = torch.nn.BatchNorm1d(1000)
+        self.optimizer=None
+    def forward(self, x):
+        #print(x.shape)
+        x = self.cov1(x)
+        # x = self.bn(x)
+        #print(x.shape)
+        # print(x.shape)
+        # x = self.bn(x)
+        #print(x.shape)
+        x = self.avPoll(x)
+        #print(x.shape)
+        return x
+
+    
+class Model_CVRobust_Dense(torch.nn.Module):
+    def __init__(self,imput_size, num_markers):
+        super().__init__()
+        torch.set_default_dtype(torch.float64)
+        self.flatten = torch.flatten
+        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=5, kernel_size=(1,num_markers))
+        self.cov2 = torch.nn.Conv2d(in_channels=5, out_channels=1, kernel_size=(1,1))
+        # self.fc1 = torch.nn.Linear(in_features=1, out_features=1)
+        self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000,1),stride =1)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.relu = torch.nn.ReLU()
+        self.fc1 = torch.nn.Linear(in_features=1, out_features=8)
+        self.fc2 = torch.nn.Linear(in_features=8, out_features=4)
+        self.fc3 = torch.nn.Linear(in_features=4, out_features=1)
         # self.do = torch.nn.Dropout1d(p=0.2)
         # self.bn = torch.nn.BatchNorm1d(1000)
         self.optimizer=None
     def forward(self, x):
         x = self.relu(self.cov1(x))
+        # x = self.bn(x)
+        # print(x.shape)
+        x = self.relu(self.cov2(x))
+        # print(x.shape)
+        # x = self.bn(x)
+        # print(x.shape)
         x = self.avPoll(x)
+        # print(x.shape)
+        # x = self.flatten(x)
+        # # print(x.shape)
+        x = self.relu(self.fc1(x))
+        # print(x.shape)
+        x = self.relu(self.fc2(x))
+        x = self.relu(self.fc3(x))
+        # print(x.shape)
+        x = self.sigmoid(x)
+        return x
+    
+
+class Model_Linear(torch.nn.Module):
+    def __init__(self,imput_size, num_markers):
+        super().__init__()
+        torch.set_default_dtype(torch.float64)
+        self.flatten = torch.flatten
+        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=5, kernel_size=(1,num_markers))
+        self.fc1 = torch.nn.Linear(in_features=5, out_features=1)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.relu = torch.nn.ReLU()
+        self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000, 1),stride =1)
+        # self.do = torch.nn.Dropout1d(p=0.2)
+        self.optimizer=None
+    def forward(self, x):
+        x = self.relu(self.cov1(x))
+        x = self.avPoll(x)
+        x = self.flatten(x)
+        x = self.sigmoid(self.fc1(x))
+        return x
+    
+class Model_CV2(torch.nn.Module):
+    def __init__(self,imput_size, num_markers):
+        super().__init__()
+        self.flatten = torch.flatten
+        self.fc1 = torch.nn.Linear(in_features=3, out_features=1)
+        self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,num_markers))
+        self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(1,1))
+        self.maxPoll=torch.nn.MaxPool2d(kernel_size=(1000,1),stride =1)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.relu = torch.nn.ReLU()
+        self.optimizer=None
+    def forward(self, x):
+        x = self.relu(self.cov1(x))
+        x = self.relu(self.cov2(x))
+        x = self.maxPoll(x)
+        x = self.flatten(x)
+        x = self.sigmoid(self.fc1(x))
         return x
     
 ### construct Neural_network ### 
+
 class Neural:
-    def __init__(self,train_dataset,val_dataset,model,optimizer,loss_f, device,sumary_lab=False,bach_size=16):
-        self.train_loader = DataLoader(dataset=train_data, batch_size=bach_size, shuffle=True)
+    def __init__(self,train_dataset,val_dataset,model,optimizer,scheduler, loss_f, device,sumary_lab=False,bach_size=16):
+        self.train_loader = DataLoader(dataset=train_dataset, batch_size=bach_size, shuffle=True)
         self.bach_size = bach_size
-        self.val_loader = DataLoader(dataset=val_data, batch_size=bach_size, shuffle=True)
+        self.val_loader = DataLoader(dataset=val_dataset, batch_size=bach_size, shuffle=True)
         self.model = model
         self.optimizer = optimizer
+        self.scheduler = scheduler
         self.loss_f = loss_f
         self.device = device
         self.sumary_lab = sumary_lab
         self.model.to(device)
         if(sumary_lab!=False):
-            self.writer= SummaryWriter(fold+"/ST2/ST2_cell/ST2_runs/"+self.sumary_lab)
+            self.writer= SummaryWriter(fold+"/runs/"+self.sumary_lab)
         else:
             self.writer=None
         
@@ -160,11 +305,11 @@ class Neural:
             ###TRAINING###
             tloss = []
             vloss = []
-            # si=0
             t_y = []
             v_y = []
             t_yp = []
             v_yp = []
+            lrs = []
             for batch_x,batch_y in self.train_loader:
                 self.model.train()
                 batch_x.to(self.device)
@@ -176,27 +321,22 @@ class Neural:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
                 tloss.append(loss.detach().item())
-                # True y in batch
                 t_y = t_y + batch_y.detach().tolist()
-                # Pred y in batch
                 t_yp = t_yp + torch.flatten(y_pred.detach()).tolist()
                 
-            fpr, tpr, thresholds = roc_curve(t_y,t_yp, pos_label=1)
-            b_acuracy = auc(fpr, tpr)       
-            # accuracy = accuracy_score(t_y, t_yp)
-            # bas = balanced_accuracy_score(t_y, t_yp)
-            # f1 = fbeta_score(t_y, t_yp,beta = 1, pos_label=1)
-            # f2 = fbeta_score(t_y, t_yp,beta = 2, pos_label=1)
+                
+            fpr, tpr, thresholds = metrics.roc_curve(t_y,t_yp, pos_label=1)
+            b_acuracy = metrics.auc(fpr, tpr)        
             ### Average validation loss and score for all batches ###
             # print(si)
             tloss = np.mean(np.array(tloss))
             # sfscore = sfscore/si
             # sscore = sscore/si
+            curr_lr = self.optimizer.param_groups[0]['lr']
+            lrs.append(curr_lr)
             print("------------------")
-            print("Epoch: ", str(epoch))
-            print("training loss: ", str(tloss), "training auc: "+str(b_acuracy))
-            # print("training accuracy: ", str(accuracy), "training bas: ", str(bas))
-            # print("f1 score: ", str(f1), "f2 score: ", str(f2))
+            print("LR: ", str(curr_lr))
+            print("training loss: ", str(tloss), "training accuracy: "+str(b_acuracy)) #, " fscore: ", str(sfscore))
             # print("------------------")
 
             ###VALIDATION###
@@ -216,14 +356,18 @@ class Neural:
                         
                 ### Average validation loss and score for all batches ###
                 # print(si)
-                fpr, tpr, thresholds =roc_curve(v_y,v_yp, pos_label=1)
-                vb_acuracy = auc(fpr, tpr)
+                fpr, tpr, thresholds = metrics.roc_curve(v_y,v_yp, pos_label=1)
+                vb_acuracy = metrics.auc(fpr, tpr)
                 vloss = np.mean(np.array(vloss))
                     # print("------------------")
                 print("val loss: ", str(vloss), "val accuracy: "+str(vb_acuracy)) #, " fscore: ", str(sfscore))
                 print("------------------")
                 if(epoch%20==0):
-                    self._save(fold+"/data/ST2/ST2_cell/ST2_models/"+self.sumary_lab +".dat", epoch, num_epochs)
+                    self._save(fold+"/data/ST1/ST1_models/"+self.sumary_lab +".dat", epoch, num_epochs)
+                print(epoch)
+                
+            self.scheduler.step(vloss)
+            
             if(self.sumary_lab!=False):
                 self.writer.add_scalars(main_tag=self.sumary_lab, 
                                         tag_scalar_dict={"Loss/train":tloss,
@@ -284,10 +428,11 @@ class Neural:
             file = open(file,"wb")
             pk.dump(mod, file)
             file.close()
-# #####################################################################################################
+
+# # #####################################################################################################
 
 ### Define the hyperparameter values to explore ###
-batch_size=16
+batch_size=64
 lr = 0.0001
 
 device = "cpu"
@@ -295,15 +440,102 @@ torch.set_num_threads(16)
 loss_f = torch.nn.BCEWithLogitsLoss(reduction="mean",pos_weight=torch.as_tensor(pos_weight))
 print("run model")
 
-model = Model_CV1(imput_size, num_markers=30)
-optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="scale_modelCV1_2207_1200",bach_size=batch_size)                  
-net.trainning(num_epochs=2000, file_out=fold+"/data/ST2/ST2_cell/Results/scale_modelCV1_2207_1200.dat", test_dataset=None)
+model = Model_CVsimp2(imput_size, num_markers=30)
+optimizer = optim.Adam(model.parameters(), lr=lr)
+scheduler = ReduceLROnPlateau(optimizer, "min", patience=20, min_lr=0.0)
 
 
-# model = Model_CV2(imput_size, num_markers=30)
-# optimizer=torch.optim.Adam(model.parameters(), lr=lr)
-# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="scale_modelCV2_2207_1200",bach_size=batch_size)                  
-# net.trainning(num_epochs=2000, file_out=fold+"/data/ST2/ST2_cell/Results/scale_modelCV2_2207_1200.dat", test_dataset=None)
+net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer, scheduler=scheduler, device=device,sumary_lab="CVsimp__25_07_64bs_plateau",bach_size=batch_size)                  
+net.trainning(num_epochs=5000, file_out=fold+"/data/Results/ST2/CVsimp_25_07_64bs_plateau.dat", test_dataset=None)
 
+model = Model_CVsimp2(imput_size, num_markers=30)
+optimizer = optim.Adam(model.parameters(), lr=lr)
+scheduler = StepLR(optimizer, step_size=100, gamma=0.5)
+
+
+net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer, scheduler=scheduler, device=device,sumary_lab="CVsimp__25_07_64bs_step",bach_size=batch_size)                  
+net.trainning(num_epochs=5000, file_out=fold+"/data/Results/ST2/CVsimp_25_07_64bs_step.dat", test_dataset=None)
+
+
+# # # model = Model_CVRobust(imput_size, num_markers=30)
+# # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+# # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVRobust_bs16_do02lr05",bach_size=batch_size)                  
+# # # net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCVRobust_do02lr05", test_dataset=None)  
+
+
+# # # # model = Model_Linear(imput_size, num_markers=30)
+# # # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+# # # # # optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+# # # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelLinear_bs16",bach_size=batch_size)                  
+# # # # net.trainning(num_epochs=500, test_dataset=None, file_out=fold+"/ST2/cellCnn/scoresmodelLinear")               
+       
+# # # model = Model_CVRobust_Dense(imput_size, num_markers=30)
+# # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+# # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense10_do02lr05",bach_size=batch_size)                  
+# # # net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCV_dense10_do02lr05", test_dataset=None)  
+
+# # # model = Model_CV2(imput_size, num_markers=28)
+# # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+# # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV2_1307_9_45s",bach_size=batch_size)                  
+# # # net.trainning(num_epochs=1, file_out=fold+"/Results/ST1/CV2/1307_8_38", test_dataset=None)  
+
+
+  
+
+# # # model = Model_Linear(imput_size, num_markers=28)
+# # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+# # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelLinear_1307_8_5channels",bach_size=batch_size)                  
+# # # net.trainning(num_epochs=1, test_dataset=None, file_out=fold+"/Results/ST1/Linear/Linear_1206_18_10")               
+       
+# # # model = Model_CVRobust_Dense(imput_size, num_markers=28)
+# # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
+# # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense_1307_8_5channels",bach_size=batch_size)                  
+# # # net.trainning(num_epochs=1, file_out=fold+"/Results/ST1/Dense/Dense_1307_8_38", test_dataset=None)  
+
+
+
+
+
+
+# # # # ### definning model
+# # # # class Model_CVRobust(torch.nn.Module):
+# # # #     def __init__(self,imput_size):
+# # # #         super().__init__()
+# # # #         torch.set_default_dtype(torch.float64)
+# # # #         self.flatten = torch.flatten
+# # # #         self.cov1 = torch.nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(1,28))
+# # # #         self.cov2 = torch.nn.Conv2d(in_channels=3, out_channels=1, kernel_size=(1,1))
+# # # #         # self.fc1 = torch.nn.Linear(in_features=1, out_features=1)
+# # # #         self.avPoll=torch.nn.AvgPool2d(kernel_size=(1000,1),stride =1)
+# # # #         self.sigmoid = torch.nn.Sigmoid()
+# # # #         self.relu = torch.nn.ReLU()
+# # # #         self.do = torch.nn.Dropout1d(p=0.1)
+# # # #         self.optimizer=None
+# # # #     def forward(self, x):
+# # # #         x = self.do(self.relu(self.cov1(x)))
+# # # #         x = self.do(self.relu(self.cov2(x)))
+# # # #         x = self.avPoll(x)
+# # # #         x = self.flatten(x)
+# # # #         x = self.sigmoid(x)
+# # # #         return x
+    
+# # # # class Model_CV1(torch.nn.Module):
+# # # #     def __init__(self,imput_size):
+# # # #         super().__init__()
+# # # #         torch.set_default_dtype(torch.float64)
+# # # #         self.flatten = torch.flatten
+# # # #         self.fc1 = torch.nn.Linear(in_features=imput_size, out_features=1)
+# # # #         self.sigmoid = torch.nn.Sigmoid()
+# # # #         self.relu = torch.nn.ReLU()
+# # # #         self.do = torch.nn.Dropout1d(p=0.1)
+# # # #         self.optimizer=None
+# # # #     def forward(self, x):
+# # # #         x = self.do(self.relu(self.cov1(x)))
+# # # #         x = self.maxPoll(x)
+# # # #         x = self.flatten(x)
+# # # #         x = self.sigmoid(self.fc1(x))
+# # # #         return x
+    
+
+    
 

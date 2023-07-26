@@ -34,7 +34,7 @@ import pickle as pk
 import os
 import numpy as np
 import pandas as pd
-from ToolsNina import RF, LR, SVM
+from Tools import RF, LR, SVM
 from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
 from joblib import Parallel, delayed
 
@@ -44,6 +44,9 @@ fold = os.getcwd()
 data = Data()
 
 data.load(fold + "/data/ST2_base")
+
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_1000.csv", balanciate = False, save=True, num_cells=1000)
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_1000_balanced.csv", save=True, num_cells=1000)
 
 df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST2_base_LMM_1000.csv", balanciate = False, save=True, num_cells=1000)
 # df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_1000_balanced.csv", save=True, num_cells=1000)

@@ -21,35 +21,36 @@ Data::~Data()
 Data::Data(const char* file_space, int num_partition)
 {
 	//std::sync_with_stdio(false);
-	double* values;
+	double* aux;
 	double max, min;
 	std::ifstream file;
-	int n_lin, n_col;
+	int n_lin, n_col,c,i,l,d;
 	double** dim_value;
 	this->num_partition = num_partition;
 	file.open(file_space, std::ios::in);
 	file >> n_lin >> n_col >> dim;
 	//painel alocation
 	split = new double* [dim];
-	for (int i = 0; i < dim; i++) {
+	for (i = 0; i < dim; i++) {
 		split[i] = new double[num_partition - 1];
 	}
 
 	//dimmention alocation
 	num_channel = n_col - dim;
 	dim_value = new double* [dim];
-	for (int i = 0; i < dim; i++) {
+	for (i = 0; i < dim; i++) {
 		dim_value[i] = new double[n_lin];
 	}
 	//load cells
-	values = new double[n_lin * num_channel];
-	for (int l = 0; l < n_lin; l++) {
-		if (l % 1000 == 0) std::cout << l / 1000 << " mil\n";
-		for (int c = 0; c < num_channel; c++) {
-			file >> values[c * n_lin + l];
+	aux = new double[n_col];
+	for (l = 0; l < n_lin; l++) {
+		//if (l % 1000 == 0) std::cout << l / 1000 << " mil\n";
+		for (c = 0; c < n_col; c++) {
+			file >> aux[c];
 		}
+		
 		for (int d = 0; d < dim; d++) {
-			file >> dim_value[d][l];
+			dim_value[d][l] = aux[num_channel + d];
 		}
 	}
 	file.close();
@@ -72,14 +73,13 @@ Data::Data(const char* file_space, int num_partition)
 			split[d][i - 1] = range * i + min;
 		}
 	}
-	std::cout << "";
+	//std::cout << "";
 	//unalocate
 	for (int i = 0; i < dim; i++) {
 		delete[] dim_value[i];
 	}
 	delete[] dim_value;
-
-	delete[] values;
+	delete[] aux;
 }
 
 void Data::save(const char* file_space)

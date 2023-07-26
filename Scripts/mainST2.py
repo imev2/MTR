@@ -33,19 +33,19 @@ data = Data()
 # data.split_data_test(fold+"/data/ST2/ST2_train", fold+"/data/ST2/ST2_val",perc_train = 0.8,seed=seed+1)
 
 
-### LOG TRANSFORM ALL DATA ###
+# ### LOG TRANSFORM ALL DATA ###
 
-## log transformation - train_val ##
-data.load(fold+"/data/ST2/ST2_base_train_val")
-data.save(fold+"/data/ST2/ST2_base_train_val_log")
-logt = Log_transformer()
-logt.fit_transform(fold+"/data/ST2/ST2_base_train_val_log")
+# ## log transformation - train_val ##
+# data.load(fold+"/data/ST2/ST2_base_train_val")
+# data.save(fold+"/data/ST2/ST2_base_train_val_log")
+# logt = Log_transformer()
+# logt.fit_transform(fold+"/data/ST2/ST2_base_train_val_log")
 
-## log transformation - test ##
-data.load(fold+"/data/ST2/ST2_base_test")
-data.save(fold+"/data/ST2/ST2_base_test_log")
-logt = Log_transformer()
-logt.fit_transform(fold+"/data/ST2/ST2_base_test_log")
+# ## log transformation - test ##
+# data.load(fold+"/data/ST2/ST2_base_test")
+# data.save(fold+"/data/ST2/ST2_base_test_log")
+# logt = Log_transformer()
+# logt.fit_transform(fold+"/data/ST2/ST2_base_test_log")
 
 
 # ### STANDARD FITS ###
