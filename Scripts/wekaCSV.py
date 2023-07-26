@@ -15,8 +15,19 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_scor
 #generate data ST3
 seed = 1235711
 fold = os.getcwd()
+
+# Step 1: Read the meta.txt file to get the marker names
+meta_file = os.path.join(fold, "data/ST2/ST2_base/meta.txt")
+
+with open(meta_file, "r") as f:
+    marker_names = f.read().splitlines()[2]
+    
+marker_names = marker_names.split()
+
+marker_names.append("outcome")
+
 data = Data()
-data.load(fold + "/data/ST2_base")
+data.load(fold + "/data/ST2/ST2_base")
 df, df_y = data.get_poll_cells(balanciate=False, save=False, num_cells=1000)
 print("Saving pooled cells.")
 df_log = np.log1p(df)
@@ -25,6 +36,12 @@ df_log_pd = pd.DataFrame(df_log)
 df_y_pd = pd.DataFrame(df_y)
 df_y_pd = df_y_pd.replace(0, "control")
 df_y_pd = df_y_pd.replace(1, "positive")
-df_csv = pd.concat([df_log_pd, df_y_pd], ignore_index=True, axis=1)
-df_csv.to_csv(fold+"/data/ST2/pooled_final/ST2_log_base_1000.csv")
+df_csv = pd.concat([df_log_pd, df_y_pd], ignore_index=True,  axis=1)
+df_csv.columns = marker_names
+
+# Step 2: Assign the marker names as column names to df_log_pd DataFrame
+df_csv.to_csv(fold+"/data/ST2/pooled_final/ST2_log_base_1000_markers.csv", index=False)
 print("Saved pooled cell file.")
+
+
+
