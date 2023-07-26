@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
 	c   file_sample  file_split
 	s   file_sample  file_split
 	*/
-	std::cout << argv[1] << " " << argv[2];
+	//std::cout << argv[1] << " " << argv[2];
 	if (argv[1][0] == 'p') {
 		Data data(argv[2], atoi(argv[3]));
 		data.save(argv[4]);

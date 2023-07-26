@@ -164,6 +164,7 @@ void Table2D::get_density(const char* file, double*& dados, bool save_data)
 	int col2 = n_col - 1;
 	int* dim1 = new int[n_lin];
 	int* dim2 = new int[n_lin];
+	double dx;
 
 
 
@@ -245,13 +246,14 @@ void Table2D::get_density(const char* file, double*& dados, bool save_data)
 		f.write(reinterpret_cast<char*>(&n_lin), sizeof(int));
 		col1 = che;
 		f.write(reinterpret_cast<char*>(&col1), sizeof(int));
-		for (d1 = 0; d1 < n_lin; d1++) {
-			col2 = num_channel * d1;
-			for (c = 0; c < che; c++) {
-				double dx = get(c, dim1[d1], dim2[d1]);
-				f.write(reinterpret_cast<char*>(&dx), sizeof(double));
+		for(c=0;c<che;c++)
+			for (d1 = 0; d1 < num_partition; d1++) {
+				aux = d1 * num_partition;
+				for (d2 = 0; d2 < num_partition; d2++) {
+					dx = table[c][aux + d2];
+					f.write(reinterpret_cast<char*>(&dx), sizeof(double));
+				}
 			}
-		}
 		f.close();
 	}
 
@@ -359,8 +361,8 @@ void Table2D::set(double value, int channel, int dim1, int dim2)
 
 void Table3D::get_density(const char* file, double*& dados, bool save_data)
 {
-	int n_lin, n_col, c, y, aux;
-	int d1, d2;
+	int n_lin, n_col, c, y, aux,aux2,aux3;
+	int d1, d2,d3;
 	readFile(file, n_lin, n_col, y, dados);
 	int che = num_channel + 1;
 	int col1 = n_col - 3;
@@ -369,6 +371,7 @@ void Table3D::get_density(const char* file, double*& dados, bool save_data)
 	int* dim1 = new int[n_lin];
 	int* dim2 = new int[n_lin];
 	int* dim3 = new int[n_lin];
+	double dx;
 	//get position for each line
 	for (d1 = 0; d1 < n_lin; d1++) {
 		dim1[d1] = binary_search(dados[d1 * n_col + col1], -1, num_partition - 1, 0);
@@ -423,17 +426,24 @@ void Table3D::get_density(const char* file, double*& dados, bool save_data)
 		std::ofstream f;
 		f.open(file, std::ios::out | std::ios::binary);
 		//"i i i",pheno ,nlin,ncol
-		f.write(reinterpret_cast<const char*>(&y), sizeof(int));
-		aux = che * num_partition * num_partition;
-		f.write(reinterpret_cast<const char*>(&aux), sizeof(int));
-		f.write(reinterpret_cast<const char*>(&num_partition), sizeof(int));
-		aux = sizeof(double) * num_partition * num_partition;
-		for (c = 0; c < che; c++)
-			d2 = c * num_partition;
-		for (d1 = 0; d1 < num_partition; d1++) {
-			f.write(reinterpret_cast<const char*>(table[d2 + d1]), aux);
-		}
 
+		f.write(reinterpret_cast<char*>(&y), sizeof(int));
+		f.write(reinterpret_cast<char*>(&n_lin), sizeof(int));
+		col1 = che;
+		f.write(reinterpret_cast<char*>(&col1), sizeof(int));
+		for (c = 0; c < che; c++) {
+			aux = c * num_partition;
+			for (d1 = 0; d1 < num_partition; d1++) {
+				aux2 = aux + d1;
+				for (d2 = 0; d2 < num_partition; d2++) {
+					aux3 = d2 * num_partition;
+					for (d3 = 0; d3 < num_partition; d3++) {
+						dx = table[aux2][aux3+d3];
+						f.write(reinterpret_cast<char*>(&dx), sizeof(double));
+					}
+				}	
+			}			
+		}
 		f.close();
 	}
 

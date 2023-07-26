@@ -44,7 +44,7 @@ Data::Data(const char* file_space, int num_partition)
 	//load cells
 	aux = new double[n_col];
 	for (l = 0; l < n_lin; l++) {
-		if (l % 1000 == 0) std::cout << l / 1000 << " mil\n";
+		//if (l % 1000 == 0) std::cout << l / 1000 << " mil\n";
 		for (c = 0; c < n_col; c++) {
 			file >> aux[c];
 		}
@@ -73,7 +73,7 @@ Data::Data(const char* file_space, int num_partition)
 			split[d][i - 1] = range * i + min;
 		}
 	}
-	std::cout << "";
+	//std::cout << "";
 	//unalocate
 	for (int i = 0; i < dim; i++) {
 		delete[] dim_value[i];
