@@ -29,7 +29,7 @@ Created on Thu Jul 20 14:37:00 2023
             
         # return(df,df_y)
     
-from DataNOUMAP import Data,Log_transformer,Standard_tranformer
+from Data import Data,Log_transformer,Standard_tranformer
 import pickle as pk
 import os
 import numpy as np
@@ -43,8 +43,7 @@ seed = 1235711
 fold = os.getcwd()
 data = Data()
 
-data.load(fold + "/data/ST1_base")
+data.load(fold + "/data/ST2_base")
 
-df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_1000.csv", balanciate = False, save=True, num_cells=1000)
-df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_1000_balanced.csv", save=True, num_cells=1000)
-
+df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST2_base_LMM_1000.csv", balanciate = False, save=True, num_cells=1000)
+# df, df_y = data.get_poll_cells(fold=fold, filename="/data/pooled/ST1_base_LMM_1000_balanced.csv", save=True, num_cells=1000)
