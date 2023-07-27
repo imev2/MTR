@@ -474,10 +474,6 @@ net.trainning(num_epochs=5000, file_out=fold+"/data/Results/ST1/modelCVsimp_dens
 # # net.trainning(num_epochs=1, file_out=fold+"/Results/ST1/Dense/Dense_1307_8_38", test_dataset=None)  
 
 
-
-
-
-
 # # # ### definning model
 # # # class Model_CVRobust(torch.nn.Module):
 # # #     def __init__(self,imput_size):
