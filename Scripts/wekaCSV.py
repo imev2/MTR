@@ -17,6 +17,7 @@ seed = 1235711
 fold = os.getcwd()
 
 # Step 1: Read the meta.txt file to get the marker names
+
 meta_file = os.path.join(fold, "data/ST3/ST3_base/meta.txt")
 
 with open(meta_file, "r") as f:
