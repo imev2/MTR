@@ -404,7 +404,7 @@ class Data:
             shutil.copyfile(src,dest)
 
         
-    def augmentation(self,factor,n_jobs=15):
+    def augmentation(self,factor,n_jobs=15,numcells=False):
         #balanciate
         print("balanciate")
         pos = [i for i in range(len(self.id)) if self.pheno[i]==1]
@@ -441,11 +441,15 @@ class Data:
             self.pheno.append(self.pheno[samp1])
             batch = self.batch[samp1]+ "_"+self.batch[samp2]
             self.batch.append(batch)
+            if numcells!=False:
+                vec =  np.arange(len(df))
+                np.random.shuffle(vec)
+                df = df[vec[:numcells]]
             self._save_data(len(self.id)-1, df)
         #aumentation
         print("aumentation")
         fac = int(len(self.id)*factor)
-        def aument(pos,neg,i,self):
+        def aument(pos,neg,i,numcells,self):
             idd_n = []
             batch_n = []
             pheno_n = []
@@ -465,6 +469,10 @@ class Data:
             df = np.concatenate((df1[:aux1], df2[:aux2]), axis=0)
             batch = self.batch[samp1]+"_"+self.batch[samp2]
             batch_n.append(batch)
+            if numcells!=False:
+                vec =  np.arange(len(df))
+                np.random.shuffle(vec)
+                df = df[vec[:numcells]]
             self._save_data(i, df,idd_n[0],0)
             #pos
             samp1 = pos[random.randint(0, len(pos)-1)]
@@ -484,11 +492,15 @@ class Data:
             self.pheno.append(self.pheno[samp1])
             batch = self.batch[samp1]+"_"+self.batch[samp2]
             batch_n.append(batch)
+            if numcells!=False:
+                vec =  np.arange(len(df))
+                np.random.shuffle(vec)
+                df = df[vec[:numcells]]
             self._save_data(i+1, df,idd_n[1],1)
             return{"id":idd_n,"batch":batch_n,"pheno":pheno_n}
         
         print("start")
-        res = Parallel(n_jobs=n_jobs,verbose=10)(delayed(aument)(pos,neg,i,self) for i in range(len(self.id),fac,2))
+        res = Parallel(n_jobs=n_jobs,verbose=10)(delayed(aument)(pos,neg,i,numcells,self) for i in range(len(self.id),fac,2))
         #res = aument(pos,neg,len(self.id)+10,self)
         print("stop")    
         for d in res:
@@ -498,6 +510,12 @@ class Data:
             self.batch.append((d["batch"][1]))
             self.pheno.append(d["pheno"][0])
             self.pheno.append(d["pheno"][1])
+        for s in neg:
+            df = self._sample_data(s ,numcells)
+            self._save_data(s, df,pheno=self.pheno[s])
+        for s in pos:
+            df = self._sample_data(s ,numcells)
+            self._save_data(s, df,pheno=self.pheno[s])
         self._save_meta()
             
     def augmentation_by_batch(self,factor):

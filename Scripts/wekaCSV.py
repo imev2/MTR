@@ -17,7 +17,8 @@ seed = 1235711
 fold = os.getcwd()
 
 # Step 1: Read the meta.txt file to get the marker names
-meta_file = os.path.join(fold, "data/ST2/ST2_base/meta.txt")
+
+meta_file = os.path.join(fold, "data/ST3/ST3_base/meta.txt")
 
 with open(meta_file, "r") as f:
     marker_names = f.read().splitlines()[2]
@@ -27,7 +28,7 @@ marker_names = marker_names.split()
 marker_names.append("outcome")
 
 data = Data()
-data.load(fold + "/data/ST2/ST2_base")
+data.load(fold + "/data/ST3/ST3_base")
 df, df_y = data.get_poll_cells(balanciate=False, save=False, num_cells=1000)
 print("Saving pooled cells.")
 df_log = np.log1p(df)
@@ -40,8 +41,7 @@ df_csv = pd.concat([df_log_pd, df_y_pd], ignore_index=True,  axis=1)
 df_csv.columns = marker_names
 
 # Step 2: Assign the marker names as column names to df_log_pd DataFrame
-df_csv.to_csv(fold+"/data/ST2/pooled_final/ST2_log_base_1000_markers.csv", index=False)
+df_csv.to_csv(fold+"/data/ST3/pooled/ST3_log_base_1000_markers.csv", index=False)
 print("Saved pooled cell file.")
-
 
 

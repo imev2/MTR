@@ -40,15 +40,16 @@ torch.manual_seed(seed+1)
 
 
 data = Data(seed=seed)
-data.load(fold+"/data/ST2/ST2_base")
+# data.load(fold+"/data/ST3/ST3_2D_val_scale")
+# data.load(fold+"/data/ST3/ST3_base")
 
-## split test/train ##
-#split test group
-data.split_data_test(fold+"/data/ST2/ST2_base_train_val", fold+"/data/ST2/ST2_base_test",perc_train = 0.9)
+# ## split test/train ##
+# #split test group
+# data.split_data_test(fold+"/data/ST3/ST3_base_train_val", fold+"/data/ST3/ST3_base_test",perc_train = 0.9)
 
-# # NOT PERFORMED ## split train/val ##
-data.load(fold+"/data/ST2/ST2_base_train_val")
-data.split_data_test(fold+"/data/ST2/ST2_base_train", fold+"/data/ST2/ST2_base_val",perc_train = 0.8)
+# # # NOT PERFORMED ## split train/val ##
+# data.load(fold+"/data/ST3/ST3_base_train_val")
+# data.split_data_test(fold+"/data/ST3/ST3_base_train", fold+"/data/ST3/ST3_base_val",perc_train = 0.8)
 
 
 
@@ -56,88 +57,88 @@ data.split_data_test(fold+"/data/ST2/ST2_base_train", fold+"/data/ST2/ST2_base_v
 
 ## standard fit ##
 #scaler = Standard_tranformer(num_cells=1000)
-#scaler.fit(fold +"/data/ST2/ST2_base_train")
-#scaler.save(fold +"/data/ST2/ST2_scaler")
+#scaler.fit(fold +"/data/ST3/ST3_base_train")
+#scaler.save(fold +"/data/ST3/ST3_scaler")
 
 
 ## standard transform - ##
-#data.load(fold +"/data/ST2/ST2_base_train")
-#data.save(fold +"/data/ST2/ST2_train_scale")
-#data.load(fold +"/data/ST2/ST2_base_test")
-#data.save(fold +"/data/ST2/ST2_test_scale")
-#data.load(fold +"/data/ST2/ST2_base_val")
-#data.save(fold +"/data/ST2/ST2_val_scale")
+#data.load(fold +"/data/ST3/ST3_base_train")
+#data.save(fold +"/data/ST3/ST3_train_scale")
+#data.load(fold +"/data/ST3/ST3_base_test")
+#data.save(fold +"/data/ST3/ST3_test_scale")
+#data.load(fold +"/data/ST3/ST3_base_val")
+#data.save(fold +"/data/ST3/ST3_val_scale")
 #scaler = Standard_tranformer()
-#scaler.load(fold +"/data/ST2/ST2_scaler")
-#scaler.transform(fold +"/data/ST2/ST2_train_scale")
-#scaler.transform(fold +"/data/ST2/ST2_val_scale")
-#scaler.transform(fold +"/data/ST2/ST2_test_scale")
+#scaler.load(fold +"/data/ST3/ST3_scaler")
+#scaler.transform(fold +"/data/ST3/ST3_train_scale")
+#scaler.transform(fold +"/data/ST3/ST3_val_scale")
+#scaler.transform(fold +"/data/ST3/ST3_test_scale")
 
 ### generate umap space
+# data = Data()
+umap = Umap_tranformer(dimentions=2)
+data.load(fold+"/data/ST3/ST3_train_scale")
+data.save(fold+"/data/ST3/ST3_2D_train_scale")
+data.load(fold+"/data/ST3/ST3_2D_train_scale")
+print("umap fit")
+umap.fit(data,num_cells=1000)
+print("umap save")
+umap.save(fold+"/data/ST3/umap_fit_2D_train_scale.dat")
+umap.save_umap_points(fold+"/data/ST3/umap_fit_2D_train_scale.csv")
 
-# umap = Umap_tranformer(dimentions=2)
-# data.load(fold+"/data/ST2/ST2_train_scale")
-# data.save(fold+"/data/ST2/ST2_2D_train_scale")
-# data.load(fold+"/data/ST2/ST2_2D_train_scale")
-# print("umap fit")
-# umap.fit(data,num_cells=1000)
-# print("umap save")
-# umap.save(fold+"/data/ST2/umap_fit_2D_train_scale.dat")
-# umap.save_umap_points(fold+"/data/ST2/umap_fit_2D_train_scale.csv")
-
-# ## umap transform
-# umap = Umap_tranformer(dimentions=2)
-# data.load(fold+"/data/ST2/ST2_2D_train_scale")
-# print("umap transform train")
-# umap.transform(data, umap_space=fold+"/data/ST2/umap_fit_2D_train_scale.dat")
-# print("umap transform val")
-# data.load(fold+"/data/ST2/ST2_val_scale")
-# data.save(fold+"/data/ST2/ST2_2D_val_scale")
-# data.load(fold+"/data/ST2/ST2_2D_val_scale")
-# umap.transform(data, umap_space=fold+"/data/ST2/umap_fit_2D_train_scale.dat")
-# print("umap transform test")
-# data.load(fold+"/data/ST2/ST2_test_scale")
-# data.save(fold+"/data/ST2/ST2_2D_test_scale")
-# data.load(fold+"/data/ST2/ST2_2D_test_scale")
-# umap.transform(data, umap_space=fold+"/data/ST2/umap_fit_2D_train_scale.dat")
+## umap transform
+umap = Umap_tranformer(dimentions=2)
+data.load(fold+"/data/ST3/ST3_2D_train_scale")
+print("umap transform train")
+umap.transform(data, umap_space=fold+"/data/ST3/umap_fit_2D_train_scale.dat")
+print("umap transform val")
+data.load(fold+"/data/ST3/ST3_val_scale")
+data.save(fold+"/data/ST3/ST3_2D_val_scale")
+data.load(fold+"/data/ST3/ST3_2D_val_scale")
+umap.transform(data, umap_space=fold+"/data/ST3/umap_fit_2D_train_scale.dat")
+print("umap transform test")
+data.load(fold+"/data/ST3/ST3_test_scale")
+data.save(fold+"/data/ST3/ST3_2D_test_scale")
+data.load(fold+"/data/ST3/ST3_2D_test_scale")
+umap.transform(data, umap_space=fold+"/data/ST3/umap_fit_2D_train_scale.dat")
 
 
 # ###Calculate density cells
 # ### create grid
 # density = Cell_Umap_tranformer(n_jobs=15)
-# density.fit(fold+"/data/ST2/umap_fit_2D_train_scale.csv",fold+"/data/ST2/fit_2D.dat",num_partition=50)
+# density.fit(fold+"/data/ST3/umap_fit_2D_train_scale.csv",fold+"/data/ST3/fit_2D.dat",num_partition=50)
 # print("density for train")
-# data.load(fold+"/data/ST2/ST2_2D_train_scale")
-# data.save(fold+"/data/ST2/ST2_2D_train_dens")
-# data.load(fold+"/data/ST2/ST2_2D_train_dens")
+# data.load(fold+"/data/ST3/ST3_2D_train_scale")
+# data.save(fold+"/data/ST3/ST3_2D_train_dens")
+# data.load(fold+"/data/ST3/ST3_2D_train_dens")
 # print("density for validation")
 # density.transform(data)
-# data.load(fold+"/data/ST2/ST2_2D_val_scale")
-# data.save(fold+"/data/ST2/ST2_2D_val_dens")
-# data.load(fold+"/data/ST2/ST2_2D_val_dens")
+# data.load(fold+"/data/ST3/ST3_2D_val_scale")
+# data.save(fold+"/data/ST3/ST3_2D_val_dens")
+# data.load(fold+"/data/ST3/ST3_2D_val_dens")
 # density.transform(data)
 # print("density for test")
 # density.transform(data)
-# data.load(fold+"/data/ST2/ST2_2D_test_scale")
-# data.save(fold+"/data/ST2/ST2_2D_test_dens")
-# data.load(fold+"/data/ST2/ST2_2D_test_dens")
+# data.load(fold+"/data/ST3/ST3_2D_test_scale")
+# data.save(fold+"/data/ST3/ST3_2D_test_dens")
+# data.load(fold+"/data/ST3/ST3_2D_test_dens")
 # density.transform(data)
 
 # ### sampler cells 
-# data.load(fold+"/data/ST2/ST2_2D_train_dens")
+# data.load(fold+"/data/ST3/ST3_2D_train_dens")
 # data.sample_all_cells(numcells=10000)
-# data.load(fold+"/data/ST2/ST2_2D_val_dens")
+# data.load(fold+"/data/ST3/ST3_2D_val_dens")
 # data.sample_all_cells(numcells=10000)
-# data.load(fold+"/data/ST2/ST2_2D_test_dens")
+# data.load(fold+"/data/ST3/ST3_2D_test_dens")
 # data.sample_all_cells(numcells=10000)
 
-# data.load(fold+"/data/ST2/ST2_2D_train_dens")
+# data.load(fold+"/data/ST3/ST3_2D_train_dens")
 # a = data._get_data(10)
 
 
 # ### load and contruct dataset ###
-# train_data, val_data = data.get_dataload(fold +"/data/ST2/ST2_2D_train_dens",fold +"/data/ST2/ST2_2D_val_dens")
-# data.load(fold+"/data/ST2/ST2_base")
+# train_data, val_data = data.get_dataload(fold +"/data/ST3/ST3_2D_train_dens",fold +"/data/ST3/ST3_2D_val_dens")
+# data.load(fold+"/data/ST3/ST3_base")
 # tam = len(data.pheno)
 # pos = sum(data.pheno)
 # pos_weight = (tam-pos)/pos
@@ -145,7 +146,7 @@ data.split_data_test(fold+"/data/ST2/ST2_base_train", fold+"/data/ST2/ST2_base_v
 # # train_loader = DataLoader(dataset=train_data, batch_size=64, shuffle=True)
 # # val_loader = DataLoader(dataset=val_data, batch_size=64, shuffle=False)
 
-# # Input shape is determined by the number of cells sampled from each sample and the number of markers (30 = ST2)
+# # Input shape is determined by the number of cells sampled from each sample and the number of markers (30 = ST3)
 # imput_shape = train_data.__getitem__(0)[0].size()
 # imput_size = 1
 # for v in imput_shape:
@@ -454,19 +455,19 @@ data.split_data_test(fold+"/data/ST2/ST2_base_train", fold+"/data/ST2/ST2_base_v
 # # # model = Model_CVRobust(imput_size, num_markers=30)
 # # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
 # # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCVRobust_bs16_do02lr05",bach_size=batch_size)                  
-# # # net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCVRobust_do02lr05", test_dataset=None)  
+# # # net.trainning(num_epochs=100, file_out=fold+"/ST3/scoresModelCVRobust_do02lr05", test_dataset=None)  
 
 
 # # # # model = Model_Linear(imput_size, num_markers=30)
 # # # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
 # # # # # optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 # # # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelLinear_bs16",bach_size=batch_size)                  
-# # # # net.trainning(num_epochs=500, test_dataset=None, file_out=fold+"/ST2/cellCnn/scoresmodelLinear")               
+# # # # net.trainning(num_epochs=500, test_dataset=None, file_out=fold+"/ST3/cellCnn/scoresmodelLinear")               
        
 # # # model = Model_CVRobust_Dense(imput_size, num_markers=30)
 # # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
 # # # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="modelCV_dense10_do02lr05",bach_size=batch_size)                  
-# # # net.trainning(num_epochs=100, file_out=fold+"/ST2/scoresModelCV_dense10_do02lr05", test_dataset=None)  
+# # # net.trainning(num_epochs=100, file_out=fold+"/ST3/scoresModelCV_dense10_do02lr05", test_dataset=None)  
 
 # # # model = Model_CV2(imput_size, num_markers=28)
 # # # optimizer=torch.optim.Adam(model.parameters(), lr=lr)
