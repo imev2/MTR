@@ -510,12 +510,13 @@ class Data:
             self.batch.append((d["batch"][1]))
             self.pheno.append(d["pheno"][0])
             self.pheno.append(d["pheno"][1])
-        for s in neg:
-            df = self._sample_data(s ,numcells)
-            self._save_data(s, df,pheno=self.pheno[s])
-        for s in pos:
-            df = self._sample_data(s ,numcells)
-            self._save_data(s, df,pheno=self.pheno[s])
+        if numcells!=False:
+            for s in neg:
+                df = self._sample_data(s ,numcells)
+                self._save_data(s, df,pheno=self.pheno[s])
+            for s in pos:
+                df = self._sample_data(s ,numcells)
+                self._save_data(s, df,pheno=self.pheno[s])
         self._save_meta()
             
     def augmentation_by_batch(self,factor):
@@ -685,16 +686,18 @@ class Data:
             df =self._sample_data(i,numcells)
             self._save_data(i, df)
     
-    def get_dataload(self,fold_train,fold_test):
+    def get_dataload(self,fold_train,fold_val,fold_test):
         train = Data()
         train.load(fold_train)
         test = Data()
         test.load(fold_test)
+        val = Data()
+        val.load(fold_val)
         aux1 =train._get_data(0)
         shape = [1]+ list(aux1[0].shape)
         # aux2 =test._get_data(0)
         # shape2 = [1]+ list(aux2[0].shape)
-        return self.AdDataset(train,shape),self.AdDataset(test,shape)
+        return self.AdDataset(train,shape),self.AdDataset(val,shape),self.AdDataset(test,shape)
                   
     def umap_space(self,num_cells=1000):
          df = self._sample_data(0, num_cells)
