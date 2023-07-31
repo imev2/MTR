@@ -37,7 +37,7 @@ class Data:
             return len(self.data.id)
     
         def __getitem__(self, idx):
-            data,y = self.data._get_data(idx)
+            data,y = self.data._get_data(idx,self.shape)
             data = torch.as_tensor(data,dtype=torch.float64).view(self.shape)
             y=torch.as_tensor(y,dtype=torch.float64)
             #y =  torch.from_numpy(np.array(y)) # Get the class label for the corresponding file WATCH OUT FOR FLOAT --> MAY CAUSE ERRORS BECAUSE DATA NOT IN SAME DTYPE AS CLASS_LABEL
@@ -51,7 +51,7 @@ class Data:
         self.batch = None
         self.painel = None
         self.dim = None
-        self.sizes = None
+        self.size = None
         np.random.seed(seed)
         random.seed(seed)
         self.seed = seed
@@ -102,7 +102,7 @@ class Data:
         self.painel = []
         self.map_batch = {}
         self.dim = 0
-        self.sizes = None
+        self.size = None
         #data = []
         index=0
         lowcell = []
@@ -206,10 +206,10 @@ class Data:
             f.write(str(self.dim)+"\n")
             #shape
             if self.dim != 0:
-                if self.sizes!=None:
-                    s = str(self.sizes[0])
-                    for i in range(1,len(self.sizes)):
-                        s+=" "+str(self.sizes[i])
+                if self.size!=None:
+                    s = str(self.size[0])
+                    for i in range(1,len(self.size)):
+                        s+=" "+str(self.size[i])
                     f.write(s+"\n")
                 else:
                     f.write("-1\n")
@@ -236,7 +236,7 @@ class Data:
             dim = int(f.readline())
             size = None
             if dim != 0:
-                s_size = f.readline()[:-1]
+                s_size = f.readline()
                 if s_size=="-1":
                     size = None
                 else:
@@ -276,7 +276,7 @@ class Data:
                 f.write(d)
                 df = data.flatten().astype(np.float64).tobytes()
                 f.write(df)
-            elif self.sizes[0] <0:
+            elif self.size[0] <0:
                 nlin = len(data)
                 ncol = len(data[0])
                 d = struct.pack("i i i",pheno ,nlin,ncol)
@@ -284,18 +284,29 @@ class Data:
                 df = data.flatten().astype(np.float64).tobytes()
                 f.write(df)
 
-    def _get_data(self, index):
+    def _get_data(self, index,shape = False):
         file = self.data + self.id[index] + ".dat"
         with open(file,"rb") as f:
-            #if self.dim ==0:
-            d= f.read(12)
-            y,nlin,ncol =struct.unpack("i i i", d)
-            sz = nlin*ncol
-            d= f.read(sz*struct.calcsize("d"))
-            data = struct.unpack(str(sz)+"d", d)
-            data = np.array(data)
-            data = data.reshape((nlin, ncol))
-            return data,y
+            if shape ==False:
+                d= f.read(12)
+                y,nlin,ncol =struct.unpack("i i i", d)
+                sz = nlin*ncol
+                d= f.read(sz*struct.calcsize("d"))
+                data = struct.unpack(str(sz)+"d", d)
+                data = np.array(data)
+                data = data.reshape((nlin, ncol))
+                return data,y
+            else:
+                d= f.read(12)
+                y,nlin,ncol =struct.unpack("i i i", d)
+                aux = 1
+                for a in shape:
+                    aux= aux*a
+                d= f.read(aux*struct.calcsize("d"))
+                data = struct.unpack(str(aux)+"d", d)
+                data = np.array(data)
+                data = data.reshape(shape)
+                return data,y
             
     def readfile(self, file):
         with open(file,"rb") as f:
@@ -693,10 +704,14 @@ class Data:
         test.load(fold_test)
         val = Data()
         val.load(fold_val)
-        aux1 =train._get_data(0)
-        shape = [1]+ list(aux1[0].shape)
-        # aux2 =test._get_data(0)
-        # shape2 = [1]+ list(aux2[0].shape)
+        if train.size!=None:
+            if train.size[0]>0:
+                return self.AdDataset(train,train.size),self.AdDataset(val,train.size),self.AdDataset(test,train.size)
+            else:
+                aux1 =train._get_data(0)
+                shape = list(aux1[0].shape)
+                return self.AdDataset(train,shape),self.AdDataset(val,shape),self.AdDataset(test,shape)
+        shape = list(aux1[0].shape)
         return self.AdDataset(train,shape),self.AdDataset(val,shape),self.AdDataset(test,shape)
                   
     def umap_space(self,num_cells=1000):
@@ -887,7 +902,7 @@ class Umap_tranformer:
         #cal_st2(self.space,0,data)
         data.painel=data.painel+["dim"+str(i+1) for i in range(self.dimention)]
         data.dim = self.dimention
-        data.sizes = None
+        data.size = [-1]
         data._save_meta()    
         
     
@@ -929,7 +944,7 @@ class Cell_Umap_tranformer:
             subprocess.Popen([program,"c",file,file_split]).wait()
             
         Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)             
-        data.sizes = [-2,len(data.painel),self.num_partition] 
+        data.size = [-2,len(data.painel),self.num_partition] 
         data._save_meta()
     
     def save(self,file):
@@ -970,10 +985,10 @@ class Density_tranformer:
             program,file, file_split = v
             subprocess.Popen([program,"s",file,file_split]).wait()
             
-        Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)             
-        data.sizes = [len(data.painel)+1]
+        Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)
+        data.size = [len(data.painel)-data.dim+1]
         for d in range(data.dim):
-            data.sizes += [self.num_partition]
+            data.size += [self.num_partition]
         data._save_meta()
     
     def save(self,file):
