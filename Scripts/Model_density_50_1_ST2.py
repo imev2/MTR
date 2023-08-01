@@ -5,7 +5,7 @@ Created on Mon Jun 30 10:00 2023
 @author: listonlab
 """
 
-from Data import Data,Standard_tranformer,Umap_tranformer,Density_tranformer
+from Data_umap import Data,Standard_tranformer,Umap_tranformer,Density_tranformer
 import pickle as pk
 import os
 import numpy as np
@@ -85,29 +85,101 @@ shape = train_data.__getitem__(0)[0].size()
 
 
 ### defining model ###
-class Model_Density_1(torch.nn.Module):
+# class Model_Density_1(torch.nn.Module):
+#     def __init__(self,shape):
+#         super().__init__()
+#         self.flatten = torch.flatten
+#         ker = (int(shape[0]/3),int(shape[0]/3))
+#         self.cov1 = torch.nn.Conv2d(in_channels=shape[0], out_channels=5, kernel_size=(3,3))
+#         self.cov2 = torch.nn.Conv2d(in_channels=5, out_channels=3, kernel_size=ker)
+#         self.cov3 = torch.nn.Conv2d(in_channels=3, out_channels=2, kernel_size=ker)
+#         self.max_poll1=torch.nn.MaxPool2d(kernel_size=(3, 3),stride =1)
+#         self.max_poll2=torch.nn.MaxPool2d(kernel_size=ker,stride =1)
+#         self.av_poll=torch.nn.AvgPool2d(kernel_size=ker,stride =1)
+#         self.sigmoid = torch.nn.Sigmoid()
+#         self.relu = torch.nn.ReLU()
+#         self.do2 = torch.nn.Dropout(p=0.5)
+#         self.fc1 = torch.nn.Linear(in_features=200, out_features=10)
+#         self.fc2 = torch.nn.Linear(in_features=10, out_features=1)
+#         self.optimizer=None
+#     def forward(self, x):
+        
+#         #x = self.do2(self.cov1(x))
+#         x = self.cov1(x)
+#         x = self.relu(x)
+#         x = self.max_poll1(x)
+#         x = self.cov2(x)
+#         x = self.relu(x)
+#         x = self.max_poll2(x)
+#         x = self.cov3(x)
+#         x = self.relu(x)
+#         x = self.av_poll(x)
+#         x = self.flatten(x,start_dim=1)
+        
+#         #print(x.shape)
+#         x = self.relu(self.fc1(x))
+#         x = self.relu(self.fc2(x))
+#         return x
+    
+
+# class Model_Density_2(torch.nn.Module):
+#     def __init__(self,shape):
+#         super().__init__()
+#         self.flatten = torch.flatten
+#         ker = (int(shape[0]/3),int(shape[0]/3))
+#         self.cov1 = torch.nn.Conv2d(in_channels=shape[0], out_channels=10, kernel_size=(5,5))
+#         self.cov2 = torch.nn.Conv2d(in_channels=10, out_channels=5, kernel_size=ker)
+#         self.cov3 = torch.nn.Conv2d(in_channels=5, out_channels=3, kernel_size=ker)
+#         self.max_poll1=torch.nn.MaxPool2d(kernel_size=(5,5),stride =1)
+#         self.max_poll2=torch.nn.MaxPool2d(kernel_size=ker,stride =1)
+#         self.av_poll=torch.nn.AvgPool2d(kernel_size=ker,stride =1)
+#         self.sigmoid = torch.nn.Sigmoid()
+#         self.relu = torch.nn.ReLU()
+#         self.do2 = torch.nn.Dropout(p=0.5)
+#         self.fc1 = torch.nn.Linear(in_features=108, out_features=10)
+#         self.fc2 = torch.nn.Linear(in_features=10, out_features=1)
+#         self.optimizer=None
+#     def forward(self, x):
+        
+#         #x = self.do2(self.cov1(x))
+#         x = self.cov1(x)
+#         x = self.relu(x)
+#         x = self.max_poll1(x)
+#         x = self.cov2(x)
+#         x = self.relu(x)
+#         x = self.max_poll2(x)
+#         x = self.cov3(x)
+#         x = self.relu(x)
+#         x = self.av_poll(x)
+#         x = self.flatten(x,start_dim=1)
+        
+#         #print(x.shape)
+#         x = self.relu(self.fc1(x))
+#         x = self.relu(self.fc2(x))
+#         return x
+
+class Model_Density_3(torch.nn.Module): # More channels
     def __init__(self,shape):
         super().__init__()
         self.flatten = torch.flatten
         ker = (int(shape[0]/3),int(shape[0]/3))
-        self.cov1 = torch.nn.Conv2d(in_channels=shape[0], out_channels=5, kernel_size=(3,3))
-        self.cov2 = torch.nn.Conv2d(in_channels=5, out_channels=3, kernel_size=ker)
-        self.cov3 = torch.nn.Conv2d(in_channels=3, out_channels=2, kernel_size=ker)
-        self.max_poll1=torch.nn.MaxPool2d(kernel_size=(3, 3),stride =1)
+        self.cov1 = torch.nn.Conv2d(in_channels=shape[0], out_channels=20, kernel_size=(5,5))
+        self.cov2 = torch.nn.Conv2d(in_channels=20, out_channels=10,kernel_size=(3,3))
+        self.cov3 = torch.nn.Conv2d(in_channels=10, out_channels=3, kernel_size=ker)
+        self.max_poll1=torch.nn.MaxPool2d(kernel_size=(5,5),stride =1)
         self.max_poll2=torch.nn.MaxPool2d(kernel_size=ker,stride =1)
         self.av_poll=torch.nn.AvgPool2d(kernel_size=ker,stride =1)
         self.sigmoid = torch.nn.Sigmoid()
         self.relu = torch.nn.ReLU()
         self.do2 = torch.nn.Dropout(p=0.5)
-        self.fc1 = torch.nn.Linear(in_features=200, out_features=10)
-        self.fc2 = torch.nn.Linear(in_features=10, out_features=1)
+        self.do1 = torch.nn.Dropout(p=0.2)
+        self.fc1 = torch.nn.Linear(in_features=867, out_features=100)
+        self.fc2 = torch.nn.Linear(in_features=100, out_features=1)
         self.optimizer=None
     def forward(self, x):
-        
-        #x = self.do2(self.cov1(x))
-        x = self.cov1(x)
+        x = self.do1(x)
+        x = self.do2(self.cov1(x))
         x = self.relu(x)
-        x = self.max_poll1(x)
         x = self.cov2(x)
         x = self.relu(x)
         x = self.max_poll2(x)
@@ -115,14 +187,12 @@ class Model_Density_1(torch.nn.Module):
         x = self.relu(x)
         x = self.av_poll(x)
         x = self.flatten(x,start_dim=1)
-        
-        #print(x.shape)
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         return x
     
-
-class Model_Density_2(torch.nn.Module):
+    
+class Model_Density_4(torch.nn.Module): # Two dropout 
     def __init__(self,shape):
         super().__init__()
         self.flatten = torch.flatten
@@ -136,26 +206,90 @@ class Model_Density_2(torch.nn.Module):
         self.sigmoid = torch.nn.Sigmoid()
         self.relu = torch.nn.ReLU()
         self.do2 = torch.nn.Dropout(p=0.5)
+        self.do1 = torch.nn.Dropout(p=0.2)
         self.fc1 = torch.nn.Linear(in_features=108, out_features=10)
         self.fc2 = torch.nn.Linear(in_features=10, out_features=1)
         self.optimizer=None
     def forward(self, x):
-        
-        #x = self.do2(self.cov1(x))
-        x = self.cov1(x)
+        x = self.do1(x)
+        x = self.do2(self.cov1(x))
         x = self.relu(x)
-        x = self.max_poll1(x)
-        x = self.cov2(x)
+        x = self.do2(self.cov2(x))
         x = self.relu(x)
         x = self.max_poll2(x)
         x = self.cov3(x)
         x = self.relu(x)
         x = self.av_poll(x)
         x = self.flatten(x,start_dim=1)
-        
-        #print(x.shape)
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
+        return x
+    
+    def __init__(self,shape):
+        super().__init__()
+        self.flatten = torch.flatten
+        ker = (int(shape[0]/3),int(shape[0]/3))
+        self.cov1 = torch.nn.Conv2d(in_channels=shape[0], out_channels=10, kernel_size=(5,5))
+        self.cov2 = torch.nn.Conv2d(in_channels=10, out_channels=5, kernel_size=ker)
+        self.cov3 = torch.nn.Conv2d(in_channels=5, out_channels=3, kernel_size=ker)
+        self.max_poll1=torch.nn.MaxPool2d(kernel_size=(5,5),stride =1)
+        self.max_poll2=torch.nn.MaxPool2d(kernel_size=ker,stride =1)
+        self.av_poll=torch.nn.AvgPool2d(kernel_size=ker,stride =1)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.relu = torch.nn.ReLU()
+        self.do2 = torch.nn.Dropout(p=0.5)
+        self.do1 = torch.nn.Dropout(p=0.2)
+        self.fc1 = torch.nn.Linear(in_features=300, out_features=30)
+        self.fc2 = torch.nn.Linear(in_features=30, out_features=1)
+        self.optimizer=None
+    def forward(self, x):
+        x = self.do1(x)
+        x = self.do2(self.cov1(x))
+        x = self.relu(x)
+        x = self.do2(self.cov2(x))
+        x = self.relu(x)
+        x = self.max_poll2(x)
+        x = self.cov3(x)
+        x = self.relu(x)
+        x = self.av_poll(x)
+        x = self.flatten(x,start_dim=1)
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        return x
+
+class Model_Density_5(torch.nn.Module): # All three have dropout and added linear layer
+    def __init__(self,shape):
+        super().__init__()
+        self.flatten = torch.flatten
+        ker = (int(shape[0]/3),int(shape[0]/3))
+        self.cov1 = torch.nn.Conv2d(in_channels=shape[0], out_channels=10, kernel_size=(5,5))
+        self.cov2 = torch.nn.Conv2d(in_channels=10, out_channels=5, kernel_size=ker)
+        self.cov3 = torch.nn.Conv2d(in_channels=5, out_channels=3, kernel_size=ker)
+        self.max_poll1=torch.nn.MaxPool2d(kernel_size=(5,5),stride =1)
+        self.max_poll2=torch.nn.MaxPool2d(kernel_size=ker,stride =1)
+        self.av_poll=torch.nn.AvgPool2d(kernel_size=ker,stride =1)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.relu = torch.nn.ReLU()
+        self.do2 = torch.nn.Dropout(p=0.5)
+        self.do1 = torch.nn.Dropout(p=0.2)
+        self.fc1 = torch.nn.Linear(in_features=300, out_features=100)
+        self.fc2 = torch.nn.Linear(in_features=100, out_features=10)
+        self.fc3 = torch.nn.Linear(in_features=10, out_features=1)
+        self.optimizer=None
+    def forward(self, x):
+        x = self.do1(x)
+        x = self.do2(self.cov1(x))
+        x = self.relu(x)
+        x = self.do2(self.cov2(x))
+        x = self.relu(x)
+        x = self.max_poll2(x)
+        x = self.do2(self.cov3(x))
+        x = self.relu(x)
+        x = self.av_poll(x)
+        x = self.flatten(x,start_dim=1)
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.relu(self.fc3(x))
         return x
 
     
@@ -338,14 +472,33 @@ torch.set_num_threads(16)
 loss_f = torch.nn.BCEWithLogitsLoss(reduction="mean")
 print("run model")
 
-model = Model_Density_1(shape=shape)
-optimizer = optim.Adam(model.parameters(), lr=lr)
+# model = Model_Density_1(shape=shape)
+# optimizer = optim.Adam(model.parameters(), lr=lr)
 
-net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="test1",bach_size=batch_size,fixed_train_size=fixed_train_size)                  
-net.trainning(num_epochs=1000, file_out=fold+"/data/Results/ST2/test1.dat", test_dataset=test_data)
+# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="test1",bach_size=batch_size,fixed_train_size=fixed_train_size)                  
+# net.trainning(num_epochs=1000, file_out=fold+"/data/Results/ST2/test1.dat", test_dataset=test_data)
 
 # model = Model_Density_2(shape=shape)
 # optimizer = optim.Adam(model.parameters(), lr=lr)
 
 # net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="test2",bach_size=batch_size,fixed_train_size=fixed_train_size)                  
 # net.trainning(num_epochs=1000, file_out=fold+"/data/Results/ST2/test2.dat", test_dataset=test_data)
+
+model = Model_Density_3(shape=shape)
+optimizer = optim.Adam(model.parameters(), lr=lr)
+
+net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="test3",bach_size=batch_size,fixed_train_size=fixed_train_size)                  
+net.trainning(num_epochs=1000, file_out=fold+"/data/Results/ST2/test3D.dat", test_dataset=test_data)
+
+# model = Model_Density_4(shape=shape)
+# optimizer = optim.Adam(model.parameters(), lr=lr)
+
+# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="test4",bach_size=batch_size,fixed_train_size=fixed_train_size)                  
+# net.trainning(num_epochs=1000, file_out=fold+"/data/Results/ST2/test4.dat", test_dataset=test_data)
+
+# model = Model_Density_5(shape=shape)
+# optimizer = optim.Adam(model.parameters(), lr=lr)
+
+# net = Neural(train_data,val_data,model=model, loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="test5",bach_size=batch_size,fixed_train_size=fixed_train_size)                  
+# net.trainning(num_epochs=1000, file_out=fold+"/data/Results/ST2/test5.dat", test_dataset=test_data)
+
