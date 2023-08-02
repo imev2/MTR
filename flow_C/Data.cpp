@@ -24,7 +24,7 @@ Data::Data(const char* file_space, int num_partition)
 	double* aux;
 	double max, min;
 	std::ifstream file;
-	int n_lin, n_col,c,i,l,d;
+	int n_lin, n_col, c, i, l, d;
 	double** dim_value;
 	this->num_partition = num_partition;
 	file.open(file_space, std::ios::in);
@@ -48,17 +48,17 @@ Data::Data(const char* file_space, int num_partition)
 		for (c = 0; c < n_col; c++) {
 			file >> aux[c];
 		}
-		
-		for (int d = 0; d < dim; d++) {
+
+		for (d = 0; d < dim; d++) {
 			dim_value[d][l] = aux[num_channel + d];
 		}
 	}
 	file.close();
 	//calculate painel
-	for (int d = 0; d < dim; d++) {
+	for (d = 0; d < dim; d++) {
 		max = -10000;
 		min = 10000;
-		for (int l = 0; l < n_lin; l++) {
+		for (l = 0; l < n_lin; l++) {
 			if (dim_value[d][l] < min) {
 				min = dim_value[d][l];
 				continue;
@@ -69,13 +69,13 @@ Data::Data(const char* file_space, int num_partition)
 		}
 		double range = (max - min) / num_partition;
 
-		for (int i = 1; i < num_partition; i++) {
+		for (i = 1; i < num_partition; i++) {
 			split[d][i - 1] = range * i + min;
 		}
 	}
 	//std::cout << "";
 	//unalocate
-	for (int i = 0; i < dim; i++) {
+	for (i = 0; i < dim; i++) {
 		delete[] dim_value[i];
 	}
 	delete[] dim_value;

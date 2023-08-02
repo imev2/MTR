@@ -21,7 +21,7 @@ import re
 import torch
 from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
-from Tools import RF
+# from Tools import RF
 from sklearn.metrics import accuracy_score, balanced_accuracy_score,roc_auc_score
 
 import shutil
@@ -625,46 +625,46 @@ class Data:
              
 
     
-    def _feature_inportance(self,num_cells=1000,cv = 5,n_jobs = 15):
-        neg = pd.DataFrame()
-        pos = pd.DataFrame()
-        print("sample data")
-        tam = len(self.id)
-        for i in range(tam):
-            print(str(i) + " of " + str(tam))
-            if self.pheno[i]==0:
-                neg = pd.concat([neg, pd.DataFrame(self._sample_data(i, num_cells))], axis=0)
-            else:
-                pos = pd.concat([pos, pd.DataFrame(self._sample_data(i, num_cells))], axis=0)
-        neg["y"] = 0
-        pos["y"] = 1
-        x = pd.concat([neg, pos], axis=0)
-        y = x["y"].copy()
-        x.drop('y', axis=1, inplace=True)
+    # def _feature_inportance(self,num_cells=1000,cv = 5,n_jobs = 15):
+    #     neg = pd.DataFrame()
+    #     pos = pd.DataFrame()
+    #     print("sample data")
+    #     tam = len(self.id)
+    #     for i in range(tam):
+    #         print(str(i) + " of " + str(tam))
+    #         if self.pheno[i]==0:
+    #             neg = pd.concat([neg, pd.DataFrame(self._sample_data(i, num_cells))], axis=0)
+    #         else:
+    #             pos = pd.concat([pos, pd.DataFrame(self._sample_data(i, num_cells))], axis=0)
+    #     neg["y"] = 0
+    #     pos["y"] = 1
+    #     x = pd.concat([neg, pos], axis=0)
+    #     y = x["y"].copy()
+    #     x.drop('y', axis=1, inplace=True)
         
         
-        x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.10,stratify=y,shuffle=True,random_state=self.seed)
-        print("train model")
-        self.seed +=1
-        rf = RF(random_state=self.seed ,n_jobs = n_jobs)
-        rf.fit(x_train, y_train)
-        y_pred = rf.predict(x_test)
-        y_ppred = rf.predict_proba(x_test)[:,1]
-        mod = {}
-        mod["acuracy"] = accuracy_score(y_test,y_pred)
-        mod["b_acuracy"] = balanced_accuracy_score(y_test,y_pred)
-        mod["ROC"] = roc_auc_score(y_test,y_ppred)
-        mod["importance"] = pd.DataFrame({"mark":self.painel,"importance":rf.rf.feature_importances_})
-        mod["y_t"] = y_test
-        mod["y_t_pred"] = y_pred
-        mod["y_t_ppred"] = y_ppred
-        mod["par"] = rf.par
-        rf.fit(x,y)
-        mod["x"] = x
-        mod["y"] = y
-        mod["y_pred"] = rf.predict_proba(x)[:,1]
-        mod["painel"] = self.painel
-        return mod
+    #     x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.10,stratify=y,shuffle=True,random_state=self.seed)
+    #     print("train model")
+    #     self.seed +=1
+    #     rf = RF(random_state=self.seed ,n_jobs = n_jobs)
+    #     rf.fit(x_train, y_train)
+    #     y_pred = rf.predict(x_test)
+    #     y_ppred = rf.predict_proba(x_test)[:,1]
+    #     mod = {}
+    #     mod["acuracy"] = accuracy_score(y_test,y_pred)
+    #     mod["b_acuracy"] = balanced_accuracy_score(y_test,y_pred)
+    #     mod["ROC"] = roc_auc_score(y_test,y_ppred)
+    #     mod["importance"] = pd.DataFrame({"mark":self.painel,"importance":rf.rf.feature_importances_})
+    #     mod["y_t"] = y_test
+    #     mod["y_t_pred"] = y_pred
+    #     mod["y_t_ppred"] = y_ppred
+    #     mod["par"] = rf.par
+    #     rf.fit(x,y)
+    #     mod["x"] = x
+    #     mod["y"] = y
+    #     mod["y_pred"] = rf.predict_proba(x)[:,1]
+    #     mod["painel"] = self.painel
+    #     return mod
     
     def _oversample(self,df,y):
         neg = [i for i in range(len(y)) if y[i]==0]
@@ -983,7 +983,7 @@ class Density_tranformer:
             v.append((fold+"/Flow_c.exe",data.data + data.id[i] + ".dat",self.file_split))
         def multi(v):
             program,file, file_split = v
-            subprocess.Popen([program,"s",file,file_split]).wait()
+            subprocess.Popen([program.replace("\\","/"),"s",file.replace("\\","/"),file_split.replace("\\","/")]).wait()
             
         Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)
         data.size = [len(data.painel)-data.dim+1]

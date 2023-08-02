@@ -22,6 +22,6 @@ int main(int argc, char** argv) {
 		data2.load(argv[3]);
 		data2.apply_space(argv[2]);
 	}
-	
+
 	return 0;
 }

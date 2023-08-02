@@ -12,7 +12,7 @@ Created on Mon Jun 30 10:00 2023
 @author: PLATEAU LR
 """
 
-from Data import Data,Log_transformer,Standard_tranformer,Umap_tranformer,Cell_Umap_tranformer
+from Data_umap import Data,Log_transformer,Standard_tranformer,Umap_tranformer,Cell_Umap_tranformer, Density_tranformer
 import pickle as pk
 import os
 import numpy as np
@@ -74,64 +74,76 @@ data = Data(seed=seed)
 
 ### generate umap space
 
-umap = Umap_tranformer(dimentions=2)
-# data.load(fold+"/data/ST1/ST1_train_scale")
-# data.save(fold+"/data/ST1/ST1_2D_train_scale")
-data.load(fold+"/data/ST1/ST1_2D_train_scale")
-print("umap fit")
-umap.fit(data,num_cells=1000)
-print("umap save")
-umap.save(fold+"/data/ST1/umap_fit_2D_train_scale.dat")
-umap.save_umap_points(fold+"/data/ST1/umap_fit_2D_train_scale.csv")
+# umap = Umap_tranformer(dimentions=2)
+# # data.load(fold+"/data/ST1/ST1_train_scale")
+# # data.save(fold+"/data/ST1/ST1_2D_train_scale")
+# data.load(fold+"/data/ST1/ST1_2D_train_scale")
+# print("umap fit")
+# umap.fit(data,num_cells=1000)
+# print("umap save")
+# umap.save(fold+"/data/ST1/umap_fit_2D_train_scale.dat")
+# umap.save_umap_points(fold+"/data/ST1/umap_fit_2D_train_scale.csv")
 
-# ## umap transform
-umap = Umap_tranformer(dimentions=2)
-data.load(fold+"/data/ST1/ST1_2D_train_scale")
-print("umap transform train")
-umap.transform(data, umap_space=fold+"/data/ST1/umap_fit_2D_train_scale.dat", n_jobs=6)
-print("umap transform val")
-# data.load(fold+"/data/ST1/ST1_val_scale")
-# data.save(fold+"/data/ST1/ST1_2D_val_scale")
-data.load(fold+"/data/ST1/ST1_2D_val_scale")
-umap.transform(data, umap_space=fold+"/data/ST1/umap_fit_2D_train_scale.dat", n_jobs=6)
-print("umap transform test")
-# data.load(fold+"/data/ST1/ST1_test_scale")
-# data.save(fold+"/data/ST1/ST1_2D_test_scale")
-data.load(fold+"/data/ST1/ST1_2D_test_scale")
-umap.transform(data, umap_space=fold+"/data/ST1/umap_fit_2D_train_scale.dat", n_jobs=6)
+# # ## umap transform
+# umap = Umap_tranformer(dimentions=2)
+# data.load(fold+"/data/ST1/ST1_2D_train_scale")
+# print("umap transform train")
+# umap.transform(data, umap_space=fold+"/data/ST1/umap_fit_2D_train_scale.dat", n_jobs=4)
+# print("umap transform val")
+# # data.load(fold+"/data/ST1/ST1_val_scale")
+# # data.save(fold+"/data/ST1/ST1_2D_val_scale")
+# data.load(fold+"/data/ST1/ST1_2D_val_scale")
+# umap.transform(data, umap_space=fold+"/data/ST1/umap_fit_2D_train_scale.dat", n_jobs=4)
+# print("umap transform test")
+# # data.load(fold+"/data/ST1/ST1_test_scale")
+# # data.save(fold+"/data/ST1/ST1_2D_test_scale")
+# data.load(fold+"/data/ST1/ST1_2D_test_scale")
+# umap.transform(data, umap_space=fold+"/data/ST1/umap_fit_2D_train_scale.dat", n_jobs=4)
 
 
-# ###Calculate density cells
-# ### create grid
+# # ###Calculate density cells
+# # ### create grid
 # density = Cell_Umap_tranformer(n_jobs=15)
 # density.fit(fold+"/data/ST1/umap_fit_2D_train_scale.csv",fold+"/data/ST1/fit_2D.dat",num_partition=50)
 # print("density for train")
-# data.load(fold+"/data/ST1/ST1_2D_train_scale")
-# data.save(fold+"/data/ST1/ST1_2D_train_dens")
-# data.load(fold+"/data/ST1/ST1_2D_train_dens")
-# print("density for validation")
+# # data.load(fold+"/data/ST1/ST1_2D_train_scale")
+# # data.save(fold+"/data/ST1/ST1_2D_train_dens")
+# data.load(fold+"/data/ST1/ST1_2D_train_dense")
 # density.transform(data)
-# data.load(fold+"/data/ST1/ST1_2D_val_scale")
-# data.save(fold+"/data/ST1/ST1_2D_val_dens")
-# data.load(fold+"/data/ST1/ST1_2D_val_dens")
+# print("density for validation")
+# # data.load(fold+"/data/ST1/ST1_2D_val_scale")
+# # data.save(fold+"/data/ST1/ST1_2D_val_dens")
+# data.load(fold+"/data/ST1/ST1_2D_val_dense")
 # density.transform(data)
 # print("density for test")
-# density.transform(data)
-# data.load(fold+"/data/ST1/ST1_2D_test_scale")
-# data.save(fold+"/data/ST1/ST1_2D_test_dens")
-# data.load(fold+"/data/ST1/ST1_2D_test_dens")
+# # density.transform(data)
+# # data.load(fold+"/data/ST1/ST1_2D_test_scale")
+# # data.save(fold+"/data/ST1/ST1_2D_test_dens")
+# data.load(fold+"/data/ST1/ST1_2D_test_dense")
 # density.transform(data)
 
-# ### sampler cells 
-# data.load(fold+"/data/ST1/ST1_2D_train_dens")
+# # ### sampler cells 
+# data.load(fold+"/data/ST1/ST1_2D_train_dense")
 # data.sample_all_cells(numcells=10000)
-# data.load(fold+"/data/ST1/ST1_2D_val_dens")
+# data.load(fold+"/data/ST1/ST1_2D_val_dense")
 # data.sample_all_cells(numcells=10000)
-# data.load(fold+"/data/ST1/ST1_2D_test_dens")
+# data.load(fold+"/data/ST1/ST1_2D_test_dense")
 # data.sample_all_cells(numcells=10000)
 
-# data.load(fold+"/data/ST1/ST1_2D_train_dens")
+# data.load(fold+"/data/ST1/ST1_2D_train_dense")
 # a = data._get_data(10)
+
+# den=Density_tranformer(n_jobs=4)
+# den.fit(file_space= fold +"/data/ST1/umap_fit_2D_train_scale.csv",
+#           file_split=fold +"/data/ST1/split.dat",num_partition=50)
+
+# # density transtorm
+# data.load(fold +"/data/ST1/ST1_2D_val_dense_grid")
+# den.transform(data)
+# data.load(fold +"/data/ST1/ST1_2D_train_dense_grid")
+# den.transform(data)
+# data.load(fold +"/data/ST1/ST1_2D_test_dense_grid")
+# den.transform(data)
 
 
 # ### load and contruct dataset ###

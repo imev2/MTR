@@ -5,7 +5,7 @@ Created on Mon Jun 30 10:00 2023
 @author: listonlab
 """
 
-from Data_umap import Data,Standard_tranformer,Umap_tranformer,Density_tranformer
+from Data import Data,Standard_tranformer,Umap_tranformer,Density_tranformer
 import pickle as pk
 import os
 import numpy as np
@@ -25,63 +25,33 @@ n_jobs = 15
 torch.manual_seed(seed+1)
 data = Data(seed=seed)
 
-# data create
-# print("create folders")
-# data.load(fold +"/data/ST2/ST2_base_train")
-# data.save(fold +"/data/ST2/ST2_train_1")
-# # data.save(fold +"/data/ST2/ST2_train_2")
-# data.load(fold +"/data/ST2/ST2_base_test")
-# data.save(fold +"/data/ST2/ST2_test_1")
-# # data.save(fold +"/data/ST2/ST2_test_2")
-# data.load(fold +"/data/ST2/ST2_base_val")
-# data.save(fold +"/data/ST2/ST2_val_1")
-# print("create umap space")
-# #umap fit
-# umap = Umap_tranformer(dimentions=2)
-# data.load(fold +"/data/ST2/ST2_train_1")
-# umap.fit(data,num_cells=1000)
-# umap.save(fold +"/data/ST2/space_umap.dat")
-# umap.save_umap_points(fold +"/data/ST2/space_umap_points.csv")
-
-# # #umap transform
-# umap = Umap_tranformer(dimentions=2)
-# #train
-# print("transformar train")
-# data.load(fold +"/data/ST2/ST2_train_1")
-# umap.transform(data, umap_space =fold +"/data/ST2/space_umap.dat" ,n_jobs=n_jobs)
-# #validation
-# print("transformar validation")
-# data.load(fold +"/data/ST2/ST2_val_1")
-# umap.transform(data, umap_space =fold +"/data/ST2/space_umap.dat" ,n_jobs=n_jobs)
-# #test
-# print("transformar test")
-# data.load(fold +"/data/ST2/ST2_test_1")
-# umap.transform(data, umap_space =fold +"/data/ST2/space_umap.dat" ,n_jobs=n_jobs)
-
 #agumented
 # print("expanda train")
 # data.load(fold +"/data/ST2/ST2_train_1")
 # data.augmentation(50,numcells=False)
 
-# density fit
-# den = Density_tranformer(n_jobs=n_jobs)
-# den.fit(file_space= fold +"/data/ST2/space_umap_points.csv",
-#          file_split=fold +"/data/ST2/split.dat",num_partition=50)
+density fit
+den = Density_tranformer(n_jobs=n_jobs)
+den.fit(file_space= fold +"/data/ST2/space_umap_points.csv",
+          file_split=fold +"/data/ST2/split.dat",num_partition=50)
 
-# # density transtorm
-# data.load(fold +"/data/ST2/ST2_test_1")
-# den.transform(data)
-# data.load(fold +"/data/ST2/ST2_val_1")
-# den.transform(data)
-# data.load(fold +"/data/ST2/ST2_train_1")
-# den.transform(data)
+# density transtorm
+data.load(fold +"/data/ST2/ST2_test_1")
+den.transform(data)
+data.load(fold +"/data/ST2/ST2_val_1")
+den.transform(data)
+data.load(fold +"/data/ST2/ST2_train_1")
+den.transform(data)
 
-### load and contruct dataset ###
-train_data, val_data, test_data = data.get_dataload(fold_train=fold +"/data/ST2/ST2_train_1",fold_val=fold +"/data/ST2/ST2_val_1",fold_test=fold +"/data/ST2/ST2_test_1")
-train_loader = DataLoader(dataset=train_data, batch_size=64, shuffle=True)
-val_loader = DataLoader(dataset=val_data, batch_size=64, shuffle=False)
 
-shape = train_data.__getitem__(0)[0].size()
+
+# RUN WITH DATAUMAP BELOW
+# ### load and contruct dataset ###
+# train_data, val_data, test_data = data.get_dataload(fold_train=fold +"/data/ST2/ST2_train_1",fold_val=fold +"/data/ST2/ST2_val_1",fold_test=fold +"/data/ST2/ST2_test_1")
+# train_loader = DataLoader(dataset=train_data, batch_size=64, shuffle=True)
+# val_loader = DataLoader(dataset=val_data, batch_size=64, shuffle=False)
+
+# shape = train_data.__getitem__(0)[0].size()
 
 
 ### defining model ###
