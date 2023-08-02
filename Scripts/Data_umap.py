@@ -29,9 +29,11 @@ import subprocess
 fold = os.getcwd()
 class Data:
     class AdDataset(Dataset):
-        def __init__(self,data,shape):
+        def __init__(self,data,shape,transformer=None):
              self.data = data
              self.shape = shape
+             self.transformer = transformer
+             
         def __len__(self):
             ## Size of whole data set
             return len(self.data.id)
@@ -40,9 +42,13 @@ class Data:
             data,y = self.data._get_data(idx,self.shape)
             data = torch.as_tensor(data,dtype=torch.float64).view(self.shape)
             y=torch.as_tensor(y,dtype=torch.float64)
+            if self.transformer:
+                data =self.transformer(data)
             #y =  torch.from_numpy(np.array(y)) # Get the class label for the corresponding file WATCH OUT FOR FLOAT --> MAY CAUSE ERRORS BECAUSE DATA NOT IN SAME DTYPE AS CLASS_LABEL
             #dimensions = data.shape  # Get the dimensions of the data  
             return data, y
+        def set_transformer(self,transformer):
+            self.transformer = transformer
 
     def __init__(self,seed = 0):
         self.id = None
@@ -973,7 +979,7 @@ class Density_tranformer:
         fold = os.getcwd()
         #p   file_quimera   num_partition  file_split
         print("start")
-        subprocess.Popen([fold+"/Flow_c.exe","p",file_space,str(self.num_partition),file_split]).wait()
+        subprocess.Popen([fold.replace("\\","/")+"/Flow_c.exe","p",file_space.replace("\\","/"),str(self.num_partition),file_split.replace("\\","/")]).wait()
         print("end")
         
         
