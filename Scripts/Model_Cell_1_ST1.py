@@ -40,7 +40,7 @@ data = Data(seed=seed)
 # test1 is unaugmented test data
 # train_data, val_data, test_data = data.get_dataload(fold_train=fold +"/data/ST1/ST1_train_1",fold_val=fold +"/data/ST1/ST1_val_1",fold_test=fold +"/data/ST1/ST1_test_1")
 ### load and contruct dataset ###
-train_dataset, val_dataset, test_dataset = data.get_dataload(fold_train=fold +"/data/ST1/ST1_train_1",fold_val=fold +"/data/ST1/ST1_val_1",fold_test=fold +"/data/ST1/ST1_test_1")
+train_dataset, val_dataset, test_dataset = data.get_dataload(fold_train=fold +"/data/ST1/ST1_train_1_noaug",fold_val=fold +"/data/ST1/ST1_val_1",fold_test=fold +"/data/ST1/ST1_test_1")
 # train_loader = DataLoader(dataset=train_data, batch_size=64, shuffle=True)
 # val_loader = DataLoader(dataset=val_data, batch_size=64, shuffle=False)
 

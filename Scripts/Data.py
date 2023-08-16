@@ -225,7 +225,7 @@ class Data:
             f.write(s+"\n")
             #batch
             s = self.batch[0]
-            for i in range(1,tam):
+            for i in range(1,len(self.batch)):
                 s+=" " + self.batch[i]
             f.write(s+"\n")
     
@@ -317,32 +317,56 @@ class Data:
         df,y = self._get_data(index)
         if num_lin > len(df):
             print("sample " + str(index) + " num cells large " + str(len(df)))
-            return
-        else:
-            ilin = np.arange(len(df))
-            np.random.shuffle(ilin)
-            df = df[ilin[:num_lin],:]
-            return df
+            return    
+        ilin = np.arange(len(df))
+        np.random.shuffle(ilin)
+        df = df[ilin[:num_lin],:]
+        return df
+        
                 
-    def get_poll_cells(self,fold=None, filename=None, balanciate=True,num_cells=1000, save=False):
-        df = self._sample_data(0,num_cells)
-        df_y = np.repeat(self.pheno[0], num_cells)
-        tam = len(self.id)
-        print("generate sample")
-        for i in range(1,tam):
-            print(str(i)+ " of "+str(tam))
-            df = np.concatenate((df, self._sample_data(i,num_cells)), axis=0)
-            df_y = np.concatenate((df_y,np.repeat(self.pheno[i], num_cells)))
-        if balanciate:
-            df,df_y = self._oversample(df, df_y)  
-        if save:
-            print("Saving pooled cells.")
-            df_y = df_y.reshape(-1, 1)
-            df_combined = np.hstack((df, df_y))
-            df = pd.DataFrame(df_combined)
-            df.to_csv(fold+filename)
-            print("Saved pooled cell file.")  
-        return(df,df_y)
+    def get_poll_cells(self,fold=None, filename=None, balanciate=True,num_cells=1000, save=False,sam_bach=False):
+        if sam_bach:
+            df = self._sample_data(0,num_cells)
+            df_y = np.repeat(self.pheno[0], num_cells)
+            df_sample = np.repeat(self.id[0], num_cells)
+            tam = len(self.id)
+            print("generate sample")
+            for i in range(1,tam):
+                print(str(i)+ " of "+str(tam))
+                df = np.concatenate((df, self._sample_data(i,num_cells)), axis=0)
+                df_y = np.concatenate((df_y,np.repeat(self.pheno[i], num_cells)))
+                df_sample = np.concatenate((df_sample,np.repeat(self.id[i], num_cells)))
+            df = pd.DataFrame(df)
+            df["id"] = df_sample
+            if balanciate:
+                df,df_y = self._oversample(df, df_y)  
+            if save:
+                print("Saving pooled cells.")
+                df_y = df_y.reshape(-1, 1)
+                df_combined = np.hstack((df, df_y))
+                df = pd.DataFrame(df_combined)
+                df.to_csv(fold+filename)
+                print("Saved pooled cell file.")  
+            return(df,df_y)
+        else:
+            df = self._sample_data(0,num_cells)
+            df_y = np.repeat(self.pheno[0], num_cells)
+            tam = len(self.id)
+            print("generate sample")
+            for i in range(1,tam):
+                print(str(i)+ " of "+str(tam))
+                df = np.concatenate((df, self._sample_data(i,num_cells)), axis=0)
+                df_y = np.concatenate((df_y,np.repeat(self.pheno[i], num_cells)))
+            if balanciate:
+                df,df_y = self._oversample(df, df_y)  
+            if save:
+                print("Saving pooled cells.")
+                df_y = df_y.reshape(-1, 1)
+                df_combined = np.hstack((df, df_y))
+                df = pd.DataFrame(df_combined)
+                df.to_csv(fold+filename)
+                print("Saved pooled cell file.")  
+            return(df,df_y)
         
             
     def split_data_test(self,fold_train,fold_test,perc_train = 0.7):
@@ -420,7 +444,7 @@ class Data:
                samp2 = pos[random.randint(0, len(pos)-1)]
                num_pos+=1
             split = random.uniform(0, 1)
-            idd = self.id[samp1]+self.id[samp2]
+            idd = self.id[samp1]+self.id[samp2]+"_"+str(split)
             self.id.append(idd)
             df1 = self._get_data(samp1)[0]
             df2 = self._get_data(samp2)[0]
@@ -449,7 +473,7 @@ class Data:
             samp2 = neg[random.randint(0, len(neg)-1)]
             pheno_n.append(self.pheno[samp1])
             split = random.uniform(0, 1)
-            idd = self.id[samp1]+self.id[samp2]
+            idd = self.id[samp1]+self.id[samp2]+"_"+str(split)
             idd_n.append(idd)
             df1 = self._get_data(samp1)[0]
             df2 = self._get_data(samp2)[0]
@@ -471,7 +495,7 @@ class Data:
             samp2 = pos[random.randint(0, len(pos)-1)]
             pheno_n.append(self.pheno[samp1])
             split = random.uniform(0, 1)
-            idd = self.id[samp1]+self.id[samp2]
+            idd = self.id[samp1]+self.id[samp2]+"_"+str(split)
             idd_n.append(idd)
             df1 = self._get_data(samp1)[0]
             df2 = self._get_data(samp2)[0]
@@ -871,15 +895,21 @@ class Cell_Umap_tranformer:
         print("end")
         
         
-    def transform(self,data):
+    def transform(self,data,num_cells=10000):
         v = []
         for i in range(len(data.id)):
-            v.append((fold+"/Flow_c.exe",data.data + data.id[i] + ".dat",self.file_split))
+            v.append((fold+"/Flow_c.exe",data.data + data.id[i] + ".dat",self.file_split,data.data,i,num_cells))
         def multi(v):
-            program,file, file_split = v
+            program,file, file_split,fo,i,n_cells = v
             subprocess.Popen([program,"c",file,file_split]).wait()
+            d = Data()
+            d.load(fo[:-1])
+            df = d._sample_data(i, num_cells)
+            d._save_data(i, df,pheno=d.pheno[i])
             
-        Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)             
+            
+        #Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)
+        [multi(v[i]) for i in range(len(data.id))]             
         data.sizes = [-2,len(data.painel),self.num_partition] 
         data._save_meta()
     

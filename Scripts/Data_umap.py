@@ -991,7 +991,8 @@ class Density_tranformer:
             program,file, file_split = v
             subprocess.Popen([program.replace("\\","/"),"s",file.replace("\\","/"),file_split.replace("\\","/")]).wait()
             
-        Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)
+        #Parallel(n_jobs=self.n_jobs,verbose=10)(delayed(multi)(a) for a in v)
+        multi(v[0])
         data.size = [len(data.painel)-data.dim+1]
         for d in range(data.dim):
             data.size += [self.num_partition]

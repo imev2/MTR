@@ -18,33 +18,32 @@ import torch.optim as optim
 torch.set_default_dtype(torch.float64)
 
 
-#generate data ST2
+#generate data ST1
 seed = 12357
 fold = os.getcwd()
 fold
 torch.manual_seed(seed+1)
 data = Data(seed=seed)
 
-## data.load(fold +"/data/ST2/ST2_train_1")
-## data.augmentation(100,numcells=10000)
+# data.load(fold +"/data/ST1/ST1_train_1")
+# data.augmentation(100,numcells=10000)
 
 # ## sample cells
-# data.load(fold +"/data/ST2/ST2_val_1")
+# data.load(fold +"/data/ST1/ST1_val_1")
 # data.sample_all_cells(numcells=10000)
-# data.load(fold +"/data/ST2/ST2_test_1")
+# data.load(fold +"/data/ST1/ST1_test_1")
 # data.sample_all_cells(numcells=10000)
 
 ### load and contruct dataset ###
 # train1 is the augmented training data
 # val1 is unaugmented val data
-# teST2 is unaugmented test data
-# train_data, val_data, test_data = data.get_dataload(fold_train=fold +"/data/ST2/ST2_train_1",fold_val=fold +"/data/ST2/ST2_val_1",fold_test=fold +"/data/ST2/ST2_test_1")
+# teST1 is unaugmented test data
+# train_data, val_data, test_data = data.get_dataload(fold_train=fold +"/data/ST1/ST1_train_1",fold_val=fold +"/data/ST1/ST1_val_1",fold_test=fold +"/data/ST1/ST1_test_1")
 ### load and contruct dataset ###
-train_dataset, val_dataset, test_dataset = data.get_dataload(fold_train=fold +"/data/ST2/ST2_train_1",fold_val=fold +"/data/ST2/ST2_val_1",fold_test=fold +"/data/ST2/ST2_test_1")
-# train_loader = DataLoader(dataset=train_data, batch_size=64, shuffle=True)
+train_dataset, val_dataset, test_dataset = data.get_dataload(fold_train=fold +"/data/ST1/ST1_train_1",fold_val=fold +"/data/ST1/ST1_val_1",fold_test=fold +"/data/ST1/ST1_test_1")# train_loader = DataLoader(dataset=train_data, batch_size=64, shuffle=True)
 # val_loader = DataLoader(dataset=val_data, batch_size=64, shuffle=False)
 
-#Input shape is determined by the number of cells sampled from each sample and the number of markers (30 = ST2)
+#Input shape is determined by the number of cells sampled from each sample and the number of markers (30 = ST1)
 imput_shape = train_dataset.__getitem__(0)[0].size()
 imput_size = 1
 for v in imput_shape:
@@ -182,7 +181,7 @@ class Neural:
                 print("val loss: ", str(vloss), "val accuracy: "+str(vb_acuracy)) #, " fscore: ", str(sfscore))
                 print("------------------")
                 if(epoch%20==0):
-                    self._save(fold+"/data/ST2/ST2_models/"+self.sumary_lab +".dat", epoch, num_epochs)
+                    self._save(fold+"/data/ST1/ST1_models/"+self.sumary_lab +".dat", epoch, num_epochs)
                 print(epoch)
                 self.li_auc.append(vb_acuracy)
                 self.li_model.append(self.model.state_dict())
@@ -255,9 +254,9 @@ fixed_train_size = 1000
 device = "cpu"
 torch.set_num_threads(8)
 loss_f = torch.nn.BCEWithLogitsLoss(reduction="mean")
-model = Model_Cell_1(imput_size, num_markers=30)
+model = Model_Cell_1(imput_size, num_markers=28)
 optimizer = optim.Adam(model.parameters(), lr=lr)
 
-net = Neural(train_data=train_dataset,val_data=val_dataset,test_data=test_dataset,model=model,loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="Model_Cell_1_ST2_3107_1600_bs64_tested",bach_size=batch_size,fixed_train_size=fixed_train_size)                  
-net.trainning(num_epochs=2000, file_out=fold+"/data/Results/ST2/Model_Cell_1_ST2_3107_1600_bs64.dat")
+net = Neural(train_data=train_dataset,val_data=val_dataset,test_data=test_dataset,model=model,loss_f=loss_f,optimizer=optimizer,device=device,sumary_lab="Model_Cell_1_ST1_0608_bs64_tested",bach_size=batch_size,fixed_train_size=fixed_train_size)                  
+net.trainning(num_epochs=2000, file_out=fold+"/data/Results/ST1/Model_Cell_1_ST1_0608_bs64_tested.dat")
 
