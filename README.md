@@ -3,6 +3,8 @@
 
 ### 0. Data availability
 The flow cytometry dataset for this project was provided by J. Neumann, Dr. S. Humblet-Baron, and Dr. L. Yshii (KU Leuven). The participant population comprised 143 males and 158 females aged between 40-83 years old. Participants were further characterized by clinical measures including age, age at diagnosis, and Mini‐Mental State Examination (MMSE) score at the time of diagnosis.
+
+Initial data processing was performed by Dr. O. Burton (University of Cambridge) using FlowJo™ Software (BD Life Sciences). Processing steps included the removal of artifacts, doublets, and dead cells and compensation correction by Autospill. 
 ### 1. Data pre-processing
 
 #### 1.1 Statistical analyses (linear mixed modeling)
