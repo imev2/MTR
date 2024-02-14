@@ -12,20 +12,21 @@ Initial data processing was performed by Dr. O. Burton (University of Cambridge)
 #### 1.2 Creating ML-friendly files
 
 ##### 1.2.1 Pre-processing
-
+LMM.R
 ##### 1.2.2 Test/train/validation split
-
+preprocess.py - Define percentages to split data for training, validation, and testing.
 ##### 1.2.3 Data transformations
-
-##### 1.2.4 Data augmentation
-
+main/mainST2/mainST3.py - Log transform, standard scaling, and data augmentation functions. Pools defined number of cells. 
 ### 2. Machine learning classifiers 
 
 #### 2.1 Cell level models
+cells_ML_base/cells_ML_base_ST2/cells_ML_base_ST3.py
 
 #### 2.2 Sample-level models
 
 ### 3. UMAP+ML classifier pipeline
-
+plotDensityGrid.py
+Model_density
+plotTensorboard.py - view Tensorboard results during training and validation
 ### 4. Cell-subset gating 
-
+wekaCSV.py
